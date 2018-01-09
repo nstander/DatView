@@ -1,0 +1,92 @@
+# -*- coding: utf-8 -*-
+
+# Form implementation generated from reading ui file 'MainWindow.ui'
+#
+# Created: Tue Jan  9 09:44:57 2018
+#      by: PyQt4 UI code generator 4.6.2
+#
+# WARNING! All changes made in this file will be lost!
+
+from PyQt4 import QtCore, QtGui
+
+class Ui_MainWindow(object):
+    def setupUi(self, MainWindow):
+        MainWindow.setObjectName("MainWindow")
+        MainWindow.resize(800, 600)
+        self.centralwidget = QtGui.QWidget(MainWindow)
+        self.centralwidget.setObjectName("centralwidget")
+        self.verticalLayout = QtGui.QVBoxLayout(self.centralwidget)
+        self.verticalLayout.setObjectName("verticalLayout")
+        self.plotScrollArea = QtGui.QScrollArea(self.centralwidget)
+        self.plotScrollArea.setWidgetResizable(True)
+        self.plotScrollArea.setObjectName("plotScrollArea")
+        self.scrollAreaWidgetContents = QtGui.QWidget(self.plotScrollArea)
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 774, 531))
+        self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
+        self.gridLayout = QtGui.QGridLayout(self.scrollAreaWidgetContents)
+        self.gridLayout.setObjectName("gridLayout")
+        self.plotScrollArea.setWidget(self.scrollAreaWidgetContents)
+        self.verticalLayout.addWidget(self.plotScrollArea)
+        MainWindow.setCentralWidget(self.centralwidget)
+        self.menubar = QtGui.QMenuBar(MainWindow)
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 22))
+        self.menubar.setObjectName("menubar")
+        self.menuFile = QtGui.QMenu(self.menubar)
+        self.menuFile.setObjectName("menuFile")
+        self.menuSave_Selections_As_2 = QtGui.QMenu(self.menuFile)
+        self.menuSave_Selections_As_2.setObjectName("menuSave_Selections_As_2")
+        self.menuPlot = QtGui.QMenu(self.menubar)
+        self.menuPlot.setObjectName("menuPlot")
+        self.menuHistogram_Bar = QtGui.QMenu(self.menuPlot)
+        self.menuHistogram_Bar.setObjectName("menuHistogram_Bar")
+        MainWindow.setMenuBar(self.menubar)
+        self.statusbar = QtGui.QStatusBar(MainWindow)
+        self.statusbar.setObjectName("statusbar")
+        MainWindow.setStatusBar(self.statusbar)
+        self.actionOpen = QtGui.QAction(MainWindow)
+        self.actionOpen.setObjectName("actionOpen")
+        self.actionSave_List = QtGui.QAction(MainWindow)
+        self.actionSave_List.setObjectName("actionSave_List")
+        self.actionSave_Stream = QtGui.QAction(MainWindow)
+        self.actionSave_Stream.setObjectName("actionSave_Stream")
+        self.actionSave_Dat = QtGui.QAction(MainWindow)
+        self.actionSave_Dat.setObjectName("actionSave_Dat")
+        self.actionSave_Plot = QtGui.QAction(MainWindow)
+        self.actionSave_Plot.setObjectName("actionSave_Plot")
+        self.actionScatter = QtGui.QAction(MainWindow)
+        self.actionScatter.setObjectName("actionScatter")
+        self.action2D_Histogram = QtGui.QAction(MainWindow)
+        self.action2D_Histogram.setObjectName("action2D_Histogram")
+        self.actionReset = QtGui.QAction(MainWindow)
+        self.actionReset.setObjectName("actionReset")
+        self.menuSave_Selections_As_2.addAction(self.actionSave_List)
+        self.menuSave_Selections_As_2.addAction(self.actionSave_Stream)
+        self.menuSave_Selections_As_2.addAction(self.actionSave_Dat)
+        self.menuFile.addAction(self.actionOpen)
+        self.menuFile.addAction(self.menuSave_Selections_As_2.menuAction())
+        self.menuFile.addAction(self.actionSave_Plot)
+        self.menuHistogram_Bar.addAction(self.actionReset)
+        self.menuPlot.addAction(self.menuHistogram_Bar.menuAction())
+        self.menuPlot.addAction(self.actionScatter)
+        self.menuPlot.addAction(self.action2D_Histogram)
+        self.menubar.addAction(self.menuFile.menuAction())
+        self.menubar.addAction(self.menuPlot.menuAction())
+
+        self.retranslateUi(MainWindow)
+        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
+    def retranslateUi(self, MainWindow):
+        MainWindow.setWindowTitle(QtGui.QApplication.translate("MainWindow", "MainWindow", None, QtGui.QApplication.UnicodeUTF8))
+        self.menuFile.setTitle(QtGui.QApplication.translate("MainWindow", "File", None, QtGui.QApplication.UnicodeUTF8))
+        self.menuSave_Selections_As_2.setTitle(QtGui.QApplication.translate("MainWindow", "Save Selections As", None, QtGui.QApplication.UnicodeUTF8))
+        self.menuPlot.setTitle(QtGui.QApplication.translate("MainWindow", "Plot", None, QtGui.QApplication.UnicodeUTF8))
+        self.menuHistogram_Bar.setTitle(QtGui.QApplication.translate("MainWindow", "Histogram / Bar", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionOpen.setText(QtGui.QApplication.translate("MainWindow", "Open", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionSave_List.setText(QtGui.QApplication.translate("MainWindow", "CrystFEL List", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionSave_Stream.setText(QtGui.QApplication.translate("MainWindow", "Stream File", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionSave_Dat.setText(QtGui.QApplication.translate("MainWindow", "Dat File", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionSave_Plot.setText(QtGui.QApplication.translate("MainWindow", "Save Plot", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionScatter.setText(QtGui.QApplication.translate("MainWindow", "Scatter", None, QtGui.QApplication.UnicodeUTF8))
+        self.action2D_Histogram.setText(QtGui.QApplication.translate("MainWindow", "2D Histogram", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionReset.setText(QtGui.QApplication.translate("MainWindow", "Reset", None, QtGui.QApplication.UnicodeUTF8))
+
