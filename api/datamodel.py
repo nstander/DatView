@@ -8,17 +8,17 @@ class DataModel(QObject):
     dtypeind=1
     fmtind=2
     hrmap={ 'run'       : ('Run', 'f4','%i'),
-            'subcxi'    : ('CXI SubFile', 'f4','%i'),
-            'class'     : ('CXI class','f4','%i'),
+            'subcxi'    : ('CXI File #', 'f4','%i'),
+            'class'     : ('CXI Class','f4','%i'),
             'event'     : ('Event','f4','%i'),
             'id'        : ('Internal ID','U12','%s'),
             'multi'     : ('Crystals Per Frame','f4','%i'),
-            'a'         : ('Cell A Axis (nm)','f4','%f'),
-            'b'         : ('Cell B Axis (nm)','f4','%f'),
-            'c'         : ('Cell C Axis (nm)', 'f4','%f'),
-            'alpha'     : ('Alpha Angle', 'f4','%f'),
-            'beta'      : ('Beta Angle', 'f4','%f'),
-            'gamma'     : ('Gamma Angle', 'f4','%f'),
+            'a'         : (' A Axis (nm)','f4','%f'),
+            'b'         : (' B Axis (nm)','f4','%f'),
+            'c'         : (' C Axis (nm)', 'f4','%f'),
+            'alpha'     : ('Alpha (deg)', 'f4','%f'),
+            'beta'      : ('Beta (deg)', 'f4','%f'),
+            'gamma'     : ('Gamma (deg)', 'f4','%f'),
             'indby'     : ('Indexed By','U50','%s'),
             'phoen'     : ('Photon Energy', 'f4','%f'),
             'bmdv'      : ('Beam Divergence', 'f4','%f'),
@@ -62,8 +62,8 @@ class DataModel(QObject):
             'cent'      : ('Centering','U1','%s'),
             'ltype'      : ('Lattice Type','U15','%s'),
           }
-    internalcols=set(['istart','iend','cstart','cend','pstart','pend','rstart','rend'])
-    defaulthistograms=['a','b','c','alpha','beta','gamma']
+    internalCols=set(['istart','iend','cstart','cend','pstart','pend','rstart','rend'])
+    defaultHistograms=set(['a','b','c','alpha','beta','gamma'])
     def __init__(self,filename):
         QObject.__init__(self)
         self.cols=[]

@@ -4,7 +4,7 @@
 import sys
 import argparse
 import numpy as np
-from PyQt4.QtGui import QApplication, QMainWindow,QLabel,QFileDialog
+from PyQt4.QtGui import QApplication, QMainWindow,QLabel,QFileDialog, QAction
 
 
 from api.datamodel import DataModel
@@ -33,12 +33,44 @@ class MyMainWindow(QMainWindow):
         self.onFilterChange()
         self.model.filterchange.connect(self.onFilterChange)
 
-        self.ui.gridLayout.addWidget(ui.plots.MyHistogram(parent=self.ui.scrollAreaWidgetContents,model=self.model,field='a'),0,0)
-        self.ui.gridLayout.addWidget(ui.plots.MyHistogram(parent=self.ui.scrollAreaWidgetContents,model=self.model,field='b'),0,1)
-        self.ui.gridLayout.addWidget(ui.plots.MyHistogram(parent=self.ui.scrollAreaWidgetContents,model=self.model,field='c'),0,2)
-        self.ui.gridLayout.addWidget(ui.plots.MyHistogram(parent=self.ui.scrollAreaWidgetContents,model=self.model,field='alpha'),1,0)
-        self.ui.gridLayout.addWidget(ui.plots.MyHistogram(parent=self.ui.scrollAreaWidgetContents,model=self.model,field='beta'),1,1)
-        self.ui.gridLayout.addWidget(ui.plots.MyHistogram(parent=self.ui.scrollAreaWidgetContents,model=self.model,field='gamma'),1,2)
+        # Histogram Menu
+        self.checkedhistograms=[]
+        self.cachedHistograms={}
+        self.ui.menuHistogram_Bar.removeAction(self.ui.actionReset)
+        self.addHistogramMenu(DataModel.defaultHistograms & set(self.model.cols), True)
+        self.ui.menuHistogram_Bar.addSeparator()
+        self.addHistogramMenu(set(self.model.cols) - DataModel.defaultHistograms - DataModel.internalCols, False)
+        self.placeHistograms()
+
+    def addHistogramMenu(self, lst, checked=False):
+        for col in sorted(lst,key=self.model.prettyname):
+            act=QAction(self.model.prettyname(col),self)
+            act.setCheckable(True)
+            act.setChecked(checked)
+            self.ui.menuHistogram_Bar.addAction(act)
+            act.triggered.connect(lambda checked, field=col: self.onHistAction(field,checked))
+            if checked:
+                self.checkedhistograms.append(col)                
+
+    def placeHistograms(self):
+        spot=0
+        for field in self.checkedhistograms:
+            if field in self.cachedHistograms:
+                h=self.cachedHistograms[field]
+            else:
+                h=ui.plots.MyHistogram(parent=self.ui.scrollAreaWidgetContents,model=self.model,field=field)
+                self.cachedHistograms[field]=h
+            self.ui.gridLayout.addWidget(h,int(spot/3),spot%3)
+            h.setVisible(True)
+            spot += 1
+
+    def onHistAction(self,field,checked):
+        if checked:
+            self.checkedhistograms.append(field)
+        else:
+            self.checkedhistograms.remove(field)
+            self.cachedHistograms[field].setVisible(False)
+        self.placeHistograms()
 
     def onFilterChange(self):
         self.filtmessage.setText('%d of %d Selected' %(len(self.model.filtered), len(self.model.data)))
