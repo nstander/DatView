@@ -14,6 +14,7 @@ class DataModel(QObject):
             'event'     : ('Event','f4','%i'),
             'id'        : ('Internal ID','U12','%s'),
             'multi'     : ('Crystals Per Frame','f4','%i'),
+            'multiid'   : ('Crystal # On Frame','f4','%i'),
             'a'         : (' A Axis (nm)','f4','%f'),
             'b'         : (' B Axis (nm)','f4','%f'),
             'c'         : (' C Axis (nm)', 'f4','%f'),
@@ -84,6 +85,8 @@ class DataModel(QObject):
         self.filtered=self.data
         self.topfilter=AndFilter(self.data.shape)
         self.topfilter.filterchange.connect(self.applyFilters)
+        self.mincache={}
+        self.maxcache={}
 
     def prettyname(self,field):
         return DataModel.hrmap[field][DataModel.nameind]
@@ -98,6 +101,18 @@ class DataModel(QObject):
         print ("DM applyFilters")
         self.filtered=self.data[self.topfilter.keep]
         self.filterchange.emit()
+
+    def fieldmin(self,field):
+        if field not in self.mincache:
+            valid = self.data[field]
+            valid = valid[valid != -1]
+            self.mincache[field]=np.min(valid)
+        return self.mincache[field]
+
+    def fieldmax(self,field):
+        if field not in self.maxcache:
+            self.maxcache[field]=np.max(self.data[field])
+        return self.maxcache[field]
 
     def saveSelDat(self,fname):
         formats=[]

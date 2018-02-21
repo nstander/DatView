@@ -44,7 +44,8 @@ class MyHistogram(MyFigure):
         self.model.filterchange.connect(self.mydraw)
 
         self.plt.get_yaxis().set_visible(False)
-        self.plt.hist(self.model.data[self.field],bins=self.bins,color='black')
+        self.plt.hist(self.model.data[self.field],bins=self.bins,color='black',
+            range=(self.model.fieldmin(self.field),self.model.fieldmax(self.field)))
         self.mydraw()
 
     def mydraw(self):
@@ -54,10 +55,13 @@ class MyHistogram(MyFigure):
         self.plt.set_title(self.model.prettyname(self.field))
         self.plt.add_patch(self.sel)
         if self.model.isFiltered():
-            b=self.plt.hist(self.model.data[self.field],bins=self.bins,color='black',alpha=0.5,edgecolor="none")[1]
-            self.plt.hist(self.model.filtered[self.field],bins=b,color='black')
+            b=self.plt.hist(self.model.data[self.field],bins=self.bins,color='black',alpha=0.5,edgecolor="none",
+                range=(self.model.fieldmin(self.field),self.model.fieldmax(self.field)))[1]
+            self.plt.hist(self.model.filtered[self.field],bins=b,color='black',
+                range=(self.model.fieldmin(self.field),self.model.fieldmax(self.field)))
         else:
-            self.plt.hist(self.model.data[self.field],bins=self.bins,color='black')
+            self.plt.hist(self.model.data[self.field],bins=self.bins,color='black',
+                range=(self.model.fieldmin(self.field),self.model.fieldmax(self.field)))
         self.plt.set_xlim(xlim)
         self.draw()
 

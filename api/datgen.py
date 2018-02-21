@@ -5,6 +5,7 @@ import os
 import argparse
 import re
 import h5py
+import sys
 
 class DatGenerator:
     streamcols=[(('ifile','run','class','subcxi'),re.compile('^Image filename: (.*r(\d{4})(?:-class(\d))?(?:-c(\d{2}))?.cxi)')),
@@ -30,29 +31,26 @@ class DatGenerator:
     allstrcols=['ifile','run','class','subcxi','event','indby','phoen','bmdv','bmbw','aclen','npeak',
                 'ltype','cent','a','b','c','alpha','beta','gamma','prorad','detdx','detdy','reslim','nref',
                 'nsref','niref','o1','o2','o3','o4','o5','o6','o7','o8','o9']
-    internalcols=['sfile','istart','iend','cstart','cend','pstart','pend','rstart','rend','multi']
+    internalcols=['sfile','istart','iend','cstart','cend','pstart','pend','rstart','rend','multiid','multi']
     allcols=allstrcols+internalcols
                 
-    def __init__(self,imageout,crystalout,streamcols,cxicols):
+    def __init__(self,out,streamcols,cxicols):
         self.cols=streamcols+cxicols
         self.cxicols=cxicols
         self.curCXIName=None
         self.curCXI=None
         self.curH5=None
-        self.chunkout=imageout
-        self.crystalout=crystalout
-        print(*self.cols,sep='\t',file=imageout)
-        print(*self.cols,sep='\t',file=crystalout)
-        pass
+        self.out=out
+        print(*self.cols,sep='\t',file=out)
 
-    def writerow(self,outstream,cur):
+    def writerow(self,cur):
         self.addcxi(cur)
         for col in self.cols:
             if col in cur and cur[col] is not None:
-                print(cur[col],end='\t',file=outstream)
+                print(cur[col],end='\t',file=self.out)
             else:
-                print(-1,end='\t',file=outstream)
-        print('\n',end='',file=outstream)
+                print(-1,end='\t',file=self.out)
+        print('\n',end='',file=self.out)
 
     def addcxi(self,cur):
         if cur['ifile'] != self.curCXIName:
@@ -85,10 +83,10 @@ class DatGenerator:
                 line = line.strip()
                 if line == '----- Begin chunk -----':
                     cur = {}
-                    mcur = {}
-                    #for col in multicol:
-                    #    mcur[col]=0
+                    crylst=[]
+                    crylst.append(cur)
                     cur['multi']=0
+                    cur['multiid']=0
                     cur['sfile']=streamname
                     cur['istart']=lineStart
                     checkre=True
@@ -109,18 +107,24 @@ class DatGenerator:
 
                 elif line == '--- Begin crystal':
                     checkre=True
+                    if cur['multi'] > 0:
+                        cur=cur.copy()
+                        crylst.append(cur)
                     cur['multi']+=1
+                    cur['multiid']+=1
                     cur['cstart']=lineStart
 
                 elif line == '--- End crystal':
                     cur['cend']=lineEnd
-                    self.writerow(self.crystalout,cur)
 
 
                 elif line == '----- End chunk -----':
-                    cur['iend']=lineEnd
+                    for c in crylst:
+                        c['iend']=lineEnd
+                        c['multi']=cur['multi']
+                        self.writerow(c)
                     checkre=False
-                    self.writerow(self.chunkout,cur)
+                    
 
                 elif checkre:
                     for streamre in DatGenerator.streamcols:
@@ -132,9 +136,8 @@ class DatGenerator:
 
 
 if __name__ == '__main__':
-    parser=argparse.ArgumentParser(description='Create a .dat file from any number of stream files. By default, images.dat will contain one line per chunk and crystals.dat will contain one line per crystal. Output files have one header row and can be appended to eachother with tail -n +1 >> fullfile (to skip the header row).')
-    parser.add_argument('--imageout',default='images.dat',help='Output for each chunk')
-    parser.add_argument('--crystalout',default='crystals.dat',help='Output for each crystal')
+    parser=argparse.ArgumentParser(description='Create a .dat file from any number of stream files. Output files have one header row and can be appended to eachother with tail -n +1 >> fullfile (to skip the header row) assuming columns are the same.')
+    parser.add_argument('--out','-o',type=argparse.FileType('w'),default=sys.stdout,help='Output file')
 #    parser.add_argument('--group','-g',required=True,help='The group file output by groupgen.py (groupcfg.txt)')
     parser.add_argument('--streamcols',default=DatGenerator.allcols,nargs='+',help='Space separated list of builtin columns to include in output. Use all for all.')
     parser.add_argument('--cxi',action='append',help='Include from cxi/h5 file. Use switch multiple times to include from multiple cxi files. Example: --cxi /cheetah/frameNumber --cxi /LCLS/machineTime')
@@ -142,6 +145,6 @@ if __name__ == '__main__':
 
     args=parser.parse_args()
 
-    datgen=DatGenerator(open(args.imageout,'w'),open(args.crystalout,'w'),args.streamcols,args.cxi)
+    datgen=DatGenerator(args.out,args.streamcols,args.cxi)
     for f in args.files:
         datgen.parsestream(f)
