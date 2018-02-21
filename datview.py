@@ -60,6 +60,10 @@ class MyMainWindow(QMainWindow):
             else:
                 h=ui.plots.MyHistogram(parent=self.ui.scrollAreaWidgetContents,model=self.model,field=field)
                 self.cachedHistograms[field]=h
+            if spot < 3:
+                self.ui.gridLayout.setColumnStretch(spot,1)
+            if spot%3 == 0:
+                self.ui.gridLayout.setRowStretch(int(spot/3),1)
             self.ui.gridLayout.addWidget(h,int(spot/3),spot%3)
             h.setVisible(True)
             spot += 1

@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'MainWindow.ui'
 #
-# Created: Tue Jan  9 09:44:57 2018
+# Created: Mon Feb  5 10:20:35 2018
 #      by: PyQt4 UI code generator 4.6.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -12,7 +12,7 @@ from PyQt4 import QtCore, QtGui
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(800, 600)
+        MainWindow.resize(800, 516)
         self.centralwidget = QtGui.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.verticalLayout = QtGui.QVBoxLayout(self.centralwidget)
@@ -21,7 +21,7 @@ class Ui_MainWindow(object):
         self.plotScrollArea.setWidgetResizable(True)
         self.plotScrollArea.setObjectName("plotScrollArea")
         self.scrollAreaWidgetContents = QtGui.QWidget(self.plotScrollArea)
-        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 774, 531))
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 774, 447))
         self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
         self.gridLayout = QtGui.QGridLayout(self.scrollAreaWidgetContents)
         self.gridLayout.setObjectName("gridLayout")
@@ -76,7 +76,7 @@ class Ui_MainWindow(object):
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
-        MainWindow.setWindowTitle(QtGui.QApplication.translate("MainWindow", "MainWindow", None, QtGui.QApplication.UnicodeUTF8))
+        MainWindow.setWindowTitle(QtGui.QApplication.translate("MainWindow", "Data Viewer", None, QtGui.QApplication.UnicodeUTF8))
         self.menuFile.setTitle(QtGui.QApplication.translate("MainWindow", "File", None, QtGui.QApplication.UnicodeUTF8))
         self.menuSave_Selections_As_2.setTitle(QtGui.QApplication.translate("MainWindow", "Save Selections As", None, QtGui.QApplication.UnicodeUTF8))
         self.menuPlot.setTitle(QtGui.QApplication.translate("MainWindow", "Plot", None, QtGui.QApplication.UnicodeUTF8))
