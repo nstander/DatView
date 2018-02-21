@@ -1,5 +1,6 @@
 from PyQt4.QtCore import QObject,pyqtSignal
 import numpy as np
+from api.filters import *
 
 
 class DataModel(QObject):
@@ -80,32 +81,22 @@ class DataModel(QObject):
                 convert[self.cols.index(c)]=np.lib.npyio.asstr
         self.data=np.loadtxt(filename,skiprows=1,converters=convert,
                              dtype={'names':tuple(self.cols),'formats':tuple(self.dtypes)})
-        self.filters={}
         self.filtered=self.data
+        self.topfilter=AndFilter(self.data.shape)
+        self.topfilter.filterchange.connect(self.applyFilters)
 
     def prettyname(self,field):
         return DataModel.hrmap[field][DataModel.nameind]
 
     def isFiltered(self):
-        return len(self.filters) > 0
+        return self.topfilter.isActive()
 
-    def addFilter(self,field,fmin,fmax):
-        self.filters[field]=(fmin,fmax)
-        self.applyFilters()
-
-    def clearFilter(self,field):
-        del self.filters[field]
-        self.applyFilters()
+    def addFilter(self,toAdd):
+        self.topfilter.addChild(toAdd)
 
     def applyFilters(self):
-        if len(self.filters) > 0:
-            keep=np.ones((self.data.shape[0],),dtype=bool)
-            for k,v in self.filters.items():
-                keep &= (self.data[k] >= v[0])
-                keep &= (self.data[k] < v[1])
-            self.filtered=self.data[keep]
-        else:
-            self.filtered=self.data
+        print ("DM applyFilters")
+        self.filtered=self.data[self.topfilter.keep]
         self.filterchange.emit()
 
     def saveSelDat(self,fname):

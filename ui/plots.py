@@ -4,6 +4,8 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
+from api.filters import BetweenFilter
+
 
 class MyFigure(FigureCanvas):
     def __init__(self,parent=None):
@@ -35,6 +37,10 @@ class MyHistogram(MyFigure):
         self.fig.canvas.mpl_connect('button_press_event',self.onPress)
         self.fig.canvas.mpl_connect('button_release_event',self.onRelease)
         self.fig.canvas.mpl_connect('motion_notify_event',self.onMotion)
+
+        self.fieldfilter=BetweenFilter(0,0,self.model.data[self.field],self.field)
+        self.fieldfilter.setActive(False)
+        self.model.addFilter(self.fieldfilter)
         self.model.filterchange.connect(self.mydraw)
 
         self.plt.get_yaxis().set_visible(False)
@@ -42,6 +48,7 @@ class MyHistogram(MyFigure):
         self.mydraw()
 
     def mydraw(self):
+        print ("Histogram mydraw")
         xlim = self.plt.get_xlim()
         self.plt.cla()
         self.plt.set_title(self.model.prettyname(self.field))
@@ -93,9 +100,10 @@ class MyHistogram(MyFigure):
             self.selx0=None
             if self.sel.get_width() == 0:
                 self.sel.set_visible(False)
-                self.model.clearFilter(self.field)
+                self.fieldfilter.setActive(False)
             else:
-                self.model.addFilter(self.field,self.sel.get_x(),self.sel.get_width() + self.sel.get_x())
+                self.fieldfilter.setRange(self.sel.get_x(),self.sel.get_width() + self.sel.get_x())
+                self.fieldfilter.setActive(True)
             self.mydraw()
 
     def onMotion(self,event):

@@ -11,8 +11,10 @@ class DataFilter(QObject):
         self.active=True
 
     def setkeep(self,keep):
-        self.keep = keep
-        self.filterchange.emit()
+        if not np.array_equal(keep,self.keep):
+            print ("Filter setkeep",keep)
+            self.keep = keep
+            self.filterchange.emit()
 
     def isActive(self):
         return self.active
@@ -24,7 +26,7 @@ class DataFilter(QObject):
 
 class GroupFilter(DataFilter):
     def __init__(self,shape):
-        DataFilter.__init__(np.ones(shape,dtype=bool)
+        DataFilter.__init__(self,np.ones(shape,dtype=bool))
         self.shape=shape
         self.children=[]
 
@@ -35,10 +37,12 @@ class GroupFilter(DataFilter):
         self.onchange()
 
     def isActive(self):
-        active = self.active
-        for child in children:
-            active &= child.active
-        return active
+        if self.active:
+            childActive=False
+            for child in self.children:
+                childActive |= child.isActive()
+            return childActive
+        return False
 
     def onchange(self):
         pass
@@ -48,9 +52,12 @@ class AndFilter(GroupFilter):
         GroupFilter.__init__(self,shape)
 
     def onchange(self):
+        print ("And onchange")
         keep=np.ones(self.shape,dtype=bool)
         for child in self.children:
+            print ("Child")
             if child.isActive():
+                print ("Was active")
                 keep &= child.keep
         self.setkeep(keep)
 
@@ -66,7 +73,7 @@ class OrFilter(GroupFilter):
         self.setkeep(keep)
 
 class FieldFilter(DataFilter):
-    def __init(self,keep,field,values):
+    def __init__(self,keep,field,values):
         DataFilter.__init__(self,keep)
         self.field=field
         self.values=values
@@ -88,28 +95,34 @@ class FieldFilter(DataFilter):
 
 class BetweenFilter(FieldFilter):
     def __init__(self,minimum,maximum,values,field):
-        FieldFilter.__init__(self, values >= minimum & values < maximum,field,values)
+        FieldFilter.__init__(self, (values >= minimum) & (values < maximum),field,values)
         self.minimum=minimum
         self.maximum=maximum
 
-    def setmin(self,minimum):
+    def setMin(self,minimum):
         self.minimum=minimum
         self.update()
 
-    def setmax(self,maximum):
+    def setMax(self,maximum):
+        self.maximum=maximum
+        self.update()
+
+    def setRange(self,minimum,maximum):
+        self.minimum=minimum
         self.maximum=maximum
         self.update()
         
 
     def update(self):
-        self.setkeep(self.values >= self.minimum & self.values < self.maximum)
+        print ("Between update")
+        self.setkeep((self.values >= self.minimum) & (self.values < self.maximum))
 
 class GreaterEqualFilter(FieldFilter):
     def __init__(self,minimum,values,field):
         FieldFilter.__init__(self, values >= minimum,field,values)
         self.minimum=minimum
 
-    def setmin(self,minimum):
+    def setMin(self,minimum):
         self.minimum=minimum
         self.update()
 
@@ -117,12 +130,12 @@ class GreaterEqualFilter(FieldFilter):
         self.setkeep(self.values >= self.minimum)
 
 class LessThanFilter(FieldFilter):
-    def __init__(self,,maximum,values,field):
+    def __init__(self,maximum,values,field):
         FieldFilter.__init__(self,values < maximum,field,values)
         self.maximum=maximum
         self.values=values
 
-    def setmax(self,maximum):
+    def setMax(self,maximum):
         self.maximum=maximum
         self.update()
 
