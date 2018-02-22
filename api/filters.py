@@ -12,7 +12,6 @@ class DataFilter(QObject):
 
     def setkeep(self,keep):
         if not np.array_equal(keep,self.keep):
-            print ("Filter setkeep",keep)
             self.keep = keep
             self.filterchange.emit()
 
@@ -52,12 +51,9 @@ class AndFilter(GroupFilter):
         GroupFilter.__init__(self,shape)
 
     def onchange(self):
-        print ("And onchange")
         keep=np.ones(self.shape,dtype=bool)
         for child in self.children:
-            print ("Child")
             if child.isActive():
-                print ("Was active")
                 keep &= child.keep
         self.setkeep(keep)
 
@@ -114,7 +110,6 @@ class BetweenFilter(FieldFilter):
         
 
     def update(self):
-        print ("Between update")
         self.setkeep((self.values >= self.minimum) & (self.values < self.maximum))
 
 class GreaterEqualFilter(FieldFilter):

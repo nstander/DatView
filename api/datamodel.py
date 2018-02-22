@@ -155,6 +155,23 @@ class DataModel(QObject):
            as multi """
         return field.startswith(GroupMgr.prefix) or 'U' in self.dtype(field) or field in ['subcxi','class','multi','multiid']
 
+    def value(self,field,i,filtered=True):
+        """Return the value of the field at (filtered if filtered=True) row i. Returns true value rather than digitized or group-id value"""
+        if field not in self.cols and (GroupMgr.prefix+field) in self.cols:
+            field=GroupMgr.prefix+field
+
+        if filtered:
+            v=self.filtered[field][i]
+        else:
+            v=self.data[field][i]
+
+        if field in self.digitized:
+            v = self.digitized[field][v]
+        elif field.startswith(GroupMgr.prefix) and self.groupmgr is not None:
+            v = self.groupmgr.value(field[len(GroupMgr.prefix):],v)
+        return v
+
+
     def isFiltered(self):
         return self.topfilter.isActive()
 
@@ -185,20 +202,21 @@ class DataModel(QObject):
         np.savetxt(fname,self.rdata[self.topfilter.keep],fmt=formats,delimiter='\t',header=self.hdrline[:-1],comments='')
 
     def canSaveLst(self):
-        return 'ifile' in self.cols# or (GroupMgr.prefix + "ifile") in self.cols
+        return 'ifile' in self.cols or ((GroupMgr.prefix + "ifile") in self.cols and self.groupmgr is not None)
 
     def saveSelLst(self,fname):
         assert self.canSaveLst()
         with open(fname,'w') as fout:
             if 'event' in self.cols:
                 for i in range(len(self.filtered)):
-                    fout.write('%s //%i\n'%(self.filtered['ifile'][i],self.filtered['event'][i]))
+                    fout.write('%s //%i\n'%(self.value('ifile',i) ,self.filtered['event'][i]))
             else:
                 for i in range(len(self.filtered)):
-                    fout.write('%s\n'%self.filtered['ifile'][i])                
+                    fout.write('%s\n'%(self.value('ifile',i)))                
 
     def canSaveStream(self):
-        return 'sfile' in self.cols and 'istart' in self.cols and \
+        return ('sfile' in self.cols or ((GroupMgr.prefix+"sfile") in self.cols and self.groupmgr is not None)) \
+                and 'istart' in self.cols and \
                 (('cstart' in self.cols and 'cend' in self.cols) or \
                 ('iend' in self.cols and self.data['iend'][0] != -1)) 
 
@@ -217,16 +235,11 @@ class DataModel(QObject):
         curfileName=None
         needheader=True
 
-        # If the file was by chunk, then 'cend' will be valid. If it's -1, then we're looking
-        # at a crystal file
-        chunkmode='iend' in self.cols and len(self.filtered) and self.filtered['iend'][0] != -1
-        print('iend' in self.cols , len(self.filtered) , self.filtered['iend'][0] != -1)
-
         with open(fname,'w') as fout:
             print ("opened output")
             for i in range(len(self.filtered)):
                 print(i)
-                streamfile=self.filtered['sfile'][i]
+                streamfile=self.value('sfile',i)
                 if streamfile != curfileName:
                     if curfile is not None:
                         curfile.close()
@@ -237,12 +250,11 @@ class DataModel(QObject):
                     line=curfile.readline()
                     while line and line != '----- Begin chunk -----\n':
                         fout.write(line)
-                        print(line)
                         line=curfile.readline()
                     needheader=False
                     print ("header out done")
                 curfile.seek(self.filtered['istart'][i])
-                if chunkmode:
+                if self.filtered['cstart'][i] < 0:
                     print ("chunk mode start")
                     fout.write(curfile.read(self.filtered['iend'][i] - self.filtered['istart'][i]))
                     print ("chunk mode end")
