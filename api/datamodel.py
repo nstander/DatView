@@ -1,6 +1,7 @@
 from PyQt4.QtCore import QObject,pyqtSignal
 import numpy as np
-from api.filters import *
+from .filters import *
+from .groupmgr import GroupMgr
 
 
 class DataModel(QObject):
@@ -12,7 +13,7 @@ class DataModel(QObject):
             'subcxi'    : ('CXI File #', 'f4','%i'),
             'class'     : ('CXI Class','f4','%i'),
             'event'     : ('Event','f4','%i'),
-            'id'        : ('Internal ID','U12','%s'),
+            'id'        : ('Internal ID','U12','%s'), #Outdated, for support with older files
             'multi'     : ('Crystals Per Frame','f4','%i'),
             'multiid'   : ('Crystal # On Frame','f4','%i'),
             'a'         : (' A Axis (nm)','f4','%f'),
@@ -66,30 +67,93 @@ class DataModel(QObject):
           }
     internalCols=set(['istart','iend','cstart','cend','pstart','pend','rstart','rend'])
     defaultHistograms=set(['a','b','c','alpha','beta','gamma'])
-    def __init__(self,filename):
+    def __init__(self,filename,groupfile=None):
         QObject.__init__(self)
         self.cols=[]
         with open(filename) as dfile:
             self.hdrline=dfile.readline()
             self.cols=self.hdrline.split()
         self.prettynames=[]
-        self.dtypes=[]
+        dtypes=[]
         convert={}
+        todigitize=[]
+        self.digitized={}
         for c in self.cols:
-            self.prettynames.append(DataModel.hrmap[c][DataModel.nameind])
-            self.dtypes.append(DataModel.hrmap[c][DataModel.dtypeind])
-            if 'U' in self.dtypes[-1]:
+            self.prettynames.append(self.prettyname(c))
+            dtypes.append(self.dtype(c))
+            if 'U' in dtypes[-1]:
                 convert[self.cols.index(c)]=np.lib.npyio.asstr
-        self.data=np.loadtxt(filename,skiprows=1,converters=convert,
-                             dtype={'names':tuple(self.cols),'formats':tuple(self.dtypes)})
+                todigitize.append(c)
+        self.rdata=np.loadtxt(filename,skiprows=1,converters=convert,
+                             dtype={'names':tuple(self.cols),'formats':tuple(dtypes)})
+        # We may have string inputs, even with grouping, and it will simplify all the other code
+        # if at this point we digitize any string inputs so other code will only ever see numbers
+        # and the labels are obtained through the common interface used for grouping anyway.
+        if len(todigitize):
+            dtypes2=[]
+            for dtype in dtypes:
+                if 'U' in dtype:
+                    dtypes2.append('i4')
+                else:
+                    dtypes2.append(dtype)
+            self.data=np.empty(self.rdata.shape,dtype={'names':tuple(self.cols),'formats':tuple(dtypes2)})
+            for c in self.cols:
+                if c in todigitize:
+                    lbls,inverse=np.unique(self.rdata[c],return_inverse=True)
+                    self.digitized[c]=lbls
+                    self.data[c]=inverse
+                else:
+                    self.data[c]=self.rdata[c]
+        else:
+            self.data=self.rdata
         self.filtered=self.data
         self.topfilter=AndFilter(self.data.shape)
         self.topfilter.filterchange.connect(self.applyFilters)
         self.mincache={}
         self.maxcache={}
+        self.groupmgr=None
+        if groupfile:
+            self.groupmgr=GroupMgr(groupfile)
 
     def prettyname(self,field):
-        return DataModel.hrmap[field][DataModel.nameind]
+        r=field
+        if r.startswith(GroupMgr.prefix):
+            r=field[len(GroupMgr.prefix):]
+        if r in DataModel.hrmap:
+            r=DataModel.hrmap[r][0]
+        return r
+
+    def dtype(self,field):
+        r='f4' # assume float
+        if field in DataModel.hrmap:
+            r= DataModel.hrmap[field][1]
+        return r
+
+    def fmt(self,field):
+        r='%f' # assume float
+        # but if it is a group, then it should be an int
+        if field.startswith(GroupMgr.prefix):
+            r='%i'
+        if field in DataModel.hrmap: # or if we already know what it should be
+            r= DataModel.hrmap[field][2]
+        return r
+
+    def hasLabels(self,field):
+        return self.groupmgr is not None and field.startswith(GroupMgr.prefix) or field in self.digitized
+
+    def labels(self,field):
+        if self.hasLabels(field):
+            if field in self.digitized:
+                return self.digitized[field]
+            return self.groupmgr.values(field[len(GroupMgr.prefix):])
+        return []
+
+    def isCategorical(self,field):
+        """Return true if values in field are categorical or discrete. Basically flags what should be
+           a bar chart versus histogram. Groups are always categorical, columns stored as strings are
+           always categorical and some columns with known limited values are specified categorical such
+           as multi """
+        return field.startswith(GroupMgr.prefix) or 'U' in self.dtype(field) or field in ['subcxi','class','multi','multiid']
 
     def isFiltered(self):
         return self.topfilter.isActive()
@@ -117,11 +181,11 @@ class DataModel(QObject):
     def saveSelDat(self,fname):
         formats=[]
         for c in self.cols:
-            formats.append(DataModel.hrmap[c][DataModel.fmtind])
-        np.savetxt(fname,self.filtered,fmt=formats,delimiter='\t',header=self.hdrline[:-1],comments='')
+            formats.append(self.fmt(c))
+        np.savetxt(fname,self.rdata[self.topfilter.keep],fmt=formats,delimiter='\t',header=self.hdrline[:-1],comments='')
 
     def canSaveLst(self):
-        return 'ifile' in self.cols
+        return 'ifile' in self.cols# or (GroupMgr.prefix + "ifile") in self.cols
 
     def saveSelLst(self,fname):
         assert self.canSaveLst()

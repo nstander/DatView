@@ -14,12 +14,12 @@ import ui.plots
 
 
 class MyMainWindow(QMainWindow):
-    def __init__(self,datfile):
+    def __init__(self,datfile,groupfile):
         QMainWindow.__init__(self)
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
 
-        self.model=DataModel(datfile)
+        self.model=DataModel(datfile,groupfile)
 
         self.ui.actionSave_Dat.triggered.connect(self.onSaveDat)
         self.ui.actionSave_List.setEnabled(self.model.canSaveLst())
@@ -97,11 +97,12 @@ class MyMainWindow(QMainWindow):
 
 def main():
     parser=argparse.ArgumentParser(description='Display statistics from a dat file and allow filtering and output to new files')
+    parser.add_argument('--group',default=None,help='The group file output by groupgen.py (groupcfg.txt), keeps files smaller and numeric by enuemrating strings')
     parser.add_argument('file',help='the dat file')
     args=parser.parse_args()
 
     app = QApplication(sys.argv)
-    w = MyMainWindow(args.file)
+    w = MyMainWindow(args.file,args.group)
     w.show()
     sys.exit(app.exec_())
 

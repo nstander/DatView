@@ -44,9 +44,33 @@ class MyHistogram(MyFigure):
         self.model.filterchange.connect(self.mydraw)
 
         self.plt.get_yaxis().set_visible(False)
-        self.plt.hist(self.model.data[self.field],bins=self.bins,color='black',
-            range=(self.model.fieldmin(self.field),self.model.fieldmax(self.field)))
+        self.dcache=None
+        self.datadraw()
         self.mydraw()
+
+    def datadraw(self):
+        if self.model.isCategorical(self.field):
+            if self.dcache is None:
+                self.dcache=np.unique(self.model.data[self.field],return_counts=True)
+            if self.model.isFiltered():
+                self.plt.bar(self.dcache[0],self.dcache[1],color='black',alpha=0.5,edgecolor="none",align='center')
+                fcnts=np.unique(self.model.filtered[self.field],return_counts=True)
+                self.plt.bar(fcnts[0],fcnts[1],color='black',align='center')
+            else:
+                self.plt.bar(self.dcache[0],self.dcache[1],color='black',align='center')
+            if self.model.hasLabels(self.field):
+                lbls=self.model.labels(self.field)
+                self.plt.set_xticks(np.arange(len(lbls)))
+                self.plt.set_xticklabels(lbls)
+        else:
+            if self.model.isFiltered():
+                b=self.plt.hist(self.model.data[self.field],bins=self.bins,color='black',alpha=0.5,edgecolor="none",
+                    range=(self.model.fieldmin(self.field),self.model.fieldmax(self.field)))[1]
+                self.plt.hist(self.model.filtered[self.field],bins=b,color='black',
+                    range=(self.model.fieldmin(self.field),self.model.fieldmax(self.field)))
+            else:
+                self.plt.hist(self.model.data[self.field],bins=self.bins,color='black',
+                    range=(self.model.fieldmin(self.field),self.model.fieldmax(self.field)))
 
     def mydraw(self):
         print ("Histogram mydraw")
@@ -54,14 +78,7 @@ class MyHistogram(MyFigure):
         self.plt.cla()
         self.plt.set_title(self.model.prettyname(self.field))
         self.plt.add_patch(self.sel)
-        if self.model.isFiltered():
-            b=self.plt.hist(self.model.data[self.field],bins=self.bins,color='black',alpha=0.5,edgecolor="none",
-                range=(self.model.fieldmin(self.field),self.model.fieldmax(self.field)))[1]
-            self.plt.hist(self.model.filtered[self.field],bins=b,color='black',
-                range=(self.model.fieldmin(self.field),self.model.fieldmax(self.field)))
-        else:
-            self.plt.hist(self.model.data[self.field],bins=self.bins,color='black',
-                range=(self.model.fieldmin(self.field),self.model.fieldmax(self.field)))
+        self.datadraw()
         self.plt.set_xlim(xlim)
         self.draw()
 
@@ -74,6 +91,8 @@ class MyHistogram(MyFigure):
             self.mydraw()
 
     def onScroll(self,event):
+        if event.xdata is None:
+            return
         scale=1
         factor=1.5
         if event.button == 'up':
