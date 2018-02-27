@@ -4,7 +4,7 @@
 import sys
 import argparse
 import numpy as np
-from PyQt4.QtGui import QApplication, QMainWindow,QLabel,QFileDialog, QAction
+from PyQt4.QtGui import QApplication, QMainWindow,QLabel,QFileDialog, QAction, QTreeView, QHeaderView
 
 
 from api.datamodel import DataModel
@@ -41,6 +41,17 @@ class MyMainWindow(QMainWindow):
         self.ui.menuHistogram_Bar.addSeparator()
         self.addHistogramMenu(set(self.model.cols) - DataModel.defaultHistograms - DataModel.internalCols, False)
         self.placeHistograms()
+
+        self.filterpanel=QTreeView()
+        self.filterpanel.setModel(self.model.filterModel())
+        self.filterpanel.setWindowTitle("Filters")
+        self.filterpanel.expand(self.model.filterModel().index(0,0))
+        self.filterpanel.header().setResizeMode(0,QHeaderView.ResizeToContents)
+        self.filterpanel.show()
+        self.ui.actionShowFilters.triggered.connect(self.filterpanel.show)
+
+    def closeEvent(self,evnt):
+        self.filterpanel.close()
 
     def addHistogramMenu(self, lst, checked=False):
         for col in sorted(lst,key=self.model.prettyname):

@@ -38,7 +38,7 @@ class MyHistogram(MyFigure):
         self.fig.canvas.mpl_connect('button_release_event',self.onRelease)
         self.fig.canvas.mpl_connect('motion_notify_event',self.onMotion)
 
-        self.fieldfilter=BetweenFilter(0,0,self.model.data[self.field],self.field)
+        self.fieldfilter=BetweenFilter(self.model.fieldmin(self.field)-1,self.model.fieldmax(self.field)+1,self.model.data[self.field],self.field)
         self.fieldfilter.setActive(False)
         self.model.addFilter(self.fieldfilter)
         self.model.filterchange.connect(self.mydraw)
@@ -73,7 +73,6 @@ class MyHistogram(MyFigure):
                     range=(self.model.fieldmin(self.field),self.model.fieldmax(self.field)))
 
     def mydraw(self):
-        print ("Histogram mydraw")
         xlim = self.plt.get_xlim()
         self.plt.cla()
         self.plt.set_title(self.model.prettyname(self.field))

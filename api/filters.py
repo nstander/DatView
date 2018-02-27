@@ -2,13 +2,16 @@ import numpy as np
 from PyQt4.QtCore import QObject,pyqtSignal
 
 class DataFilter(QObject):
-    filterchange=pyqtSignal()
+    filterchange=pyqtSignal() # When filtering needs to update, final "keep" changed. 
     activechange=pyqtSignal()
+    modelchange=pyqtSignal(object) # When the model needs to update (active or values changed)
 
     def __init__(self,keep):
         QObject.__init__(self)
         self.keep = keep
         self.active=True
+        self.row=0
+        self.par=None
 
     def setkeep(self,keep):
         if not np.array_equal(keep,self.keep):
@@ -22,18 +25,40 @@ class DataFilter(QObject):
         if active != self.active:
             self.active=active
             self.activechange.emit()
+            self.modelchange.emit(self)
+
+    def childcnt(self):
+        return 0
+
+    def parent(self):
+        return self.par
+
+    def kind(self):
+        return ""
+
+    def prettyvals(self):
+        return ""
+
+
 
 class GroupFilter(DataFilter):
+    beforeAddChild=pyqtSignal(object,object)
+    afterAddChild=pyqtSignal()
+
     def __init__(self,shape):
         DataFilter.__init__(self,np.ones(shape,dtype=bool))
         self.shape=shape
         self.children=[]
 
     def addChild(self,child):
+        self.beforeAddChild.emit(self,child)
         self.children.append(child)
+        child.row=len(self.children)-1
+        child.par=self
         child.filterchange.connect(self.onchange)
         child.activechange.connect(self.onchange)
         self.onchange()
+        self.afterAddChild.emit()
 
     def isActive(self):
         if self.active:
@@ -46,6 +71,9 @@ class GroupFilter(DataFilter):
     def onchange(self):
         pass
 
+    def childcnt(self):
+        return len(self.children)
+
 class AndFilter(GroupFilter):
     def __init__(self,shape):
         GroupFilter.__init__(self,shape)
@@ -57,6 +85,9 @@ class AndFilter(GroupFilter):
                 keep &= child.keep
         self.setkeep(keep)
 
+    def kind(self):
+        return "AND"
+
 class OrFilter(GroupFilter):
     def __init__(self,shape):
         GroupFilter.__init__(self,shape)
@@ -67,6 +98,9 @@ class OrFilter(GroupFilter):
             if child.isActive():
                 keep |= child.keep
         self.setkeep(keep)
+
+    def kind(self):
+        return "OR"
 
 class FieldFilter(DataFilter):
     def __init__(self,keep,field,values):
@@ -82,11 +116,6 @@ class FieldFilter(DataFilter):
     def update(self):
         pass
 
-    def isFieldChangable(self):
-        return self.fieldChangeable
-
-    def setFieldChangeable(self,fieldChangeable):
-        self.fieldChangeable=fieldChangeable
 
 
 class BetweenFilter(FieldFilter):
@@ -98,19 +127,28 @@ class BetweenFilter(FieldFilter):
     def setMin(self,minimum):
         self.minimum=minimum
         self.update()
+        self.modelchange.emit(self)
 
     def setMax(self,maximum):
         self.maximum=maximum
         self.update()
+        self.modelchange.emit(self)
 
     def setRange(self,minimum,maximum):
         self.minimum=minimum
         self.maximum=maximum
         self.update()
+        self.modelchange.emit(self)
         
 
     def update(self):
         self.setkeep((self.values >= self.minimum) & (self.values < self.maximum))
+
+    def kind(self):
+        return "Between"
+
+    def prettyvals(self):
+        return "[%.3f,%.3f)"%(self.minimum,self.maximum)
 
 class GreaterEqualFilter(FieldFilter):
     def __init__(self,minimum,values,field):
@@ -120,9 +158,16 @@ class GreaterEqualFilter(FieldFilter):
     def setMin(self,minimum):
         self.minimum=minimum
         self.update()
+        self.modelchange.emit(self)
 
     def update(self):
         self.setkeep(self.values >= self.minimum)
+
+    def kind(self):
+        return ">="%self.field
+
+    def prettyvals(self):
+        return "%.3f"%self.minimum
 
 class LessThanFilter(FieldFilter):
     def __init__(self,maximum,values,field):
@@ -133,9 +178,16 @@ class LessThanFilter(FieldFilter):
     def setMax(self,maximum):
         self.maximum=maximum
         self.update()
+        self.modelchange.emit(self)
 
     def update(self):
         self.setkeep(self.values < self.maximum)
+
+    def kind(self):
+        return "<"%self.field
+
+    def prettyvals(self):
+        return "%.3f"%self.maximum
 
 class InSetFilter(FieldFilter):
     def __init__(self,allowed,values,field):
@@ -146,12 +198,20 @@ class InSetFilter(FieldFilter):
     def addAllowed(self,value):
         self.allowed.add(value)
         self.update()
+        self.modelchange.emit(self)
 
     def removeAllowed(self,value):
         if value in allowed:
             allowed.remove(value)
             self.update()
+        self.modelchange.emit(self)
 
     def update(self):
         self.setkeep(np.isin(values,allowed))
+
+    def kind(self):
+        return "In"%self.field
+
+    def prettyvals(self):
+        return str(self.allowed)
 

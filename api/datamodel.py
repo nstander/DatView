@@ -1,6 +1,7 @@
 from PyQt4.QtCore import QObject,pyqtSignal
 import numpy as np
 from .filters import *
+from .filtermodel import FilterModel
 from .groupmgr import GroupMgr
 
 
@@ -109,6 +110,7 @@ class DataModel(QObject):
         self.filtered=self.data
         self.topfilter=AndFilter(self.data.shape)
         self.topfilter.filterchange.connect(self.applyFilters)
+        self.filtermodel=FilterModel(self.topfilter,self)
         self.mincache={}
         self.maxcache={}
         self.groupmgr=None
@@ -179,9 +181,11 @@ class DataModel(QObject):
         self.topfilter.addChild(toAdd)
 
     def applyFilters(self):
-        print ("DM applyFilters")
         self.filtered=self.data[self.topfilter.keep]
         self.filterchange.emit()
+
+    def filterModel(self):
+        return self.filtermodel
 
     def fieldmin(self,field):
         if field not in self.mincache:
