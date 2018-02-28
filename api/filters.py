@@ -39,6 +39,12 @@ class DataFilter(QObject):
     def prettyvals(self):
         return ""
 
+    def hasMin(self):
+        return False
+
+    def hasMax(self):
+        return False
+
 
 
 class GroupFilter(DataFilter):
@@ -150,6 +156,12 @@ class BetweenFilter(FieldFilter):
     def prettyvals(self):
         return "[%.3f,%.3f)"%(self.minimum,self.maximum)
 
+    def hasMin(self):
+        return True
+
+    def hasMax(self):
+        return True
+
 class GreaterEqualFilter(FieldFilter):
     def __init__(self,minimum,values,field):
         FieldFilter.__init__(self, values >= minimum,field,values)
@@ -168,6 +180,9 @@ class GreaterEqualFilter(FieldFilter):
 
     def prettyvals(self):
         return "%.3f"%self.minimum
+
+    def hasMin(self):
+        return True
 
 class LessThanFilter(FieldFilter):
     def __init__(self,maximum,values,field):
@@ -188,6 +203,9 @@ class LessThanFilter(FieldFilter):
 
     def prettyvals(self):
         return "%.3f"%self.maximum
+
+    def hasMax(self):
+        return True
 
 class InSetFilter(FieldFilter):
     def __init__(self,allowed,values,field):

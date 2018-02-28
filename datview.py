@@ -9,7 +9,7 @@ from PyQt4.QtGui import QApplication, QMainWindow,QLabel,QFileDialog, QAction, Q
 
 from api.datamodel import DataModel
 from ui.Ui_MainWindow import Ui_MainWindow
-import ui.plots
+import ui.plots, ui.filterEditDelegate
 
 
 
@@ -47,6 +47,9 @@ class MyMainWindow(QMainWindow):
         self.filterpanel.setWindowTitle("Filters")
         self.filterpanel.expand(self.model.filterModel().index(0,0))
         self.filterpanel.header().setResizeMode(0,QHeaderView.ResizeToContents)
+        self.filterpanel.header().setResizeMode(1,QHeaderView.ResizeToContents)
+        self.filterpanel.setHeaderHidden(True)
+        self.filterpanel.setItemDelegate(ui.filterEditDelegate.FilterItemDelegate())
         self.filterpanel.show()
         self.ui.actionShowFilters.triggered.connect(self.filterpanel.show)
 

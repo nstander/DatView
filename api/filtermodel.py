@@ -12,7 +12,7 @@ class FilterModel(QAbstractItemModel):
 
     def index(self,row,col,par=QModelIndex()):
         r=QModelIndex()
-        if col < 2: # Only label and values columns
+        if col < 3: # Only label and values columns
             if par.isValid() and row < par.internalPointer().childcnt():
                 r= self.createIndex(row,col,par.internalPointer().children[row])
             elif not par.isValid() and row == 0:
@@ -30,16 +30,22 @@ class FilterModel(QAbstractItemModel):
         return 1 # top item
 
     def columnCount(self,parent):
-        return 2 # filtername filtervalues
+        return 3 # filtername min max
 
     def data(self,index,role):
         if role == Qt.DisplayRole and index.isValid():
             if index.column() == 0:
                 if isinstance(index.internalPointer(),FieldFilter):
-                    return "%s [%.3f,%.3f] %s"%(self.dmodel.prettyname(index.internalPointer().field),self.dmodel.fieldmin(index.internalPointer().field),self.dmodel.fieldmax(index.internalPointer().field),index.internalPointer().kind())
+                    return "%s [%.3f,%.3f] %s"%(\
+                        self.dmodel.prettyname(index.internalPointer().field),\
+                        self.dmodel.fieldmin(index.internalPointer().field),\
+                        self.dmodel.fieldmax(index.internalPointer().field),\
+                        index.internalPointer().kind())
                 return index.internalPointer().kind()
-            elif index.column() == 1:
-                return index.internalPointer().prettyvals()
+            elif index.column() == 1 and index.internalPointer().hasMin():
+                return "[%.3f"%index.internalPointer().minimum
+            elif index.column() == 2 and index.internalPointer().hasMax():
+                return "%.3f)"%index.internalPointer().maximum
         elif role == Qt.CheckStateRole and index.isValid() and index.column()==0:
             return index.internalPointer().active
         return None
@@ -50,6 +56,9 @@ class FilterModel(QAbstractItemModel):
             r=Qt.ItemIsSelectable | Qt.ItemIsEnabled
             if index.column() == 0:
                 r|= Qt.ItemIsUserCheckable 
+            elif (index.column() == 1 and index.internalPointer().hasMin()) or \
+                 (index.column() == 2 and index.internalPointer().hasMax()):
+                r|= Qt.ItemIsEditable
         return r
 
     def onFilterChange(self,f):
