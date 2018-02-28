@@ -116,6 +116,7 @@ class DataModel(QObject):
         self.groupmgr=None
         if groupfile:
             self.groupmgr=GroupMgr(groupfile)
+        self.selfilters={}
 
     def prettyname(self,field):
         r=field
@@ -179,6 +180,14 @@ class DataModel(QObject):
 
     def addFilter(self,toAdd):
         self.topfilter.addChild(toAdd)
+
+    def selectionFilter(self,field):
+        if field not in self.selfilters:
+            f=BetweenFilter(self.fieldmin(field)-1,self.fieldmax(field)+1,self.data[field],field)
+            f.setActive(False)
+            self.addFilter(f)
+            self.selfilters[field]=f
+        return self.selfilters[field]
 
     def applyFilters(self):
         self.filtered=self.data[self.topfilter.keep]

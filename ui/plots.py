@@ -38,10 +38,8 @@ class MyHistogram(MyFigure):
         self.fig.canvas.mpl_connect('button_release_event',self.onRelease)
         self.fig.canvas.mpl_connect('motion_notify_event',self.onMotion)
 
-        self.fieldfilter=BetweenFilter(self.model.fieldmin(self.field)-1,self.model.fieldmax(self.field)+1,self.model.data[self.field],self.field)
-        self.fieldfilter.setActive(False)
+        self.fieldfilter=self.model.selectionFilter(self.field)
         self.fieldfilter.modelchange.connect(self.onFilterChange)
-        self.model.addFilter(self.fieldfilter)
         self.model.filterchange.connect(self.mydraw)
 
         self.plt.get_yaxis().set_visible(False)
