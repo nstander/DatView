@@ -61,6 +61,12 @@ class FilterModel(QAbstractItemModel):
             child.beforeAddChild.connect(self.onChildAdd)
             child.afterAddChild.connect(self.endInsertRows)
         self.beginInsertRows(self.createIndex(parent.row,0,parent),parent.childcnt(),parent.childcnt())
+
+    def setData(self,index,value,role):
+        if role == Qt.CheckStateRole and index.isValid() and index.column()==0:
+            index.internalPointer().setActive(not index.internalPointer().active)
+            return True
+        return False
         
         
         

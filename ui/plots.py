@@ -40,6 +40,7 @@ class MyHistogram(MyFigure):
 
         self.fieldfilter=BetweenFilter(self.model.fieldmin(self.field)-1,self.model.fieldmax(self.field)+1,self.model.data[self.field],self.field)
         self.fieldfilter.setActive(False)
+        self.fieldfilter.modelchange.connect(self.onFilterChange)
         self.model.addFilter(self.fieldfilter)
         self.model.filterchange.connect(self.mydraw)
 
@@ -71,6 +72,7 @@ class MyHistogram(MyFigure):
             else:
                 self.plt.hist(self.model.data[self.field],bins=self.bins,color='black',
                     range=(self.model.fieldmin(self.field),self.model.fieldmax(self.field)))
+        self.sel.set_height(self.plt.get_ylim()[1])
 
     def mydraw(self):
         xlim = self.plt.get_xlim()
@@ -141,5 +143,11 @@ class MyHistogram(MyFigure):
                 self.sel.set_x(event.xdata)
                 self.sel.set_width(self.selx0 - event.xdata)
             self.draw()
+
+    def onFilterChange(self):
+        self.sel.set_x(self.fieldfilter.minimum)
+        self.sel.set_width(self.fieldfilter.maximum-self.fieldfilter.minimum)
+        self.sel.set_visible(self.fieldfilter.isActive())
+        self.draw()
 
             
