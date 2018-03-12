@@ -105,7 +105,7 @@ class MyHistogram(MyFigure):
 
     def onPress(self,event):
         if event.button == 1:
-            if event.key == 'shift':
+            if event.key == 'shift' or QtCore.Qt.ShiftModifier & QtGui.QApplication.keyboardModifiers() :
                 self.selx0=event.xdata
                 self.sel.set_x(event.xdata)
                 self.sel.set_width(0)

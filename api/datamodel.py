@@ -156,7 +156,7 @@ class DataModel(QObject):
            a bar chart versus histogram. Groups are always categorical, columns stored as strings are
            always categorical and some columns with known limited values are specified categorical such
            as multi """
-        return field.startswith(GroupMgr.prefix) or 'U' in self.dtype(field) or field in ['subcxi','class','multi','multiid']
+        return field.startswith(GroupMgr.prefix) or 'U' in self.dtype(field) or field in ['subcxi','class','multi','multiid','run']
 
     def value(self,field,i,filtered=True):
         """Return the value of the field at (filtered if filtered=True) row i. Returns true value rather than digitized or group-id value"""
