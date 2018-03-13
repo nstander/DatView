@@ -3,6 +3,7 @@ import numpy as np
 from .filters import *
 from .filtermodel import FilterModel
 from .groupmgr import GroupMgr
+import lxml.etree as ElementTree
 
 
 class DataModel(QObject):
@@ -167,13 +168,36 @@ class DataModel(QObject):
             v=self.filtered[field][i]
         else:
             v=self.data[field][i]
+        return stringValue(v)
+
+    def stringValue(self,field,v):
+        if field not in self.cols and (GroupMgr.prefix+field) in self.cols:
+            field=GroupMgr.prefix+field
 
         if field in self.digitized:
             v = self.digitized[field][v]
         elif field.startswith(GroupMgr.prefix) and self.groupmgr is not None:
             v = self.groupmgr.value(field[len(GroupMgr.prefix):],v)
-        return v
+        return str(v)
 
+    def intValue(self,field,i):
+        if field not in self.cols and (GroupMgr.prefix+field) in self.cols:
+            field=GroupMgr.prefix+field
+
+        r=None
+        if field in self.digitized:
+            for k,v in self.digitized[field]:
+                if i == v:
+                    r=k
+        elif field.startswith(GroupMgr.prefix) and self.groupmgr is not None:
+            r = self.groupmgr.gid(field[len(GroupMgr.prefix):],i)
+        if r is None:
+            try:
+                r=int(v)
+            except ValueError:
+                pass
+        return r
+                
 
     def isFiltered(self):
         return self.topfilter.isActive()
@@ -287,8 +311,13 @@ class DataModel(QObject):
                     print ("End crystal (and chunk)")
         if curfile is not None:
             curfile.close()
-                    
-                    
+
+
+    def saveFilters(self,fname):
+        root=ElementTree.Element("filters")
+        self.topfilter.toXML(root)
+        et=ElementTree.ElementTree(root)
+        et.write(fname,pretty_print=True)
             
 
         

@@ -1,5 +1,6 @@
 import numpy as np
 from PyQt4.QtCore import QObject,pyqtSignal
+import lxml.etree as ElementTree
 
 class DataFilter(QObject):
     filterchange=pyqtSignal() # When filtering needs to update, final "keep" changed. 
@@ -44,6 +45,9 @@ class DataFilter(QObject):
 
     def hasMax(self):
         return False
+
+    def toXML(self,parent):
+        pass
 
 
 
@@ -94,6 +98,13 @@ class AndFilter(GroupFilter):
     def kind(self):
         return "AND"
 
+    def toXML(self,parent):
+        e=ElementTree.SubElement(parent,"and")
+        e.set("active",str(self.active))
+        for child in self.children:
+            child.toXML(e)
+        
+
 class OrFilter(GroupFilter):
     def __init__(self,shape):
         GroupFilter.__init__(self,shape)
@@ -107,6 +118,12 @@ class OrFilter(GroupFilter):
 
     def kind(self):
         return "OR"
+
+    def toXML(self,parent):
+        e=ElementTree.SubElement(parent,"or")
+        e.set("active",str(self.active))
+        for child in self.children:
+            child.toXML(e)
 
 class FieldFilter(DataFilter):
     def __init__(self,keep,field,values):
@@ -162,6 +179,13 @@ class BetweenFilter(FieldFilter):
     def hasMax(self):
         return True
 
+    def toXML(self,parent):
+        e=ElementTree.SubElement(parent,"between")
+        e.set("active",str(self.active))
+        e.set("min",str(self.minimum))
+        e.set("max",str(self.maximum))
+        e.set("field",self.field)
+
 class GreaterEqualFilter(FieldFilter):
     def __init__(self,minimum,values,field):
         FieldFilter.__init__(self, values >= minimum,field,values)
@@ -183,6 +207,12 @@ class GreaterEqualFilter(FieldFilter):
 
     def hasMin(self):
         return True
+
+    def toXML(self,parent):
+        e=ElementTree.SubElement(parent,"greaterequal")
+        e.set("active",str(self.active))
+        e.set("min",str(self.minimum))
+        e.set("field",self.field)
 
 class LessThanFilter(FieldFilter):
     def __init__(self,maximum,values,field):
@@ -207,11 +237,19 @@ class LessThanFilter(FieldFilter):
     def hasMax(self):
         return True
 
+    def toXML(self,parent):
+        e=ElementTree.SubElement(parent,"lessthan")
+        e.set("active",str(self.active))
+        e.set("max",str(self.maximum))
+        e.set("field",self.field)
+
 class InSetFilter(FieldFilter):
-    def __init__(self,allowed,values,field):
+    def __init__(self,allowed,values,field,decoder,encoder):
         FieldFilter.__init__(self, np.isin(values,allowed),field,values)
         self.allowed=allowed
         self.values=values
+        self.decoder=decoder # From number to string
+        self.encoder=encoder # from string to number
 
     def addAllowed(self,value):
         self.allowed.add(value)
@@ -222,7 +260,7 @@ class InSetFilter(FieldFilter):
         if value in allowed:
             allowed.remove(value)
             self.update()
-        self.modelchange.emit(self)
+            self.modelchange.emit(self)
 
     def update(self):
         self.setkeep(np.isin(values,allowed))
@@ -232,4 +270,23 @@ class InSetFilter(FieldFilter):
 
     def prettyvals(self):
         return str(self.allowed)
+
+    def valuesString(self):
+        vals=[]
+        for v in self.allowed:
+            vals.append(self.decoder(self.field,v))
+        return ",".join(vals)
+
+    def toXML(self,parent):
+        e=ElementTree.SubElement(parent,"inset")
+        e.set("active",str(self.active))
+        e.set("field",self.field)
+        e.set("set", self.valuesString())
+
+
+    
+
+
+
+
 

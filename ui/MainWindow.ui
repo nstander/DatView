@@ -59,6 +59,7 @@
     <addaction name="actionOpen"/>
     <addaction name="menuSave_Selections_As_2"/>
     <addaction name="actionSave_Plot"/>
+    <addaction name="actionSave_Filters"/>
    </widget>
    <widget class="QMenu" name="menuPlot">
     <property name="title">
@@ -128,6 +129,11 @@
   <action name="actionShowFilters">
    <property name="text">
     <string>Filters</string>
+   </property>
+  </action>
+  <action name="actionSave_Filters">
+   <property name="text">
+    <string>Save Filters</string>
    </property>
   </action>
  </widget>

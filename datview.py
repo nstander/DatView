@@ -26,6 +26,7 @@ class MyMainWindow(QMainWindow):
         self.ui.actionSave_List.triggered.connect(self.onSaveLst)
         self.ui.actionSave_Stream.setEnabled(self.model.canSaveStream())
         self.ui.actionSave_Stream.triggered.connect(self.onSaveStream)
+        self.ui.actionSave_Filters.triggered.connect(self.onSaveFilters)
         
 
         self.filtmessage=QLabel(self)
@@ -107,6 +108,11 @@ class MyMainWindow(QMainWindow):
         name=QFileDialog.getSaveFileName(self,'Save Selected As Stream File',filter='*.stream')
         if name is not None and len(name):
             self.model.saveSelStream(name)
+
+    def onSaveFilters(self):
+        name=QFileDialog.getSaveFileName(self,'Save Filters',filter='*.xml')
+        if name is not None and len(name):
+            self.model.saveFilters(name)        
         
 
 def main():

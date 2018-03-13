@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui/MainWindow.ui'
+# Form implementation generated from reading ui file 'MainWindow.ui'
 #
-# Created: Tue Feb 27 13:38:14 2018
+# Created: Tue Mar 13 11:01:22 2018
 #      by: PyQt4 UI code generator 4.6.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -63,12 +63,15 @@ class Ui_MainWindow(object):
         self.actionReset.setObjectName("actionReset")
         self.actionShowFilters = QtGui.QAction(MainWindow)
         self.actionShowFilters.setObjectName("actionShowFilters")
+        self.actionSave_Filters = QtGui.QAction(MainWindow)
+        self.actionSave_Filters.setObjectName("actionSave_Filters")
         self.menuSave_Selections_As_2.addAction(self.actionSave_List)
         self.menuSave_Selections_As_2.addAction(self.actionSave_Stream)
         self.menuSave_Selections_As_2.addAction(self.actionSave_Dat)
         self.menuFile.addAction(self.actionOpen)
         self.menuFile.addAction(self.menuSave_Selections_As_2.menuAction())
         self.menuFile.addAction(self.actionSave_Plot)
+        self.menuFile.addAction(self.actionSave_Filters)
         self.menuHistogram_Bar.addAction(self.actionReset)
         self.menuPlot.addAction(self.menuHistogram_Bar.menuAction())
         self.menuPlot.addAction(self.actionScatter)
@@ -97,4 +100,5 @@ class Ui_MainWindow(object):
         self.action2D_Histogram.setText(QtGui.QApplication.translate("MainWindow", "2D Histogram", None, QtGui.QApplication.UnicodeUTF8))
         self.actionReset.setText(QtGui.QApplication.translate("MainWindow", "Reset", None, QtGui.QApplication.UnicodeUTF8))
         self.actionShowFilters.setText(QtGui.QApplication.translate("MainWindow", "Filters", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionSave_Filters.setText(QtGui.QApplication.translate("MainWindow", "Save Filters", None, QtGui.QApplication.UnicodeUTF8))
 
