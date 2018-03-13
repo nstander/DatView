@@ -165,8 +165,7 @@ class DataModel(QObject):
 
     def value(self,field,i,filtered=True):
         """Return the value of the field at (filtered if filtered=True) row i. Returns true value rather than digitized or group-id value"""
-        if field not in self.cols and (GroupMgr.prefix+field) in self.cols:
-            field=GroupMgr.prefix+field
+        field=self.datafield(field)
 
         if filtered:
             v=self.filtered[field][i]
@@ -175,8 +174,7 @@ class DataModel(QObject):
         return stringValue(v)
 
     def stringValue(self,field,v):
-        if field not in self.cols and (GroupMgr.prefix+field) in self.cols:
-            field=GroupMgr.prefix+field
+        field=self.datafield(field)
 
         if field in self.digitized:
             v = self.digitized[field][v]
@@ -185,22 +183,28 @@ class DataModel(QObject):
         return str(v)
 
     def intValue(self,field,i):
-        if field not in self.cols and (GroupMgr.prefix+field) in self.cols:
-            field=GroupMgr.prefix+field
+        field=self.datafield(field)
 
         r=None
         if field in self.digitized:
-            for k,v in self.digitized[field]:
-                if i == v:
-                    r=k
+            r=np.where(self.digitized[field] == i)[0][0]
         elif field.startswith(GroupMgr.prefix) and self.groupmgr is not None:
             r = self.groupmgr.gid(field[len(GroupMgr.prefix):],i)
         if r is None:
             try:
-                r=int(v)
+                r=int(i)
             except ValueError:
                 pass
         return r
+
+    def datafield(self,field):
+        """Return the field name as it appears in the structured array"""
+        if field not in self.cols: 
+            if (GroupMgr.prefix+field) in self.cols:
+                field=GroupMgr.prefix+field
+            elif field[len(GroupMgr.prefix):] in self.cols:
+                field = field[len(GroupMgr.prefix):]
+        return field
 
 #########################################
 ###            Filtering              ###
@@ -213,6 +217,7 @@ class DataModel(QObject):
         self.topfilter.addChild(toAdd)
 
     def selectionFilter(self,field):
+        field=self.datafield(field)
         if field not in self.selfilters:
             f=BetweenFilter(self.fieldmin(field)-1,self.fieldmax(field)+1,self.data[field],field)
             f.setActive(False)
@@ -228,6 +233,7 @@ class DataModel(QObject):
         return self.filtermodel
 
     def fieldmin(self,field):
+        field=self.datafield(field)
         if field not in self.mincache:
             valid = self.data[field]
             valid = valid[valid != -1]
@@ -235,6 +241,7 @@ class DataModel(QObject):
         return self.mincache[field]
 
     def fieldmax(self,field):
+        field=self.datafield(field)
         if field not in self.maxcache:
             self.maxcache[field]=np.max(self.data[field])
         return self.maxcache[field]
@@ -350,19 +357,19 @@ class DataModel(QObject):
     def loadFilterRecursive(self,xmlEl,filterpar):
         for child in xmlEl:
             if child.tag == "between":
-                f=BetweenFilter(float(child.get("min")),float(child.get("max")),self.data[child.get("field")],child.get("field"))
+                f=BetweenFilter(float(child.get("min")),float(child.get("max")),self.data[self.datafield(child.get("field"))],child.get("field"))
                 if child.get("field") not in self.selfilters:
                     self.selfilters[child.get("field")] = f
             elif child.tag == "greaterequal":
-                f=GreaterEqualFilter(float(child.get("min")),self.data[child.get("field")],child.get("field"))
+                f=GreaterEqualFilter(float(child.get("min")),self.data[self.datafield(child.get("field"))],child.get("field"))
             elif child.tag == "lessthan":
-                f=LessThanFilter(float(child.get("max")),self.data[child.get("field")],child.get("field"))
+                f=LessThanFilter(float(child.get("max")),self.data[self.datafield(child.get("field"))],child.get("field"))
             elif child.tag == "inset":
                 allowedlst=child.get("set").split(",")
                 allowedset=set()
                 for v in allowedlst:
                     allowedset.add(self.intValue(child.get("field"),v))
-                f=InSetFilter(allowedset,self.data[child.get("field")],child.get("field"),self.stringValue)
+                f=InSetFilter(allowedset,self.data[self.datafield(child.get("field"))],child.get("field"),self.stringValue)
             elif child.tag == "or":
                 f=OrFilter(self.data.shape)
                 loadFilterRecursive(child,f)

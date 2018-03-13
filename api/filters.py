@@ -170,9 +170,6 @@ class BetweenFilter(FieldFilter):
     def kind(self):
         return "Between"
 
-    def prettyvals(self):
-        return "[%.3f,%.3f)"%(self.minimum,self.maximum)
-
     def hasMin(self):
         return True
 
@@ -200,10 +197,7 @@ class GreaterEqualFilter(FieldFilter):
         self.setkeep(self.values >= self.minimum)
 
     def kind(self):
-        return ">="%self.field
-
-    def prettyvals(self):
-        return "%.3f"%self.minimum
+        return ">="
 
     def hasMin(self):
         return True
@@ -229,10 +223,7 @@ class LessThanFilter(FieldFilter):
         self.setkeep(self.values < self.maximum)
 
     def kind(self):
-        return "<"%self.field
-
-    def prettyvals(self):
-        return "%.3f"%self.maximum
+        return "<"
 
     def hasMax(self):
         return True
@@ -245,7 +236,7 @@ class LessThanFilter(FieldFilter):
 
 class InSetFilter(FieldFilter):
     def __init__(self,allowed,values,field,decoder):
-        FieldFilter.__init__(self, np.isin(values,allowed),field,values)
+        FieldFilter.__init__(self, np.in1d(values,list(allowed)),field,values)
         self.allowed=allowed
         self.values=values
         self.decoder=decoder # From number to string
@@ -262,7 +253,7 @@ class InSetFilter(FieldFilter):
             self.modelchange.emit(self)
 
     def update(self):
-        self.setkeep(np.isin(values,allowed))
+        self.setkeep(np.in1d(values,list(allowed)))
 
     def kind(self):
         return "In"
