@@ -28,9 +28,7 @@ class MyHistogram(MyFigure):
         self.model=model
         self.field=field
         self.panx0=None
-        self.sel=Rectangle((0,0),0,0,alpha=0.3,color='r')
-        self.sel.set_visible(False)
-        self.selx0=None
+
 
         self.fig.canvas.mpl_connect('key_press_event',self.onKey)
         self.fig.canvas.mpl_connect('scroll_event',self.onScroll)
@@ -41,6 +39,10 @@ class MyHistogram(MyFigure):
         self.fieldfilter=self.model.selectionFilter(self.field)
         self.fieldfilter.modelchange.connect(self.onFilterChange)
         self.model.filterchange.connect(self.mydraw)
+
+        self.sel=Rectangle((self.fieldfilter.minimum,0),self.fieldfilter.maximum-self.fieldfilter.minimum,0,alpha=0.3,color='r')
+        self.sel.set_visible(self.fieldfilter.isActive())
+        self.selx0=None
 
         self.plt.get_yaxis().set_visible(False)
         self.dcache=None

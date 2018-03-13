@@ -14,12 +14,14 @@ import ui.plots, ui.filterEditDelegate
 
 
 class MyMainWindow(QMainWindow):
-    def __init__(self,datfile,groupfile):
+    def __init__(self,datfile,groupfile,filterfile):
         QMainWindow.__init__(self)
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
 
         self.model=DataModel(datfile,groupfile)
+        if filterfile is not None:
+            self.model.loadFilters(filterfile)
 
         self.ui.actionSave_Dat.triggered.connect(self.onSaveDat)
         self.ui.actionSave_List.setEnabled(self.model.canSaveLst())
@@ -118,11 +120,12 @@ class MyMainWindow(QMainWindow):
 def main():
     parser=argparse.ArgumentParser(description='Display statistics from a dat file and allow filtering and output to new files')
     parser.add_argument('--group',default=None,help='The group file output by groupgen.py (groupcfg.txt), keeps files smaller and numeric by enuemrating strings')
+    parser.add_argument('--filter',default=None,help='A filter file to load. Filter files are XML format. The first Between filter in the file for a field will be updated with selection.')
     parser.add_argument('file',help='the dat file')
     args=parser.parse_args()
 
     app = QApplication(sys.argv)
-    w = MyMainWindow(args.file,args.group)
+    w = MyMainWindow(args.file,args.group, args.filter)
     w.show()
     sys.exit(app.exec_())
 

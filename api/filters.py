@@ -244,12 +244,11 @@ class LessThanFilter(FieldFilter):
         e.set("field",self.field)
 
 class InSetFilter(FieldFilter):
-    def __init__(self,allowed,values,field,decoder,encoder):
+    def __init__(self,allowed,values,field,decoder):
         FieldFilter.__init__(self, np.isin(values,allowed),field,values)
         self.allowed=allowed
         self.values=values
         self.decoder=decoder # From number to string
-        self.encoder=encoder # from string to number
 
     def addAllowed(self,value):
         self.allowed.add(value)
@@ -266,10 +265,7 @@ class InSetFilter(FieldFilter):
         self.setkeep(np.isin(values,allowed))
 
     def kind(self):
-        return "In"%self.field
-
-    def prettyvals(self):
-        return str(self.allowed)
+        return "In"
 
     def valuesString(self):
         vals=[]

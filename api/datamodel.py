@@ -142,6 +142,10 @@ class DataModel(QObject):
             r= DataModel.hrmap[field][2]
         return r
 
+#########################################
+###           Categorical             ###
+#########################################
+
     def hasLabels(self,field):
         return self.groupmgr is not None and field.startswith(GroupMgr.prefix) or field in self.digitized
 
@@ -197,7 +201,10 @@ class DataModel(QObject):
             except ValueError:
                 pass
         return r
-                
+
+#########################################
+###            Filtering              ###
+#########################################                
 
     def isFiltered(self):
         return self.topfilter.isActive()
@@ -231,6 +238,10 @@ class DataModel(QObject):
         if field not in self.maxcache:
             self.maxcache[field]=np.max(self.data[field])
         return self.maxcache[field]
+
+#########################################
+###            Load/Save              ###
+#########################################
 
     def saveSelDat(self,fname):
         formats=[]
@@ -318,7 +329,50 @@ class DataModel(QObject):
         self.topfilter.toXML(root)
         et=ElementTree.ElementTree(root)
         et.write(fname,pretty_print=True)
-            
+
+    def loadFilters(self,fname):
+        et=ElementTree.parse(fname)
+        root = et.getroot()
+        assert root.tag == "filters" and len(list(root)) == 1
+        child=root[0]
+        if child.tag == "and":
+            self.topfilter=AndFilter(self.data.shape)
+        elif child.tag == "or":
+            self.topfilter=OrFilter(self.data.shape)
+        else:
+            assert False # Top filter must be group filter
+        self.topfilter.setActive(child.get("active") == "True")
+        self.loadFilterRecursive(child,self.topfilter)
+        self.topfilter.filterchange.connect(self.applyFilters)
+        self.applyFilters()
+        self.filtermodel=FilterModel(self.topfilter,self)
+
+    def loadFilterRecursive(self,xmlEl,filterpar):
+        for child in xmlEl:
+            if child.tag == "between":
+                f=BetweenFilter(float(child.get("min")),float(child.get("max")),self.data[child.get("field")],child.get("field"))
+                if child.get("field") not in self.selfilters:
+                    self.selfilters[child.get("field")] = f
+            elif child.tag == "greaterequal":
+                f=GreaterEqualFilter(float(child.get("min")),self.data[child.get("field")],child.get("field"))
+            elif child.tag == "lessthan":
+                f=LessThanFilter(float(child.get("max")),self.data[child.get("field")],child.get("field"))
+            elif child.tag == "inset":
+                allowedlst=child.get("set").split(",")
+                allowedset=set()
+                for v in allowedlst:
+                    allowedset.add(self.intValue(child.get("field"),v))
+                f=InSetFilter(allowedset,self.data[child.get("field")],child.get("field"),self.stringValue)
+            elif child.tag == "or":
+                f=OrFilter(self.data.shape)
+                loadFilterRecursive(child,f)
+            elif child.tag == "and":
+                f=AndFilter(self.data.shape)
+                loadFilterRecursive(child,f)
+            else:
+                assert False #Unsupported
+            f.setActive(child.get("active") == "True")
+            filterpar.addChild(f)
 
         
 
