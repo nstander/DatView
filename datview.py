@@ -29,6 +29,9 @@ class MyDatasetPanel(QWidget):
         self.onSelectionChange()
         self.ui.removeSortField.clicked.connect(self.onRemoveSortField)
         self.ui.moveSortField.clicked.connect(self.onMoveSortFieldUp)
+        self.ui.limitCheckBox.clicked.connect(self.onLimitChange)
+        self.ui.limitSpinBox.editingFinished.connect(self.onLimitChange)
+        self.onLimitChange()
 
     def onAddSortField(self):
         field=self.sender().data()
@@ -60,6 +63,23 @@ class MyDatasetPanel(QWidget):
             self.model.sortlst.insert(r-1,self.model.sortlst.pop(r))
             self.ui.sortByListWidget.insertItem(r-1,self.ui.sortByListWidget.takeItem(r))
             self.ui.sortByListWidget.setCurrentItem(self.ui.sortByListWidget.item(r-1))      
+
+    def onLimitChange(self):
+        if self.ui.limitCheckBox.isChecked():
+            self.model.limit = self.ui.limitSpinBox.value()
+        else:
+            self.model.limit = None
+        self.ui.limitSpinBox.setEnabled(self.ui.limitCheckBox.isChecked())
+
+    def setLimit(self,l):
+        self.ui.limitSpinBox.setValue(l)
+        self.ui.limitCheckBox.setChecked(True)
+        self.onLimitChange()
+
+    def setSort(self,lst):
+        for field in lst:
+            self.ui.sortByListWidget.addItem(self.model.prettyname(field))
+            self.model.sortlst.append(field)
         
 
 class MyMainWindow(QMainWindow):
@@ -104,7 +124,6 @@ class MyMainWindow(QMainWindow):
         self.filterpanel.header().setResizeMode(1,QHeaderView.ResizeToContents)
         self.filterpanel.setHeaderHidden(True)
         self.filterpanel.setItemDelegate(ui.filterEditDelegate.FilterItemDelegate())
-        self.filterpanel.show()
         self.ui.actionShowFilters.triggered.connect(self.filterpanel.show)
 
         # Dataset Panel
@@ -177,11 +196,17 @@ def main():
     parser=argparse.ArgumentParser(description='Display statistics from a dat file and allow filtering and output to new files')
     parser.add_argument('--group',default=None,help='The group file output by groupgen.py (groupcfg.txt), keeps files smaller and numeric by enuemrating strings')
     parser.add_argument('--filter',default=None,help='A filter file to load. Filter files are XML format. The first Between filter in the file for a field will be updated with selection.')
+    parser.add_argument('--sort',default=None,nargs='+',help='One or more fields to sort the output by. Field names must match the header of the dat file.')
+    parser.add_argument('--limit',default=None,type=int,help='Limit the output to this number, if provided')
     parser.add_argument('file',help='the dat file')
     args=parser.parse_args()
 
     app = QApplication(sys.argv)
     w = MyMainWindow(args.file,args.group, args.filter)
+    if args.sort is not None:
+        w.datasetpanel.setSort(args.sort)
+    if args.limit is not None:
+        w.datasetpanel.setLimit(args.limit)
     w.show()
     sys.exit(app.exec_())
 

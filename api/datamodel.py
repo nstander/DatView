@@ -119,6 +119,7 @@ class DataModel(QObject):
             self.groupmgr=GroupMgr(groupfile)
         self.selfilters={}
         self.sortlst=[]
+        self.limit=None
 
     def prettyname(self,field):
         r=field
@@ -268,13 +269,20 @@ class DataModel(QObject):
 ###            Load/Save              ###
 #########################################
 
+    def outArrIndices(self,applyLimit=True):
+        outarr=range(len(self.filtered))
+        if len(self.sortlst):
+            outarr=np.argsort(self.filtered,order=self.sortlst)
+        if applyLimit and self.limit is not None and len(outarr) > self.limit:
+            keep=np.random.permutation(np.arange(len(outarr)))[:self.limit] # Select random set of size self.limit
+            outarr=outarr[np.sort(keep)] # Maintain previous sorting order by sorting keep
+        return outarr
+
     def saveSelDat(self,fname):
         formats=[]
         for c in self.cols:
             formats.append(self.fmt(c))
-        outarr=self.rdata[self.topfilter.keep]
-        if len(self.sortlst):
-            outarr.sort(order=self.sortlst)
+        outarr=self.rdata[self.topfilter.keep][self.outArrIndices()]
         np.savetxt(fname,outarr,fmt=formats,delimiter='\t',header=self.hdrline[:-1],comments='')
 
     def canSaveLst(self):
@@ -282,9 +290,7 @@ class DataModel(QObject):
 
     def saveSelLst(self,fname):
         assert self.canSaveLst()
-        outarr=range(len(self.filtered))
-        if len(self.sortlst):
-            outarr=np.argsort(self.filtered,order=self.sortlst)
+        outarr=self.outArrIndices()
         with open(fname,'w') as fout:
             if 'event' in self.cols:
                 for i in outarr:
@@ -312,12 +318,8 @@ class DataModel(QObject):
         curfileName=None
         needheader=True
 
-        outarr=range(len(self.filtered))
-        if len(self.sortlst):
-            outarr=np.argsort(self.filtered,order=self.sortlst)
-
         with open(fname,'w') as fout:
-            for i in outarr:
+            for i in self.outArrIndices():
                 streamfile=self.value('sfile',i)
                 if streamfile != curfileName:
                     if curfile is not None:
