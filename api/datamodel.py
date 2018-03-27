@@ -147,9 +147,11 @@ class DataModel(QObject):
 #########################################
 
     def hasLabels(self,field):
+        field=self.datafield(field)
         return self.groupmgr is not None and field.startswith(GroupMgr.prefix) or field in self.digitized
 
     def labels(self,field):
+        field=self.datafield(field)
         if self.hasLabels(field):
             if field in self.digitized:
                 return self.digitized[field]
@@ -194,6 +196,7 @@ class DataModel(QObject):
             try:
                 r=int(i)
             except ValueError:
+                print ("value error for",i)
                 pass
         return r
 

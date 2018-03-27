@@ -253,7 +253,12 @@ class InSetFilter(FieldFilter):
             self.modelchange.emit(self)
 
     def update(self):
-        self.setkeep(np.in1d(values,list(allowed)))
+        self.setkeep(np.in1d(self.values,list(self.allowed)))
+
+    def setAllowed(self,allowed):
+        self.allowed=allowed
+        self.update()
+        self.modelchange.emit(self)
 
     def kind(self):
         return "In"
