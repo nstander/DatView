@@ -4,7 +4,7 @@
 import sys
 import argparse
 import numpy as np
-from PyQt4.QtGui import QApplication, QMainWindow,QLabel,QFileDialog, QAction, QTreeView, QHeaderView
+from PyQt4.QtGui import QApplication, QMainWindow,QLabel,QFileDialog, QAction, QTreeView, QHeaderView, QAbstractItemView
 
 
 from api.datamodel import DataModel
@@ -46,6 +46,7 @@ class MyMainWindow(QMainWindow):
         self.placeHistograms()
 
         self.filterpanel=QTreeView()
+        self.filterpanel.setEditTriggers(QAbstractItemView.AllEditTriggers)
         self.filterpanel.setModel(self.model.filterModel())
         self.filterpanel.setWindowTitle("Filters")
         self.filterpanel.expand(self.model.filterModel().index(0,0))

@@ -1,9 +1,9 @@
-from PyQt4.QtGui import QStyledItemDelegate, QDoubleSpinBox, QComboBox, QListWidget, QListWidgetItem
+from PyQt4.QtGui import QStyledItemDelegate, QDoubleSpinBox, QComboBox, QListWidget, QListWidgetItem, QToolButton, QMenu
 from PyQt4.QtCore import  Qt
 import sys
 import numpy as np
 sys.path.append("..")
-from api import filters
+from api import filters, datamodel
 
 
 class FilterItemDelegate(QStyledItemDelegate):
@@ -23,6 +23,43 @@ class FilterItemDelegate(QStyledItemDelegate):
         if index.isValid() and index.column() == 2 and isinstance(index.internalPointer(),filters.InSetFilter):
             combo=QComboBox(parent)
             return combo
+        if index.isValid() and index.column() == 2 and isinstance(index.internalPointer(),filters.GroupFilter):
+            e=QToolButton(parent)
+            e.setText("+")
+            e.setPopupMode(QToolButton.InstantPopup)
+            top=QMenu()
+
+            addAnd = top.addAction("AND")
+            addAnd.setData(index.internalPointer())
+            addAnd.triggered.connect(self.onAddAnd)
+
+            addOr  = top.addAction("OR")
+            addOr.setData(index.internalPointer())
+            addOr.triggered.connect(self.onAddOr)
+
+            between = top.addMenu("Bewteen")
+            greater = top.addMenu(">=")
+            less = top.addMenu("<")
+            inset = top.addMenu("In")
+            for col in sorted(set(index.model().dmodel.cols) - datamodel.DataModel.internalCols,key=index.model().dmodel.prettyname):
+                a = between.addAction(index.model().dmodel.prettyname(col))
+                a.setData((index,col))
+                a.triggered.connect(self.onAddBetween)
+
+                a = greater.addAction(index.model().dmodel.prettyname(col))
+                a.setData((index,col))
+                a.triggered.connect(self.onAddGreater)
+
+                a = less.addAction(index.model().dmodel.prettyname(col))
+                a.setData((index,col))
+                a.triggered.connect(self.onAddLess)
+
+                if index.model().dmodel.isCategorical(col):
+                    a = inset.addAction(index.model().dmodel.prettyname(col))
+                    a.setData((index,col))
+                    a.triggered.connect(self.onAddIn)
+            e.setMenu(top)
+            return e
         return super(FilterItemDelegate,self).createEditor(parent,option,index)
 
     def setEditorData(self,editor,index):
@@ -52,6 +89,8 @@ class FilterItemDelegate(QStyledItemDelegate):
                 editor.setModel(lwidget.model())
                 editor.setView(lwidget)
                 editor.currentIndexChanged.connect(self.onComboChange)
+            elif index.column() == 2 and isinstance(index.internalPointer(),filters.GroupFilter):
+                pass
         else:
             super(FilterItemDelegate,self).setEditorData(editor,index)
 
@@ -94,3 +133,45 @@ class FilterItemDelegate(QStyledItemDelegate):
             combo.view().item(i).setCheckState(check)
             combo.setCurrentIndex(0)
             combo.showPopup()
+
+    def onAddAnd(self):
+        act=self.sender()
+        par=act.data().internalPointer()
+        child=filters.AndFilter(par.shape)
+        par.addChild(child)
+
+    def onAddOr(self):
+        act=self.sender()
+        par=act.data().internalPointer()
+        child=filters.OrFilter(par.shape)
+        par.addChild(child)
+
+    def onAddBetween(self):
+        act=self.sender()
+        par=act.data()[0].internalPointer()
+        dmodel=act.data()[0].model().dmodel
+        field=act.data()[1]
+        child=filters.BetweenFilter(dmodel.fieldmin(field)-1,dmodel.fieldmax(field)+1,dmodel.data[field],field)
+        par.addChild(child)
+
+    def onAddLess(self):
+        act=self.sender()
+        par=act.data()[0].internalPointer()
+        dmodel=act.data()[0].model().dmodel
+        field=act.data()[1]
+        child=filters.LessThanFilter(dmodel.fieldmax(field)+1,dmodel.data[field],field)
+        par.addChild(child)
+
+    def onAddGreater(self):
+        act=self.sender()
+        par=act.data()[0].internalPointer()
+        dmodel=act.data()[0].model().dmodel
+        field=act.data()[1]
+        child=filters.GreaterEqualFilter(dmodel.fieldmin(field)-1,dmodel.data[field],field)
+        par.addChild(child)
+
+    def onAddIn(self):
+        pass
+
+
+

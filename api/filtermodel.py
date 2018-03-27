@@ -48,6 +48,8 @@ class FilterModel(QAbstractItemModel):
                 return "%.3f)"%index.internalPointer().maximum
             elif index.column() == 2 and isinstance(index.internalPointer(),InSetFilter):
                 return index.internalPointer().valuesString()
+            elif index.column() == 2 and isinstance(index.internalPointer(),GroupFilter):
+                return "+"
         elif role == Qt.CheckStateRole and index.isValid() and index.column()==0:
             return index.internalPointer().active
         return None
@@ -60,7 +62,8 @@ class FilterModel(QAbstractItemModel):
                 r|= Qt.ItemIsUserCheckable 
             elif (index.column() == 1 and index.internalPointer().hasMin()) or \
                  (index.column() == 2 and index.internalPointer().hasMax()) or \
-                 (index.column() == 2 and isinstance(index.internalPointer(),InSetFilter)):
+                 (index.column() == 2 and isinstance(index.internalPointer(),InSetFilter)) or \
+                 (index.column() == 2 and isinstance(index.internalPointer(),GroupFilter)):
                 r|= Qt.ItemIsEditable
         return r
 
