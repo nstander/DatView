@@ -118,6 +118,7 @@ class DataModel(QObject):
         if groupfile:
             self.groupmgr=GroupMgr(groupfile)
         self.selfilters={}
+        self.sortlst=[]
 
     def prettyname(self,field):
         r=field
@@ -187,7 +188,7 @@ class DataModel(QObject):
             v=self.filtered[field][i]
         else:
             v=self.data[field][i]
-        return stringValue(v)
+        return self.stringValue(field,v)
 
     def stringValue(self,field,v):
         field=self.datafield(field)
@@ -271,26 +272,30 @@ class DataModel(QObject):
         formats=[]
         for c in self.cols:
             formats.append(self.fmt(c))
-        np.savetxt(fname,self.rdata[self.topfilter.keep],fmt=formats,delimiter='\t',header=self.hdrline[:-1],comments='')
+        outarr=self.rdata[self.topfilter.keep]
+        if len(self.sortlst):
+            outarr.sort(order=self.sortlst)
+        np.savetxt(fname,outarr,fmt=formats,delimiter='\t',header=self.hdrline[:-1],comments='')
 
     def canSaveLst(self):
         return 'ifile' in self.cols or ((GroupMgr.prefix + "ifile") in self.cols and self.groupmgr is not None)
 
     def saveSelLst(self,fname):
         assert self.canSaveLst()
+        outarr=range(len(self.filtered))
+        if len(self.sortlst):
+            outarr=np.argsort(self.filtered,order=self.sortlst)
         with open(fname,'w') as fout:
             if 'event' in self.cols:
-                for i in range(len(self.filtered)):
+                for i in outarr:
                     fout.write('%s //%i\n'%(self.value('ifile',i) ,self.filtered['event'][i]))
             else:
-                for i in range(len(self.filtered)):
-                    fout.write('%s\n'%(self.value('ifile',i)))                
+                for i in outarr:
+                    fout.write('%s\n'%(self.value('ifile',i)))                 
 
     def canSaveStream(self):
         return ('sfile' in self.cols or ((GroupMgr.prefix+"sfile") in self.cols and self.groupmgr is not None)) \
-                and 'istart' in self.cols and \
-                (('cstart' in self.cols and 'cend' in self.cols) or \
-                ('iend' in self.cols and self.data['iend'][0] != -1)) 
+                and 'istart' in self.cols and 'cstart' in self.cols and 'cend' in self.cols
 
     def saveSelStream(self,fname):
         assert self.canSaveStream()
@@ -307,10 +312,12 @@ class DataModel(QObject):
         curfileName=None
         needheader=True
 
+        outarr=range(len(self.filtered))
+        if len(self.sortlst):
+            outarr=np.argsort(self.filtered,order=self.sortlst)
+
         with open(fname,'w') as fout:
-            print ("opened output")
-            for i in range(len(self.filtered)):
-                print(i)
+            for i in outarr:
                 streamfile=self.value('sfile',i)
                 if streamfile != curfileName:
                     if curfile is not None:
@@ -324,28 +331,23 @@ class DataModel(QObject):
                         fout.write(line)
                         line=curfile.readline()
                     needheader=False
-                    print ("header out done")
                 curfile.seek(self.filtered['istart'][i])
                 if self.filtered['cstart'][i] < 0:
-                    print ("chunk mode start")
                     fout.write(curfile.read(self.filtered['iend'][i] - self.filtered['istart'][i]))
-                    print ("chunk mode end")
                 else:
                     # This may be a multicrystal chunk and we only want the specific crystal
                     # asked for. So, write out lines until a begin crystal line, then jump to
                     # the correct crystal and output that.
-                    print ("cyrstal mode start")
                     line=curfile.readline()
                     while line and line != '--- Begin crystal\n':
                         fout.write(line)
                         line=curfile.readline()
-                    print ("End chunk header")
                     curfile.seek(self.filtered['cstart'][i])
                     fout.write(curfile.read(self.filtered['cend'][i] - self.filtered['cstart'][i]))
                     fout.write('----- End chunk -----\n') # Add on the end chunk line
-                    print ("End crystal (and chunk)")
         if curfile is not None:
             curfile.close()
+        print ("Done writing stream")
 
 
     def saveFilters(self,fname):

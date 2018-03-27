@@ -4,14 +4,63 @@
 import sys
 import argparse
 import numpy as np
-from PyQt4.QtGui import QApplication, QMainWindow,QLabel,QFileDialog, QAction, QTreeView, QHeaderView, QAbstractItemView
+from PyQt4.QtGui import QApplication, QMainWindow,QLabel,QFileDialog, QAction, QTreeView, QHeaderView, QAbstractItemView, QWidget, QMenu
 
 
 from api.datamodel import DataModel
 from ui.Ui_MainWindow import Ui_MainWindow
+from ui.Ui_DatasetPanel import Ui_DatasetPanel
 import ui.plots, ui.filterEditDelegate
 
+class MyDatasetPanel(QWidget):
+    def __init__(self,model):
+        QWidget.__init__(self)
+        self.ui=Ui_DatasetPanel()
+        self.ui.setupUi(self)
+        self.model = model
 
+        menu=QMenu()
+        for col in sorted(set(self.model.cols) - DataModel.internalCols,key=self.model.prettyname):
+            a = menu.addAction(self.model.prettyname(col))
+            a.setData(col)
+            a.triggered.connect(self.onAddSortField)
+        self.ui.addSortField.setMenu(menu)
+        self.ui.sortByListWidget.itemSelectionChanged.connect(self.onSelectionChange)
+        self.onSelectionChange()
+        self.ui.removeSortField.clicked.connect(self.onRemoveSortField)
+        self.ui.moveSortField.clicked.connect(self.onMoveSortFieldUp)
+
+    def onAddSortField(self):
+        field=self.sender().data()
+        self.ui.sortByListWidget.addItem(self.model.prettyname(field))
+        self.model.sortlst.append(field)
+
+    def onSelectionChange(self):
+        hasSelection=bool(len(self.ui.sortByListWidget.selectedItems()))
+        self.ui.removeSortField.setEnabled(hasSelection)
+        canMove=hasSelection
+        for item in self.ui.sortByListWidget.selectedItems():
+            canMove &= self.ui.sortByListWidget.row(item) != 0
+        self.ui.moveSortField.setEnabled(canMove)
+
+    def onRemoveSortField(self):
+        rows=[]
+        for item in self.ui.sortByListWidget.selectedItems():
+            rows.append(self.ui.sortByListWidget.row(item))
+        for r in sorted(rows,reverse=True):
+            del self.model.sortlst[r]
+            self.ui.sortByListWidget.takeItem(r)
+        self.onSelectionChange()
+
+    def onMoveSortFieldUp(self):
+        rows=[]
+        for item in self.ui.sortByListWidget.selectedItems():
+            rows.append(self.ui.sortByListWidget.row(item))
+        for r in sorted(rows):
+            self.model.sortlst.insert(r-1,self.model.sortlst.pop(r))
+            self.ui.sortByListWidget.insertItem(r-1,self.ui.sortByListWidget.takeItem(r))
+            self.ui.sortByListWidget.setCurrentItem(self.ui.sortByListWidget.item(r-1))      
+        
 
 class MyMainWindow(QMainWindow):
     def __init__(self,datfile,groupfile,filterfile):
@@ -45,6 +94,7 @@ class MyMainWindow(QMainWindow):
         self.addHistogramMenu(set(self.model.cols) - DataModel.defaultHistograms - DataModel.internalCols, False)
         self.placeHistograms()
 
+        # Filter Panel
         self.filterpanel=QTreeView()
         self.filterpanel.setEditTriggers(QAbstractItemView.AllEditTriggers)
         self.filterpanel.setModel(self.model.filterModel())
@@ -57,8 +107,13 @@ class MyMainWindow(QMainWindow):
         self.filterpanel.show()
         self.ui.actionShowFilters.triggered.connect(self.filterpanel.show)
 
+        # Dataset Panel
+        self.datasetpanel=MyDatasetPanel(self.model)
+        self.ui.actionShowDatasetPanel.triggered.connect(self.datasetpanel.show)
+
     def closeEvent(self,evnt):
         self.filterpanel.close()
+        self.datasetpanel.close()
 
     def addHistogramMenu(self, lst, checked=False):
         for col in sorted(lst,key=self.model.prettyname):

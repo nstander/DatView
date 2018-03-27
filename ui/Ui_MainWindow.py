@@ -78,6 +78,8 @@ class Ui_MainWindow(object):
         self.actionShowFilters.setObjectName(_fromUtf8("actionShowFilters"))
         self.actionSave_Filters = QtGui.QAction(MainWindow)
         self.actionSave_Filters.setObjectName(_fromUtf8("actionSave_Filters"))
+        self.actionShowDatasetPanel = QtGui.QAction(MainWindow)
+        self.actionShowDatasetPanel.setObjectName(_fromUtf8("actionShowDatasetPanel"))
         self.menuSave_Selections_As_2.addAction(self.actionSave_List)
         self.menuSave_Selections_As_2.addAction(self.actionSave_Stream)
         self.menuSave_Selections_As_2.addAction(self.actionSave_Dat)
@@ -90,6 +92,7 @@ class Ui_MainWindow(object):
         self.menuPlot.addAction(self.actionScatter)
         self.menuPlot.addAction(self.action2D_Histogram)
         self.menuView.addAction(self.actionShowFilters)
+        self.menuView.addAction(self.actionShowDatasetPanel)
         self.menubar.addAction(self.menuFile.menuAction())
         self.menubar.addAction(self.menuPlot.menuAction())
         self.menubar.addAction(self.menuView.menuAction())
@@ -114,4 +117,5 @@ class Ui_MainWindow(object):
         self.actionReset.setText(_translate("MainWindow", "Reset", None))
         self.actionShowFilters.setText(_translate("MainWindow", "Filters", None))
         self.actionSave_Filters.setText(_translate("MainWindow", "Save Filters", None))
+        self.actionShowDatasetPanel.setText(_translate("MainWindow", "Dataset Panel", None))
 
