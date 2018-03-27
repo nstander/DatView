@@ -5,11 +5,12 @@ import sys
 import argparse
 import numpy as np
 from PyQt4.QtGui import QApplication, QMainWindow,QLabel,QFileDialog, QAction, QTreeView, QHeaderView, QAbstractItemView, QWidget, QMenu
-
+from PyQt4.QtCore import Qt
 
 from api.datamodel import DataModel
 from ui.Ui_MainWindow import Ui_MainWindow
 from ui.datasetPanel import MyDatasetPanel
+from ui.scatterDialog import MyScatterDialog
 import ui.plots, ui.filterEditDelegate
 
 class MyMainWindow(QMainWindow):
@@ -28,6 +29,7 @@ class MyMainWindow(QMainWindow):
         self.ui.actionSave_Stream.setEnabled(self.model.canSaveStream())
         self.ui.actionSave_Stream.triggered.connect(self.onSaveStream)
         self.ui.actionSave_Filters.triggered.connect(self.onSaveFilters)
+        self.ui.actionScatter.triggered.connect(self.onShowScatter)
         
 
         self.filtmessage=QLabel(self)
@@ -45,7 +47,8 @@ class MyMainWindow(QMainWindow):
         self.placeHistograms()
 
         # Filter Panel
-        self.filterpanel=QTreeView()
+        self.filterpanel=QTreeView(parent=self)
+        self.filterpanel.setWindowFlags(Qt.Window)
         self.filterpanel.setEditTriggers(QAbstractItemView.AllEditTriggers)
         self.filterpanel.setModel(self.model.filterModel())
         self.filterpanel.setWindowTitle("Filters")
@@ -57,12 +60,9 @@ class MyMainWindow(QMainWindow):
         self.ui.actionShowFilters.triggered.connect(self.filterpanel.show)
 
         # Dataset Panel
-        self.datasetpanel=MyDatasetPanel(self.model)
+        self.datasetpanel=MyDatasetPanel(self.model,parent=self)
+        self.datasetpanel.setWindowFlags(Qt.Window)
         self.ui.actionShowDatasetPanel.triggered.connect(self.datasetpanel.show)
-
-    def closeEvent(self,evnt):
-        self.filterpanel.close()
-        self.datasetpanel.close()
 
     def addHistogramMenu(self, lst, checked=False):
         for col in sorted(lst,key=self.model.prettyname):
@@ -120,6 +120,10 @@ class MyMainWindow(QMainWindow):
         name=QFileDialog.getSaveFileName(self,'Save Filters',filter='*.xml')
         if name is not None and len(name):
             self.model.saveFilters(name)        
+
+    def onShowScatter(self):
+        d=MyScatterDialog(self.model,self)
+        d.exec()
         
 
 def main():

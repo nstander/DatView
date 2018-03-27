@@ -6,8 +6,8 @@ from api.datamodel import DataModel
 from ui.Ui_DatasetPanel import Ui_DatasetPanel
 
 class MyDatasetPanel(QWidget):
-    def __init__(self,model):
-        QWidget.__init__(self)
+    def __init__(self,model,parent=None):
+        QWidget.__init__(self,parent)
         self.ui=Ui_DatasetPanel()
         self.ui.setupUi(self)
         self.model = model

@@ -8,10 +8,11 @@ from api.filters import BetweenFilter
 
 
 class MyFigure(FigureCanvas):
-    def __init__(self,parent=None):
+    def __init__(self,parent=None,flags=0):
         self.fig=Figure()
         FigureCanvas.__init__(self,self.fig)
         self.setParent(parent)
+        self.setWindowFlags(QtCore.Qt.WindowFlags(flags))
         self.fig.canvas.setFocusPolicy(QtCore.Qt.ClickFocus)
         self.fig.canvas.setFocus()
         self.plt=self.fig.add_subplot(111)
@@ -21,28 +22,156 @@ class MyFigure(FigureCanvas):
         FigureCanvas.setSizePolicy(self,QtGui.QSizePolicy.Expanding,QtGui.QSizePolicy.Expanding)
         FigureCanvas.updateGeometry(self)
 
-class MyHistogram(MyFigure):
-    def __init__(self,model,field,parent=None):
-        MyFigure.__init__(self,parent)
-        self.bins=int(64)
-        self.model=model
-        self.field=field
-        self.panx0=None
-
-
-        self.fig.canvas.mpl_connect('key_press_event',self.onKey)
         self.fig.canvas.mpl_connect('scroll_event',self.onScroll)
         self.fig.canvas.mpl_connect('button_press_event',self.onPress)
         self.fig.canvas.mpl_connect('button_release_event',self.onRelease)
         self.fig.canvas.mpl_connect('motion_notify_event',self.onMotion)
 
-        self.fieldfilter=self.model.selectionFilter(self.field)
-        self.fieldfilter.modelchange.connect(self.onFilterChange)
+        self.pan=None
+        self.sel=None # Derived classes should initialize to Rectangle
+        self.fieldfilterX=None # Derived classes should intialize if manageX
+        self.fieldfilterY=None # Derived classes should intialize if manageY
+        self.selp=None
+
+        self.manageX=False
+        self.manageY=False
+
+    def datadraw(self):
+        pass
+
+    def mydraw(self):
+        xlim = self.plt.get_xlim()
+        ylim = self.plt.get_ylim()
+        self.plt.cla()
+        self.plt.add_patch(self.sel)
+        self.datadraw()
+        if self.manageX:
+            self.plt.set_xlim(xlim)
+        if self.manageY:
+            self.plt.set_ylim(ylim)
+        self.draw()
+
+    def onScroll(self,event):
+        if event.xdata is None or event.ydata is None:
+            return
+        scale=1
+        factor=1.5
+        if event.button == 'up':
+            scale = 1.0/factor
+        else:
+            scale = factor
+        if scale != 1:
+            if self.manageX:
+                cur_xlim = self.plt.get_xlim()
+                self.plt.set_xlim([event.xdata - (event.xdata - cur_xlim[0]) / scale, event.xdata + (cur_xlim[1]-event.xdata)/scale ])
+            if self.manageY:
+                cur_ylim = self.plt.get_ylim()
+                self.plt.set_ylim([event.ydata - (event.ydata - cur_ylim[0]) / scale, event.ydata + (cur_ylim[1]-event.ydata)/scale ])
+            if self.manageX or self.manageY:
+                self.draw()
+
+    def onPress(self,event):
+        if event.button == 1:
+            if event.key == 'shift' or QtCore.Qt.ShiftModifier & QtGui.QApplication.keyboardModifiers() :
+                self.selp=(event.xdata,event.ydata)
+                if self.manageX:
+                    self.sel.set_x(event.xdata)
+                    self.sel.set_width(0)
+                if self.manageY:
+                    self.sel.set_y(event.ydata)
+                    self.sel.set_height(0)
+                if self.manageX or self.manageY:
+                    self.sel.set_visible(True)
+                    self.draw()
+            else:
+                self.pan=(event.xdata,event.ydata)
+
+    def onRelease(self,event):
+        if self.pan is not None:
+            self.pan=None 
+        elif self.selp is not None:
+            self.selp=None
+            if self.manageX:
+                if self.sel.get_width() == 0:
+                    self.sel.set_visible(False)
+                    self.fieldfilterX.setActive(False)
+                else:
+                    self.fieldfilterX.setRange(self.sel.get_x(),self.sel.get_width() + self.sel.get_x())
+                    self.fieldfilterX.setActive(True)
+            if self.manageY:
+                if self.sel.get_height() == 0:
+                    self.sel.set_visible(False)
+                    self.fieldfilterY.setActive(False)
+                else:
+                    self.fieldfilterY.setRange(self.sel.get_y(),self.sel.get_height() + self.sel.get_y())
+                    self.fieldfilterY.setActive(True)
+            if self.manageX or self.manageY:
+                self.mydraw()
+
+    def onMotion(self,event):
+        if event.xdata and event.ydata:
+            if self.pan is not None:
+                if self.manageX:
+                    xlim=self.plt.get_xlim()
+                    xlim -= (event.xdata - self.pan[0])
+                    self.plt.set_xlim(xlim)
+                if self.manageY:
+                    ylim=self.plt.get_ylim()
+                    ylim -= (event.ydata - self.pan[1])
+                    self.plt.set_ylim(ylim)
+                if self.manageX or self.manageY:
+                    self.draw()
+            elif self.selp is not None:
+                if self.manageX:
+                    if self.selp[0] <= event.xdata:
+                        self.sel.set_width(event.xdata - self.selp[0])
+                    else:
+                        self.sel.set_x(event.xdata)
+                        self.sel.set_width(self.selp[0] - event.xdata)
+                if self.manageY:
+                    if self.selp[1] <= event.ydata:
+                        self.sel.set_height(event.ydata - self.selp[1])
+                    else:
+                        self.sel.set_y(event.ydata)
+                        self.sel.set_height(self.selp[1] - event.xdata)
+                if self.manageX or self.manageY:
+                    self.draw()
+
+    def onFilterChange(self):
+        ylim = self.plt.get_ylim()
+        xlim = self.plt.get_xlim()
+        self.sel.set_x(xlim[0])
+        self.sel.set_y(ylim[0])
+        self.sel.set_width(xlim[1]-xlim[0])
+        self.sel.set_height(ylim[1]-ylim[0])
+
+        if self.manageX:
+            self.sel.set_x(self.fieldfilterX.minimum)
+            self.sel.set_width(self.fieldfilterX.maximum-self.fieldfilterX.minimum)
+            self.sel.set_visible(self.fieldfilterX.isActive())
+        if self.manageY:
+            self.sel.set_y(self.fieldfilterY.minimum)
+            self.sel.set_height(self.fieldfilterY.maximum-self.fieldfilterY.minimum)
+            self.sel.set_visible(self.fieldfilterY.isActive() or (self.fieldfilterX is not None and self.fieldfilterX.isActive()))
+        self.draw()
+
+
+class MyHistogram(MyFigure):
+    def __init__(self,model,field,parent=None,flags=0):
+        MyFigure.__init__(self,parent,flags)
+        self.bins=int(64)
+        self.model=model
+        self.field=field
+
+        self.fig.canvas.mpl_connect('key_press_event',self.onKey)
+
+        self.manageX=True
+        self.fieldfilterX=self.model.selectionFilter(self.field)
+        self.fieldfilterX.modelchange.connect(self.onFilterChange)
         self.model.filterchange.connect(self.mydraw)
 
-        self.sel=Rectangle((self.fieldfilter.minimum,0),self.fieldfilter.maximum-self.fieldfilter.minimum,0,alpha=0.3,color='r')
-        self.sel.set_visible(self.fieldfilter.isActive())
-        self.selx0=None
+        self.sel=Rectangle((self.fieldfilterX.minimum,0),self.fieldfilterX.maximum-self.fieldfilterX.minimum,0,alpha=0.3,color='r')
+        self.sel.set_visible(self.fieldfilterX.isActive())
 
         self.plt.get_yaxis().set_visible(False)
         self.dcache=None
@@ -72,16 +201,8 @@ class MyHistogram(MyFigure):
             else:
                 self.plt.hist(self.model.data[self.field],bins=self.bins,color='black',
                     range=(self.model.fieldmin(self.field),self.model.fieldmax(self.field)))
-        self.sel.set_height(self.plt.get_ylim()[1])
-
-    def mydraw(self):
-        xlim = self.plt.get_xlim()
-        self.plt.cla()
         self.plt.set_title(self.model.prettyname(self.field))
-        self.plt.add_patch(self.sel)
-        self.datadraw()
-        self.plt.set_xlim(xlim)
-        self.draw()
+        self.sel.set_height(self.plt.get_ylim()[1])
 
     def onKey(self,event):
         if event.key == '+' or event.key == '=':
@@ -91,63 +212,58 @@ class MyHistogram(MyFigure):
             self.bins =int(self.bins/2)
             self.mydraw()
 
-    def onScroll(self,event):
-        if event.xdata is None:
-            return
-        scale=1
-        factor=1.5
-        if event.button == 'up':
-            scale = 1.0/factor
+class MyScatter(MyFigure):
+    def __init__(self,model,xfield,yfield,cfield,parent=None,flags=0):
+        MyFigure.__init__(self,parent,flags)
+        self.model=model
+        self.xfield=xfield
+        self.yfield=yfield
+        self.cfield=cfield
+
+        self.manageX=True
+        self.fieldfilterX=self.model.selectionFilter(self.xfield)
+        self.fieldfilterX.modelchange.connect(self.onFilterChange)
+
+        self.manageY=True
+        self.fieldfilterY=self.model.selectionFilter(self.yfield)
+        self.fieldfilterY.modelchange.connect(self.onFilterChange)
+
+        self.model.filterchange.connect(self.mydraw)
+        self.plt.set_xlim((self.model.fieldmin(self.xfield),self.model.fieldmax(self.xfield)))
+        self.plt.set_ylim((self.model.fieldmin(self.yfield),self.model.fieldmax(self.yfield)))
+
+        self.sel=Rectangle((0,0),0,0,color='r',fill=False)
+        self.onFilterChange() # Let this function worry about actual bounds, we just cared about color and fill
+
+        self.datadraw()
+        self.mydraw()
+
+    def datadraw(self):
+        xAll=None
+        xFiltered=None
+        if self.xfield is None:
+            if len(self.model.sortlst):
+                xAll=np.argsort(self.model.data,order=self.sortlst)
+                xFiltered=self.model.outArrIndices(False)
         else:
-            scale = factor
-        if scale != 1:
-            cur_xlim = self.plt.get_xlim()
-            self.plt.set_xlim([event.xdata - (event.xdata - cur_xlim[0]) / scale, event.xdata + (cur_xlim[1]-event.xdata)/scale ])
-            self.draw()
+            xAll=self.model.data[self.xfield]
+            xFiltered=self.model.filtered[self.xfield]
 
-    def onPress(self,event):
-        if event.button == 1:
-            if event.key == 'shift' or QtCore.Qt.ShiftModifier & QtGui.QApplication.keyboardModifiers() :
-                self.selx0=event.xdata
-                self.sel.set_x(event.xdata)
-                self.sel.set_width(0)
-                self.sel.set_height(self.plt.get_ylim()[1])
-                self.sel.set_visible(True)
-                self.draw()
-            else:
-                self.panx0=event.xdata
+        cAll="black"
+        cFiltered="black"
+        if self.cfield is not None:
+            cAll=self.model.data[self.cfield]
+            cFiltered=self.model.filtered[self.cfield]
 
-    def onRelease(self,event):
-        if self.panx0 is not None:
-            self.panx0=None 
-        elif self.selx0 is not None:
-            self.selx0=None
-            if self.sel.get_width() == 0:
-                self.sel.set_visible(False)
-                self.fieldfilter.setActive(False)
-            else:
-                self.fieldfilter.setRange(self.sel.get_x(),self.sel.get_width() + self.sel.get_x())
-                self.fieldfilter.setActive(True)
-            self.mydraw()
+        if self.model.isFiltered():
+            self.plt.scatter(xAll,self.model.data[self.yfield],c=cAll,alpha=0.5,marker=".")
+            self.plt.scatter(xFiltered,self.model.filtered[self.yfield],c=cFiltered,marker=".")
+        else:
+            self.plt.scatter(xAll,self.model.data[self.yfield],c=cAll,marker=".")
 
-    def onMotion(self,event):
-        if self.panx0 is not None and event.xdata:
-            xlim=self.plt.get_xlim()
-            xlim -= (event.xdata - self.panx0)
-            self.plt.set_xlim(xlim)
-            self.draw()
-        elif self.selx0 is not None and event.xdata:
-            if self.selx0 <= event.xdata:
-                self.sel.set_width(event.xdata - self.selx0)
-            else:
-                self.sel.set_x(event.xdata)
-                self.sel.set_width(self.selx0 - event.xdata)
-            self.draw()
+        self.plt.set_xlabel(self.model.prettyname(self.xfield))
+        self.plt.set_ylabel(self.model.prettyname(self.yfield))
 
-    def onFilterChange(self):
-        self.sel.set_x(self.fieldfilter.minimum)
-        self.sel.set_width(self.fieldfilter.maximum-self.fieldfilter.minimum)
-        self.sel.set_visible(self.fieldfilter.isActive())
-        self.draw()
+
 
             
