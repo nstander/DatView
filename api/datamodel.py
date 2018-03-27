@@ -165,6 +165,20 @@ class DataModel(QObject):
            as multi """
         return field.startswith(GroupMgr.prefix) or 'U' in self.dtype(field) or field in ['subcxi','class','multi','multiid','run']
 
+    def intValues(self,field):
+        """Meant for categorical values, return list of all possible"""
+        field=self.datafield(field)
+        if field in self.digitized:
+            return range(len(self.digitized[field])) # It's digitized 0:N-1
+        elif self.groupmgr is not None and field.startswith(GroupMgr.prefix):
+            return range(len(self.groupmgr.values(field[len(GroupMgr.prefix):]))) # Valid groupfiles are 0:N-1 
+        else:
+            vals = np.unique(self.data[field])
+            r=[]
+            for v in vals:
+                r.append(int(v))
+            return r
+
     def value(self,field,i,filtered=True):
         """Return the value of the field at (filtered if filtered=True) row i. Returns true value rather than digitized or group-id value"""
         field=self.datafield(field)

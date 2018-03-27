@@ -171,7 +171,12 @@ class FilterItemDelegate(QStyledItemDelegate):
         par.addChild(child)
 
     def onAddIn(self):
-        pass
+        act=self.sender()
+        par=act.data()[0].internalPointer()
+        dmodel=act.data()[0].model().dmodel
+        field=act.data()[1]
+        child=filters.InSetFilter(dmodel.intValues(field),dmodel.data[field],field,dmodel.stringValue)
+        par.addChild(child)
 
 
 
