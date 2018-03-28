@@ -30,6 +30,8 @@ class MyMainWindow(QMainWindow):
         self.ui.actionSave_Stream.triggered.connect(self.onSaveStream)
         self.ui.actionSave_Filters.triggered.connect(self.onSaveFilters)
         self.ui.actionScatter.triggered.connect(self.onShowScatter)
+        self.ui.actionOpen.setVisible(False)
+        self.ui.actionSave_Plot.setVisible(False)
         
 
         self.filtmessage=QLabel(self)
