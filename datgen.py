@@ -11,7 +11,8 @@ import numpy as np
 from api.groupmgr import GroupMgr
 
 class DatGenerator:
-    streamcols=[(('ifile','run','class','subcxi'),re.compile('^Image filename: (.*r(\d{4})(?:-class(\d))?(?:-c(\d{2}))?.cxi)')),
+    streamcols=[(('run','class','subcxi'),re.compile('^Image filename: .*r(\d{4})(?:-class(\d))?(?:-c(\d{2}))?\.(?:cxi|h5)')),
+                (('ifile',),re.compile('^Image filename: (.*)')),
                 (('event',),re.compile('^Event: //(\d+)')),
                 (('indby',),re.compile('^indexed_by = ([A-Za-z-]+)')),
                 (('phoen',),re.compile('^photon_energy_eV = (\d+\.\d+)')),
@@ -95,6 +96,8 @@ class DatGenerator:
         print('\n',end='',file=self.out)
 
     def addcxi(self,cur):
+        if len(self.cxicols) == 0:
+            return
         if cur['ifile'] != self.curCXIName:
             if self.curCXI is not None:
                 self.curCXI.close()
@@ -187,7 +190,7 @@ if __name__ == '__main__':
     parser.add_argument('--out','-o',type=argparse.FileType('w'),default=sys.stdout,help='Output file')
     parser.add_argument('--group',default=None,help='The group file output by groupgen.py (groupcfg.txt), keeps files smaller and numeric by enuemrating strings')
     parser.add_argument('--streamcols',default=DatGenerator.allcols,nargs='+',help='Space separated list of builtin columns to include in output. Defaults to all possible.')
-    parser.add_argument('--cxi',action='append',help='Include from cxi/h5 file. Use switch multiple times to include from multiple cxi files. Example: --cxi /cheetah/frameNumber --cxi /LCLS/machineTime')
+    parser.add_argument('--cxi',action='append',default=[],help='Include from cxi/h5 file. Use switch multiple times to include from multiple cxi files. Example: --cxi /cheetah/frameNumber --cxi /LCLS/machineTime')
     parser.add_argument('--npfile',default=None,help='Filepath to numpy file. Columns in numpy file will be synced with stats after cxi columns but before grouping.')
     parser.add_argument('--npcols',nargs='+',default=[],help='Space separated column names for columns in npfile. Defaults to npcol0 npcol1 etc if not provided. Variable length arguments so don\'t use as last switch before stream files.')
     parser.add_argument('--npsynccols',type=int,nargs='+',default=[],help='The column(s) numbers of the npfile to sync on. Defaults to the the first column(s) to the length of the --npsyncfields. So, if --npsyncfields is length 2, and this is not provided, it will default to 0,1. These  columns are not output Variable length arguments so don\'t use as last switch before stream files.')
