@@ -57,9 +57,9 @@ class MyFigure(FigureCanvas):
         scale=1
         factor=1.5
         if event.button == 'up':
-            scale = 1.0/factor
-        else:
             scale = factor
+        else:
+             scale = 1.0/factor
         if scale != 1:
             if self.manageX:
                 cur_xlim = self.plt.get_xlim()
