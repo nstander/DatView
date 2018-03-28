@@ -14,8 +14,9 @@ class MyScatterDialog(QDialog):
         self.ui.setupUi(self)
         self.model = model
 
-        self.ui.xCombo.addItem("Current Order",None)
         self.ui.zCombo.addItem("None",None)
+        self.ui.zCombo.hide()
+        self.ui.label_3.hide()
         self.ui.cCombo.addItem("None",None)
         for col in sorted(set(self.model.cols) - DataModel.internalCols,key=self.model.prettyname):
             self.ui.xCombo.addItem(self.model.prettyname(col),col)
@@ -25,7 +26,6 @@ class MyScatterDialog(QDialog):
         self.accepted.connect(self.onAccept)
 
     def onAccept(self):
-        print(self.ui.xCombo.itemData(self.ui.xCombo.currentIndex()),self.ui.yCombo.itemData(self.ui.yCombo.currentIndex()),self.ui.zCombo.itemData(self.ui.zCombo.currentIndex()),self.ui.cCombo.itemData(self.ui.cCombo.currentIndex()))
         p=MyScatter(self.model,self.ui.xCombo.itemData(self.ui.xCombo.currentIndex()),self.ui.yCombo.itemData(self.ui.yCombo.currentIndex()),self.ui.cCombo.itemData(self.ui.cCombo.currentIndex()),parent=self.parent(),flags=Qt.Window)
         p.show()
 

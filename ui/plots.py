@@ -71,7 +71,7 @@ class MyFigure(FigureCanvas):
                 self.draw()
 
     def onPress(self,event):
-        if event.button == 1:
+        if event.button == 1 and event.xdata is not None and event.ydata is not None:
             if event.key == 'shift' or QtCore.Qt.ShiftModifier & QtGui.QApplication.keyboardModifiers() :
                 self.selp=(event.xdata,event.ydata)
                 if self.manageX:
@@ -90,7 +90,8 @@ class MyFigure(FigureCanvas):
         if self.pan is not None:
             self.pan=None 
         elif self.selp is not None:
-            self.selp=None
+            if not self.manageX or not self.manageY:
+                self.selp=None # Only managing 0 or  1 axis, clear right away
             if self.manageX:
                 if self.sel.get_width() == 0:
                     self.sel.set_visible(False)
@@ -98,6 +99,7 @@ class MyFigure(FigureCanvas):
                 else:
                     self.fieldfilterX.setRange(self.sel.get_x(),self.sel.get_width() + self.sel.get_x())
                     self.fieldfilterX.setActive(True)
+                self.selp=None # In case we were managing two axis, clear here
             if self.manageY:
                 if self.sel.get_height() == 0:
                     self.sel.set_visible(False)
@@ -105,6 +107,7 @@ class MyFigure(FigureCanvas):
                 else:
                     self.fieldfilterY.setRange(self.sel.get_y(),self.sel.get_height() + self.sel.get_y())
                     self.fieldfilterY.setActive(True)
+            self.selp=None # Probably unneccessary but make sure this does get cleared
             if self.manageX or self.manageY:
                 self.mydraw()
 
@@ -133,11 +136,13 @@ class MyFigure(FigureCanvas):
                         self.sel.set_height(event.ydata - self.selp[1])
                     else:
                         self.sel.set_y(event.ydata)
-                        self.sel.set_height(self.selp[1] - event.xdata)
+                        self.sel.set_height(self.selp[1] - event.ydata)
                 if self.manageX or self.manageY:
                     self.draw()
 
     def onFilterChange(self):
+        if self.selp is not None:
+            return # Selecting is from this plot, wait for both filters to update so we don't clear variables
         ylim = self.plt.get_ylim()
         xlim = self.plt.get_xlim()
         self.sel.set_x(xlim[0])
@@ -234,6 +239,7 @@ class MyScatter(MyFigure):
 
         self.sel=Rectangle((0,0),0,0,color='r',fill=False)
         self.onFilterChange() # Let this function worry about actual bounds, we just cared about color and fill
+        self.cb=None
 
         self.datadraw()
         self.mydraw()
@@ -251,18 +257,29 @@ class MyScatter(MyFigure):
 
         cAll="black"
         cFiltered="black"
+        cm=None
+        marker='o'
+        vmin=None
+        vmax=None
         if self.cfield is not None:
             cAll=self.model.data[self.cfield]
             cFiltered=self.model.filtered[self.cfield]
+            cm=plt.cm.get_cmap('jet')
+            vmin=self.model.fieldmin(self.cfield)
+            vmax=self.model.fieldmax(self.cfield)
 
         if self.model.isFiltered():
-            self.plt.scatter(xAll,self.model.data[self.yfield],c=cAll,alpha=0.5,marker=".")
-            self.plt.scatter(xFiltered,self.model.filtered[self.yfield],c=cFiltered,marker=".")
+            self.plt.scatter(xAll,self.model.data[self.yfield],c=cAll,alpha=0.5,cmap=cm,vmin=vmin,vmax=vmax,marker=marker)
+            sc=self.plt.scatter(xFiltered,self.model.filtered[self.yfield],c=cFiltered,cmap=cm,vmin=vmin,vmax=vmax,marker=marker)
         else:
-            self.plt.scatter(xAll,self.model.data[self.yfield],c=cAll,marker=".")
+            sc=self.plt.scatter(xAll,self.model.data[self.yfield],c=cAll,cmap=cm,vmin=vmin,vmax=vmax,marker=marker)
 
         self.plt.set_xlabel(self.model.prettyname(self.xfield))
         self.plt.set_ylabel(self.model.prettyname(self.yfield))
+        if self.cfield is not None:
+            self.plt.set_title(self.model.prettyname(self.cfield))
+        if self.cfield is not None and self.cb is None:
+            self.cb=self.fig.colorbar(sc)
 
 
 

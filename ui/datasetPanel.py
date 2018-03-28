@@ -24,6 +24,9 @@ class MyDatasetPanel(QWidget):
         self.ui.moveSortField.clicked.connect(self.onMoveSortFieldUp)
         self.ui.limitCheckBox.clicked.connect(self.onLimitChange)
         self.ui.limitSpinBox.editingFinished.connect(self.onLimitChange)
+        self.ui.colorByCombo.hide()
+        self.ui.label.hide()
+        self.ui.legendListWidget.hide()
         self.onLimitChange()
 
     def onAddSortField(self):
