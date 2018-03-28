@@ -256,7 +256,10 @@ class DataModel(QObject):
         if field not in self.mincache:
             valid = self.data[field]
             valid = valid[valid != -1]
-            self.mincache[field]=np.min(valid)
+            if len(valid):
+                self.mincache[field]=np.min(valid)
+            else:
+                self.mincache[field]=-1
         return self.mincache[field]
 
     def fieldmax(self,field):
