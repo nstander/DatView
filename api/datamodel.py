@@ -284,6 +284,7 @@ class DataModel(QObject):
             formats.append(self.fmt(c))
         outarr=self.rdata[self.topfilter.keep][self.outArrIndices()]
         np.savetxt(fname,outarr,fmt=formats,delimiter='\t',header=self.hdrline[:-1],comments='')
+        print ("Wrote",fname)
 
     def canSaveLst(self):
         return 'ifile' in self.cols or ((GroupMgr.prefix + "ifile") in self.cols and self.groupmgr is not None)
@@ -297,7 +298,8 @@ class DataModel(QObject):
                     fout.write('%s //%i\n'%(self.value('ifile',i) ,self.filtered['event'][i]))
             else:
                 for i in outarr:
-                    fout.write('%s\n'%(self.value('ifile',i)))                 
+                    fout.write('%s\n'%(self.value('ifile',i)))
+        print ("Wrote",fname)
 
     def canSaveStream(self):
         return ('sfile' in self.cols or ((GroupMgr.prefix+"sfile") in self.cols and self.groupmgr is not None)) \
@@ -349,7 +351,7 @@ class DataModel(QObject):
                     fout.write('----- End chunk -----\n') # Add on the end chunk line
         if curfile is not None:
             curfile.close()
-        print ("Done writing stream")
+        print ("Wrote",fname)
 
 
     def saveFilters(self,fname):
@@ -357,6 +359,7 @@ class DataModel(QObject):
         self.topfilter.toXML(root)
         et=ElementTree.ElementTree(root)
         et.write(fname,pretty_print=True)
+        print("Wrote",fname)
 
     def loadFilters(self,fname):
         et=ElementTree.parse(fname)
