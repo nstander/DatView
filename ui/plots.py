@@ -38,18 +38,25 @@ class MyFigure(FigureCanvas):
         self.manageX=False
         self.manageY=False
 
+        self.menu=QtGui.QMenu()
+        saveAct=self.menu.addAction("Save PNG")
+        saveAct.triggered.connect(self.onSave)
+        resetAct=self.menu.addAction("Reset")
+        resetAct.triggered.connect(self.onReset)
+
     def datadraw(self):
         pass
 
-    def mydraw(self):
-        xlim = self.plt.get_xlim()
-        ylim = self.plt.get_ylim()
+    def mydraw(self,keeplimits=True):
+        if keeplimits:
+            xlim = self.plt.get_xlim()
+            ylim = self.plt.get_ylim()
         self.plt.cla()
-        self.plt.add_patch(self.sel)
         self.datadraw()
-        if self.manageX:
+        self.plt.add_patch(self.sel)
+        if keeplimits and self.manageX:
             self.plt.set_xlim(xlim)
-        if self.manageY:
+        if keeplimits and self.manageY:
             self.plt.set_ylim(ylim)
         self.draw()
 
@@ -87,6 +94,8 @@ class MyFigure(FigureCanvas):
                     self.draw()
             else:
                 self.pan=(event.xdata,event.ydata)
+        elif event.button == 3:
+            self.menu.popup(QtGui.QCursor.pos())
 
     def onRelease(self,event):
         if self.pan is not None:
@@ -150,6 +159,14 @@ class MyFigure(FigureCanvas):
     def onToolTip(self,event):
         pass
 
+    def onSave(self):
+        name=QtGui.QFileDialog.getSaveFileName(self,'Save Plot',filter='*.png')
+        if name is not None:
+            self.fig.savefig(name,ext="png")
+
+    def onReset(self,event):
+        self.mydraw(False)
+
     def onFilterChange(self):
         if self.selp is not None:
             return # Selecting is from this plot, wait for both filters to update so we don't clear variables
@@ -193,8 +210,7 @@ class MyHistogram(MyFigure):
 
         self.plt.get_yaxis().set_visible(False)
         self.dcache=None
-        self.datadraw()
-        self.mydraw()
+        self.mydraw(False)
 
     def datadraw(self):
         title=self.model.prettyname(self.field)
@@ -280,7 +296,6 @@ class MyScatter(MyFigure):
         self.onFilterChange() # Let this function worry about actual bounds, we just cared about color and fill
         self.cb=None
 
-        self.datadraw()
         self.mydraw()
 
     def datadraw(self):
@@ -319,6 +334,11 @@ class MyScatter(MyFigure):
             self.plt.set_title(self.model.prettyname(self.cfield))
         if self.cfield is not None and self.cb is None:
             self.cb=self.fig.colorbar(sc)
+
+    def onReset(self,event):
+        self.plt.set_xlim((self.model.fieldmin(self.xfield),self.model.fieldmax(self.xfield)))
+        self.plt.set_ylim((self.model.fieldmin(self.yfield),self.model.fieldmax(self.yfield)))
+        self.mydraw()
 
 
 
