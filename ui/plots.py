@@ -3,8 +3,10 @@ import numpy as np
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
+import matplotlib.mlab
 from matplotlib.patches import Rectangle
 from api.filters import BetweenFilter
+from scipy.stats import norm
 
 
 class MyFigure(FigureCanvas):
@@ -178,12 +180,17 @@ class MyHistogram(MyFigure):
         self.sel=Rectangle((self.fieldfilterX.minimum,0),self.fieldfilterX.maximum-self.fieldfilterX.minimum,0,alpha=0.3,color='r')
         self.sel.set_visible(self.fieldfilterX.isActive())
 
+        self.mu=None
+        self.sigma=None
+
         self.plt.get_yaxis().set_visible(False)
         self.dcache=None
         self.datadraw()
         self.mydraw()
 
     def datadraw(self):
+        title=self.model.prettyname(self.field)
+        fmt=" %0.2f "+u"\u00B1"+ " %0.2f"
         if self.model.isCategorical(self.field):
             if self.dcache is None:
                 self.dcache=np.unique(self.model.data[self.field],return_counts=True)
@@ -204,9 +211,13 @@ class MyHistogram(MyFigure):
                 self.plt.hist(self.model.filtered[self.field],bins=b,color='black',
                     range=(self.model.fieldmin(self.field),self.model.fieldmax(self.field)))
             else:
-                self.plt.hist(self.model.data[self.field],bins=self.bins,color='black',
-                    range=(self.model.fieldmin(self.field),self.model.fieldmax(self.field)))
-        self.plt.set_title(self.model.prettyname(self.field))
+                b=self.plt.hist(self.model.data[self.field],bins=self.bins,color='black',
+                    range=(self.model.fieldmin(self.field),self.model.fieldmax(self.field)))[1]
+            if self.mu is not None:
+                y=matplotlib.mlab.normpdf(np.array(b),self.mu,self.sigma)
+                self.plt.plot(b,y,'r',linewidth=2)
+                title += fmt % (self.mu,self.sigma)
+        self.plt.set_title(title)
         self.sel.set_height(self.plt.get_ylim()[1])
 
     def onKey(self,event):
@@ -216,6 +227,17 @@ class MyHistogram(MyFigure):
         if event.key == '-':
             self.bins =int(self.bins/2)
             self.mydraw()
+        if event.key == 'ctrl+f':
+            if self.mu is None:
+                # Always fit filtered (if not filtering, will be full model
+                dt=self.model.filtered[self.field]
+                dt = dt[dt != -1] # But don't use empty
+                (self.mu,self.sigma)=norm.fit(dt)
+            else:
+                self.mu = None
+                self.sigma = None
+            self.mydraw()
+            
 
 class MyScatter(MyFigure):
     def __init__(self,model,xfield,yfield,cfield,parent=None,flags=0):
