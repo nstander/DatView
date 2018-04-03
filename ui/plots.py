@@ -215,7 +215,7 @@ class MyHistogram(MyFigure):
                     range=(self.model.fieldmin(self.field),self.model.fieldmax(self.field)))[1]
             if self.mu is not None:
                 y=matplotlib.mlab.normpdf(np.array(b),self.mu,self.sigma)
-                self.plt.plot(b,y,'r',linewidth=2)
+                self.plt.plot(b,y/np.max(y)*self.plt.get_ylim()[1]*0.95,'r',linewidth=2)
                 title += fmt % (self.mu,self.sigma)
         self.plt.set_title(title)
         self.sel.set_height(self.plt.get_ylim()[1])
