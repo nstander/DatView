@@ -41,7 +41,7 @@ class FilterItemDelegate(QStyledItemDelegate):
             greater = top.addMenu(">=")
             less = top.addMenu("<")
             inset = top.addMenu("In")
-            for col in sorted(set(index.model().dmodel.cols) - datamodel.DataModel.internalCols,key=index.model().dmodel.prettyname):
+            for col in sorted(set(index.model().dmodel.cols) - index.model().dmodel.cfg.internalCols,key=index.model().dmodel.prettyname):
                 a = between.addAction(index.model().dmodel.prettyname(col))
                 a.setData((index,col))
                 a.triggered.connect(self.onAddBetween)

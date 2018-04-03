@@ -4,73 +4,17 @@ from .filters import *
 from .filtermodel import FilterModel
 from .groupmgr import GroupMgr
 import lxml.etree as ElementTree
+from .modelcfg import ModelConfig
 
 
 class DataModel(QObject):
     filterchange=pyqtSignal()
-    nameind=0
-    dtypeind=1
-    fmtind=2
-    hrmap={ 'run'       : ('Run', 'f4','%i'),
-            'subcxi'    : ('CXI File #', 'f4','%i'),
-            'class'     : ('CXI Class','f4','%i'),
-            'event'     : ('Event','f4','%i'),
-            'id'        : ('Internal ID','U12','%s'), #Outdated, for support with older files
-            'multi'     : ('Crystals Per Frame','f4','%i'),
-            'multiid'   : ('Crystal # On Frame','f4','%i'),
-            'a'         : (' A Axis (nm)','f4','%f'),
-            'b'         : (' B Axis (nm)','f4','%f'),
-            'c'         : (' C Axis (nm)', 'f4','%f'),
-            'alpha'     : ('Alpha (deg)', 'f4','%f'),
-            'beta'      : ('Beta (deg)', 'f4','%f'),
-            'gamma'     : ('Gamma (deg)', 'f4','%f'),
-            'indby'     : ('Indexed By','U50','%s'),
-            'phoen'     : ('Photon Energy (eV)', 'f4','%f'),
-            'bmdv'      : ('Beam Divergence (rad)', 'f4','%f'),
-            'bmbw'      : ('Beam Bandwidth (fraction)', 'f4','%f'),
-            'npeak'     : ('Number of Cheetah Peaks', 'f4','%i'),
-            'prorad'    : ('Profile Radius (nm^-1)','f4','%f'),
-            'detdx'     : ('Detector X Shift (mm)', 'f4','%f'),
-            'detdy'     : ('Detector Y Shift (mm)','f4','%f'),
-            'reslim'    : ('Diffraction Resolution Limit (nm^-1)','f4','%f'),
-            'nref'      : ('Number of Reflections', 'f4','%i'),
-            'nsref'     : ('Number of Saturated Reflections','f4','%i'),
-            'niref'     : ('Number of implausibly negative reflections','f4','%i'),
-            'o1'        : ('astar[0] (nm^-1)','f4','%f'),
-            'o2'        : ('astar[1] (nm^-1)','f4','%f'),
-            'o3'        : ('astar[2] (nm^-1)','f4','%f'),
-            'o4'        : ('bstar[0] (nm^-1)','f4','%f'),
-            'o5'        : ('bstar[1] (nm^-1)','f4','%f'),
-            'o6'        : ('bstar[2] (nm^-1)','f4','%f'),
-            'o7'        : ('cstar[0] (nm^-1)','f4','%f'),
-            'o8'        : ('cstar[1] (nm^-1)','f4','%f'),
-            'o9'        : ('cstar[2] (nm^-1)','f4','%f'),
-            'row'       : ('Chip Row (by Run)','f4','%i'),
-            'col'       : ('Chip Column','f4','%i'),
-            'chiprow'   : ('Chip Row (by Chip)','f4','%i'),
-            'chipframe' : ('Frame # by Chip','f4','%i'),
-            '/LCLS/machineTime' : ('Machine Time (s)','f4','%i'),
-            '/LCLS/machineTimeNanoSeconds' : ('Machine Time (ns)','f4','%i'),
-            '/LCLS/fiducial' : ('Fiducial','f4','%i'),
-            '/cheetah/frameNumber' : ('Frame # (by Run)','f4','%i'),
-            'ifile'      : ('Image file (cxi/hdf5)','U256','%s'),
-            'sfile'     : ('Stream file','U256','%s'),
-            'istart'    : ('Beginning of Chunk File Pointer','i4','%i'),
-            'iend'      : ('End of Chunk File Pointer','i4','%i'),
-            'cstart'    : ('Begin Crystal Pointer','i4','%i'),
-            'cend'      : ('End Crystal Pointer','i4','%i'),
-            'rstart'    : ('Reflection Start Pointer','i4','%i'),
-            'rend'      : ('Reflection End Pointer','i4','%i'),
-            'pstart'    : ('Peak Start Pointer','i4','%i'),
-            'pend'      : ('Peak End Pointer','i4','%i'),
-            'aclen'      : ('Average Camera Length (m)','f4','%i'),
-            'cent'      : ('Centering','U1','%s'),
-            'ltype'      : ('Lattice Type','U15','%s'),
-          }
-    internalCols=set(['istart','iend','cstart','cend','pstart','pend','rstart','rend'])
-    defaultHistograms=set(['a','b','c','alpha','beta','gamma'])
-    def __init__(self,filename,groupfile=None):
+    def __init__(self,filename,groupfile=None,cfg=None):
         QObject.__init__(self)
+        if cfg is None:
+            self.cfg = ModelConfig()
+        else:
+            self.cfg = cfg
         self.cols=[]
         with open(filename) as dfile:
             self.hdrline=dfile.readline()
@@ -82,11 +26,11 @@ class DataModel(QObject):
         self.digitized={}
         for c in self.cols:
             self.prettynames.append(self.prettyname(c))
-            dtypes.append(self.dtype(c))
+            dtypes.append(self.cfg.dtype(c))
             if 'U' in dtypes[-1]:
                 convert[self.cols.index(c)]=np.lib.npyio.asstr
                 todigitize.append(c)
-        self.rdata=np.loadtxt(filename,skiprows=1,converters=convert,
+        self.rdata=np.loadtxt(filename,skiprows=1,converters=convert,delimiter=self.cfg.sep,
                              dtype={'names':tuple(self.cols),'formats':tuple(dtypes)})
         # We may have string inputs, even with grouping, and it will simplify all the other code
         # if at this point we digitize any string inputs so other code will only ever see numbers
@@ -106,6 +50,10 @@ class DataModel(QObject):
                     self.data[c]=inverse
                 else:
                     self.data[c]=self.rdata[c]
+                    if c in self.cfg.invert:
+                        self.data[c] = 1/self.data[c]
+                    if self.cfg.multvalue(c) != 1:
+                        self.data[c][self.data[c]!=-1]*=self.cfg.multvalue(c)
         else:
             self.data=self.rdata
         self.filtered=self.data
@@ -122,29 +70,10 @@ class DataModel(QObject):
         self.reverseSort=False
         self.limit=None
         self.limitModeRandom = True
+        
 
     def prettyname(self,field):
-        r=field
-        if r.startswith(GroupMgr.prefix):
-            r=field[len(GroupMgr.prefix):]
-        if r in DataModel.hrmap:
-            r=DataModel.hrmap[r][0]
-        return r
-
-    def dtype(self,field):
-        r='f4' # assume float
-        if field in DataModel.hrmap:
-            r= DataModel.hrmap[field][1]
-        return r
-
-    def fmt(self,field):
-        r='%f' # assume float
-        # but if it is a group, then it should be an int
-        if field.startswith(GroupMgr.prefix):
-            r='%i'
-        if field in DataModel.hrmap: # or if we already know what it should be
-            r= DataModel.hrmap[field][2]
-        return r
+        return self.cfg.prettyname(field)
 
 #########################################
 ###           Categorical             ###
@@ -167,7 +96,7 @@ class DataModel(QObject):
            a bar chart versus histogram. Groups are always categorical, columns stored as strings are
            always categorical and some columns with known limited values are specified categorical such
            as multi """
-        return field.startswith(GroupMgr.prefix) or 'U' in self.dtype(field) or field in ['subcxi','class','multi','multiid','run']
+        return field.startswith(GroupMgr.prefix) or 'U' in self.cfg.dtype(field) or field in ['subcxi','class','multi','multiid','run']
 
     def intValues(self,field):
         """Meant for categorical values, return list of all possible"""
@@ -291,7 +220,7 @@ class DataModel(QObject):
     def saveSelDat(self,fname):
         formats=[]
         for c in self.cols:
-            formats.append(self.fmt(c))
+            formats.append(self.cfg.fmt(c))
         outarr=self.rdata[self.topfilter.keep][self.outArrIndices()]
         np.savetxt(fname,outarr,fmt=formats,delimiter='\t',header=self.hdrline[:-1],comments='')
         print ("Wrote",fname)

@@ -13,7 +13,7 @@ class MyDatasetPanel(QWidget):
         self.model = model
 
         menu=QMenu()
-        for col in sorted(set(self.model.cols) - DataModel.internalCols,key=self.model.prettyname):
+        for col in sorted(set(self.model.cols) - self.model.cfg.internalCols,key=self.model.prettyname):
             a = menu.addAction(self.model.prettyname(col))
             a.setData(col)
             a.triggered.connect(self.onAddSortField)

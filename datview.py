@@ -43,9 +43,9 @@ class MyMainWindow(QMainWindow):
         self.checkedhistograms=[]
         self.cachedHistograms={}
         self.ui.menuHistogram_Bar.removeAction(self.ui.actionReset)
-        self.addHistogramMenu(DataModel.defaultHistograms & set(self.model.cols), True)
+        self.addHistogramMenu(self.model.cfg.defaultHistograms & set(self.model.cols), True)
         self.ui.menuHistogram_Bar.addSeparator()
-        self.addHistogramMenu(set(self.model.cols) - DataModel.defaultHistograms - DataModel.internalCols, False)
+        self.addHistogramMenu(set(self.model.cols) - self.model.cfg.defaultHistograms - self.model.cfg.internalCols, False)
         self.placeHistograms()
 
         # Filter Panel

@@ -1,0 +1,86 @@
+<!-- This is the default configuration file for the datamodel python class.-->
+<modelcfg>
+  <!-- If empty uses np default which is whitespace. You can set to use comma. -->
+  <datsep></datsep>
+  <!-- Format: <fieldname options> and options include:
+    prettyname (name used for titles in the gui/> 
+    dtype (the numpy datatype use unicode if it can be a string whether or not it can be grouped/> 
+    fmt (the output format for python like %.2f)
+    mult (multiply the column by this amount after loading)
+  -->
+  <fields>
+    <!-- The defaults when unspecified. -->
+    <field nm="default" dtype="f4" fmt="%f"  mult="1" />
+
+    <!-- Stream columns possible with datgen -->
+    <field nm="run"    prettyname="Run"  fmt="%i"/>
+    <field nm="subcxi" prettyname="CXI File #"  fmt="%i"/>
+    <field nm="class"  prettyname="CXI Class" fmt="%i"/>
+    <field nm="event"  prettyname="Event" fmt="%i"/>
+    <field nm="id"     prettyname="Internal ID" dtype="U12" fmt="%s"/>
+    <field nm="multi"  prettyname="Crystals Per Frame" fmt="%i"/>
+    <field nm="multiid" prettyname="Crystal # On Frame" fmt="%i"/>
+    <field nm="a"      prettyname=" A Axis (A)" mult="10" />
+    <field nm="b"      prettyname=" B Axis (A)" mult="10" />
+    <field nm="c"      prettyname=" C Axis (A)" mult="10" />
+    <field nm="alpha"  prettyname="Alpha (deg)"  />
+    <field nm="beta"   prettyname="Beta (deg)"  />
+    <field nm="gamma"  prettyname="Gamma (deg)"  />
+    <field nm="indby"  prettyname="Indexed By" dtype="U50" fmt="%s"/>
+    <field nm="phoen"  prettyname="Photon Energy (eV)"  />
+    <field nm="bmdv"   prettyname="Beam Divergence (rad)"  />
+    <field nm="bmbw"   prettyname="Beam Bandwidth (fraction)"  />
+    <field nm="npeak"  prettyname="Number of Cheetah Peaks"  fmt="%i"/>
+    <field nm="prorad" prettyname="Profile Radius (nm^-1)" />
+    <field nm="detdx"  prettyname="Detector X Shift (mm)"  />
+    <field nm="detdy"  prettyname="Detector Y Shift (mm)" />
+    <field nm="reslim" prettyname="Diffraction Resolution Limit (nm^-1)" />
+    <!-- Use this for resolution limit in Angstroms
+    <field nm="reslim" prettyname="Diffraction Resolution Limit (A)" mult="10" invert="True" />
+    -->
+    <field nm="nref"   prettyname="Number of Reflections"  fmt="%i"/>
+    <field nm="nsref"  prettyname="Number of Saturated Reflections" fmt="%i"/>
+    <field nm="niref"  prettyname="Number of implausibly negative reflections" fmt="%i"/>
+    <field nm="o1"     prettyname="astar[0] (nm^-1)" />
+    <field nm="o2"     prettyname="astar[1] (nm^-1)" />
+    <field nm="o3"     prettyname="astar[2] (nm^-1)" />
+    <field nm="o4"     prettyname="bstar[0] (nm^-1)" />
+    <field nm="o5"     prettyname="bstar[1] (nm^-1)" />
+    <field nm="o6"     prettyname="bstar[2] (nm^-1)" />
+    <field nm="o7"     prettyname="cstar[0] (nm^-1)" />
+    <field nm="o8"     prettyname="cstar[1] (nm^-1)" />
+    <field nm="o9"     prettyname="cstar[2] (nm^-1)" />
+    <field nm="ifile"  prettyname="Image file (cxi/hdf5)" dtype="U256" fmt="%s"/>
+    <field nm="sfile"  prettyname="Stream file" dtype="U256" fmt="%s"/>
+    <field nm="istart" prettyname="Beginning of Chunk File Pointer" dtype="i4" fmt="%i"/>
+    <field nm="iend"   prettyname="End of Chunk File Pointer" dtype="i4" fmt="%i"/>
+    <field nm="cstart" prettyname="Begin Crystal Pointer" dtype="i4" fmt="%i"/>
+    <field nm="cend"   prettyname="End Crystal Pointer" dtype="i4" fmt="%i"/>
+    <field nm="rstart" prettyname="Reflection Start Pointer" dtype="i4" fmt="%i"/>
+    <field nm="rend"   prettyname="Reflection End Pointer" dtype="i4" fmt="%i"/>
+    <field nm="pstart" prettyname="Peak Start Pointer" dtype="i4" fmt="%i"/>
+    <field nm="pend"   prettyname="Peak End Pointer" dtype="i4" fmt="%i"/>
+    <field nm="aclen"  prettyname="Average Camera Length (m)" fmt="%i"/>
+    <field nm="cent"   prettyname="Centering" dtype="U1" fmt="%s"/>
+    <field nm="ltype"  prettyname="Lattice Type" dtype="U15" fmt="%s"/>
+
+    <!-- Some common cxi/h5 fields -->
+    <field nm="/LCLS/machineTime" prettyname="Machine Time (s)" fmt="%i"/>
+    <field nm="/LCLS/machineTimeNanoSeconds" prettyname="Machine Time (ns)" fmt="%i"/>
+    <field nm="/LCLS/fiducial" prettyname="Fiducial" fmt="%i"/>
+    <field nm="/cheetah/frameNumber" prettyname="Frame # (by Run)" fmt="%i"/>
+
+    <!-- Some common numpy file names -->
+    <field nm="row"    prettyname="Chip Row (by Run)" fmt="%i" />
+    <field nm="col"    prettyname="Chip Column" fmt="%i" />
+    <field nm="chiprow" prettyname="Chip Row (by Chip)" fmt="%i" />
+    <field nm="chipframe" prettyname="Frame # by Chip" fmt="%i" />
+
+  </fields> 
+
+  <!-- Histograms displayed by default when launching GUI -->
+  <defaulthistograms names="a,b,c,alpha,beta,gamma"/>
+
+  <!-- Columns that should be hidden from menus in the GUI (values that make no sense to plot and would just clutter the gui -->
+  <hidden names="istart,iend,cstart,cend,pstart,pend,rstart,rend"/>
+</modelcfg>

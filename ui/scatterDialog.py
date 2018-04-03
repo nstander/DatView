@@ -18,7 +18,7 @@ class MyScatterDialog(QDialog):
         self.ui.zCombo.hide()
         self.ui.label_3.hide()
         self.ui.cCombo.addItem("None",None)
-        for col in sorted(set(self.model.cols) - DataModel.internalCols,key=self.model.prettyname):
+        for col in sorted(set(self.model.cols) - self.model.cfg.internalCols,key=self.model.prettyname):
             self.ui.xCombo.addItem(self.model.prettyname(col),col)
             self.ui.yCombo.addItem(self.model.prettyname(col),col)
             self.ui.zCombo.addItem(self.model.prettyname(col),col)
