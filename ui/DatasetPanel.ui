@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>258</width>
-    <height>422</height>
+    <height>445</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -108,6 +108,16 @@
       </item>
       <item>
        <widget class="QListWidget" name="sortByListWidget"/>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="sortAscendingCheckBox">
+        <property name="text">
+         <string>Ascending</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
       </item>
       <item>
        <widget class="QGroupBox" name="limitCheckBox">

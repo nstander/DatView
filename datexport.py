@@ -10,6 +10,7 @@ parser=argparse.ArgumentParser(description='Export to a new file. If new file na
 parser.add_argument('--group',default=None,help='The group file output by groupgen.py (groupcfg.txt), keeps files smaller and numeric by enuemrating strings')
 parser.add_argument('--filter',default=None,help='A filter file to load. Filter files are XML format. The first Between filter in the file for a field will be updated with selection.')
 parser.add_argument('--sort',default=None,nargs='+',help='One or more fields to sort the output by. Field names must match the header of the dat file. Multiple arguments accepted so don\'t use as last switch before inputs.')
+parser.add_argument('--reversesort',action="store_true",help='Sort descending instead of ascending')
 parser.add_argument('--limit',default=None,type=int,help='Limit the output to this number, if provided')
 parser.add_argument('--limitmode',default="random",choices=['random','top'],help='Whether to take random subset to enforce limit or to take first. Default is random.')
 parser.add_argument('infile',help='the dat file')
@@ -24,6 +25,7 @@ if args.sort is not None:
 if args.limit is not None:
     model.limit = args.limit
 model.limitModeRandom = args.limitmode == "random"
+model.reverseSort = args.reversesort
 
 if '.stream' in args.outfile:
     model.saveSelStream(args.outfile)

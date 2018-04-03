@@ -119,6 +119,7 @@ class DataModel(QObject):
             self.groupmgr=GroupMgr(groupfile)
         self.selfilters={}
         self.sortlst=[]
+        self.reverseSort=False
         self.limit=None
         self.limitModeRandom = True
 
@@ -277,6 +278,8 @@ class DataModel(QObject):
         outarr=range(len(self.filtered))
         if len(self.sortlst):
             outarr=np.argsort(self.filtered,order=self.sortlst)
+            if self.reverseSort:
+                outarr = np.flipud(outarr)
         if applyLimit and self.limit is not None and len(outarr) > self.limit:
             if self.limitModeRandom:
                 keep=np.random.permutation(np.arange(len(outarr)))[:self.limit] # Select random set of size self.limit

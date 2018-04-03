@@ -25,7 +25,7 @@ except AttributeError:
 class Ui_DatasetPanel(object):
     def setupUi(self, DatasetPanel):
         DatasetPanel.setObjectName(_fromUtf8("DatasetPanel"))
-        DatasetPanel.resize(258, 422)
+        DatasetPanel.resize(258, 445)
         self.verticalLayout_3 = QtGui.QVBoxLayout(DatasetPanel)
         self.verticalLayout_3.setObjectName(_fromUtf8("verticalLayout_3"))
         self.horizontalLayout = QtGui.QHBoxLayout()
@@ -75,6 +75,10 @@ class Ui_DatasetPanel(object):
         self.sortByListWidget = QtGui.QListWidget(self.groupBox)
         self.sortByListWidget.setObjectName(_fromUtf8("sortByListWidget"))
         self.verticalLayout_2.addWidget(self.sortByListWidget)
+        self.sortAscendingCheckBox = QtGui.QCheckBox(self.groupBox)
+        self.sortAscendingCheckBox.setChecked(True)
+        self.sortAscendingCheckBox.setObjectName(_fromUtf8("sortAscendingCheckBox"))
+        self.verticalLayout_2.addWidget(self.sortAscendingCheckBox)
         self.limitCheckBox = QtGui.QGroupBox(self.groupBox)
         self.limitCheckBox.setCheckable(True)
         self.limitCheckBox.setChecked(False)
@@ -112,6 +116,7 @@ class Ui_DatasetPanel(object):
         self.removeSortField.setText(_translate("DatasetPanel", "-", None))
         self.moveSortField.setToolTip(_translate("DatasetPanel", "Move selected field up", None))
         self.moveSortField.setText(_translate("DatasetPanel", "^", None))
+        self.sortAscendingCheckBox.setText(_translate("DatasetPanel", "Ascending", None))
         self.limitCheckBox.setTitle(_translate("DatasetPanel", "Limit Output", None))
         self.limRandomButton.setText(_translate("DatasetPanel", "Random Subset", None))
         self.limTopButton.setText(_translate("DatasetPanel", "Top", None))

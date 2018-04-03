@@ -26,6 +26,7 @@ class MyDatasetPanel(QWidget):
         self.ui.limTopButton.clicked.connect(self.onLimitChange)
         self.ui.limRandomButton.clicked.connect(self.onLimitChange)
         self.ui.limitSpinBox.editingFinished.connect(self.onLimitChange)
+        self.ui.sortAscendingCheckBox.clicked.connect(self.onSortAscendingChange)
         self.ui.colorByCombo.hide()
         self.ui.label.hide()
         self.ui.legendListWidget.hide()
@@ -78,3 +79,7 @@ class MyDatasetPanel(QWidget):
         for field in lst:
             self.ui.sortByListWidget.addItem(self.model.prettyname(field))
             self.model.sortlst.append(field)
+
+    def onSortAscendingChange(self):
+        self.model.reverseSort = not self.ui.sortAscendingCheckBox.isChecked()
+
