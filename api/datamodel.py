@@ -120,6 +120,7 @@ class DataModel(QObject):
         self.selfilters={}
         self.sortlst=[]
         self.limit=None
+        self.limitModeRandom = True
 
     def prettyname(self,field):
         r=field
@@ -277,8 +278,11 @@ class DataModel(QObject):
         if len(self.sortlst):
             outarr=np.argsort(self.filtered,order=self.sortlst)
         if applyLimit and self.limit is not None and len(outarr) > self.limit:
-            keep=np.random.permutation(np.arange(len(outarr)))[:self.limit] # Select random set of size self.limit
-            outarr=outarr[np.sort(keep)] # Maintain previous sorting order by sorting keep
+            if self.limitModeRandom:
+                keep=np.random.permutation(np.arange(len(outarr)))[:self.limit] # Select random set of size self.limit
+                outarr=outarr[np.sort(keep)] # Maintain previous sorting order by sorting keep
+            else:
+                outarr=outarr[:self.limit]
         return outarr
 
     def saveSelDat(self,fname):

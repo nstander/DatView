@@ -23,6 +23,8 @@ class MyDatasetPanel(QWidget):
         self.ui.removeSortField.clicked.connect(self.onRemoveSortField)
         self.ui.moveSortField.clicked.connect(self.onMoveSortFieldUp)
         self.ui.limitCheckBox.clicked.connect(self.onLimitChange)
+        self.ui.limTopButton.clicked.connect(self.onLimitChange)
+        self.ui.limRandomButton.clicked.connect(self.onLimitChange)
         self.ui.limitSpinBox.editingFinished.connect(self.onLimitChange)
         self.ui.colorByCombo.hide()
         self.ui.label.hide()
@@ -65,7 +67,7 @@ class MyDatasetPanel(QWidget):
             self.model.limit = self.ui.limitSpinBox.value()
         else:
             self.model.limit = None
-        self.ui.limitSpinBox.setEnabled(self.ui.limitCheckBox.isChecked())
+        self.model.limitModeRandom=self.ui.limRandomButton.isChecked()
 
     def setLimit(self,l):
         self.ui.limitSpinBox.setValue(l)
