@@ -5,8 +5,9 @@ from .groupmgr import GroupMgr
 
 
 class ModelConfig:
-    def __init__(self):
-        defaultfile = os.path.join(os.path.dirname(os.path.abspath(__file__)),"modelcfg.xml")
+    def __init__(self,filename=None):
+        if filename is None:
+            filename = os.path.join(os.path.dirname(os.path.abspath(__file__)),"modelcfg.xml")
 
         self.sep = None
         self.prettyMap = {}
@@ -20,7 +21,7 @@ class ModelConfig:
         self.internalCols=set()
         self.invert=[]
 
-        et=ElementTree.parse(defaultfile)
+        et=ElementTree.parse(filename)
         root = et.getroot()
         assert root.tag == "modelcfg"
         for child in root:

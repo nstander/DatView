@@ -8,18 +8,20 @@ from PyQt4.QtGui import QApplication, QMainWindow,QLabel,QFileDialog, QAction, Q
 from PyQt4.QtCore import Qt
 
 from api.datamodel import DataModel
+from api.modelcfg import ModelConfig
 from ui.Ui_MainWindow import Ui_MainWindow
 from ui.datasetPanel import MyDatasetPanel
 from ui.scatterDialog import MyScatterDialog
 import ui.plots, ui.filterEditDelegate
 
 class MyMainWindow(QMainWindow):
-    def __init__(self,datfile,groupfile,filterfile):
+    def __init__(self,datfile,groupfile,filterfile,cfg):
         QMainWindow.__init__(self)
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
 
-        self.model=DataModel(datfile,groupfile)
+        config=ModelConfig(cfg)
+        self.model=DataModel(datfile,groupfile,cfg=config)
         if filterfile is not None:
             self.model.loadFilters(filterfile)
 
@@ -134,11 +136,12 @@ def main():
     parser.add_argument('--filter',default=None,help='A filter file to load. Filter files are XML format. The first Between filter in the file for a field will be updated with selection.')
     parser.add_argument('--sort',default=None,nargs='+',help='One or more fields to sort the output by. Field names must match the header of the dat file.')
     parser.add_argument('--limit',default=None,type=int,help='Limit the output to this number, if provided')
+    parser.add_argument('--cfg',default=None,help='Use the provided configuration file (xml) instead of the default one. Default one is found in api/modelcfg.xml')
     parser.add_argument('file',help='the dat file')
     args=parser.parse_args()
 
     app = QApplication(sys.argv)
-    w = MyMainWindow(args.file,args.group, args.filter)
+    w = MyMainWindow(args.file,args.group, args.filter,args.cfg)
     if args.sort is not None:
         w.datasetpanel.setSort(args.sort)
     if args.limit is not None:

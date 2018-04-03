@@ -5,6 +5,7 @@ import sys
 import argparse
 
 from api.datamodel import DataModel
+from api.modelcfg import ModelConfig
 
 parser=argparse.ArgumentParser(description='Export to a new file. If new file name contains .stream, output will be a CrystFEL stream. If new file name contains .lst, output will be a CrystFEL lst. Otherwise, output will be a .dat file. Note that the group file is necessary IF exporting to stream or lst and stream or image files have been grouped, or IF "in" filtering is performed on grouped fields because "in" filters always use complete names rather than numbers.')
 parser.add_argument('--group',default=None,help='The group file output by groupgen.py (groupcfg.txt), keeps files smaller and numeric by enuemrating strings')
@@ -13,11 +14,13 @@ parser.add_argument('--sort',default=None,nargs='+',help='One or more fields to 
 parser.add_argument('--reversesort',action="store_true",help='Sort descending instead of ascending')
 parser.add_argument('--limit',default=None,type=int,help='Limit the output to this number, if provided')
 parser.add_argument('--limitmode',default="random",choices=['random','top'],help='Whether to take random subset to enforce limit or to take first. Default is random.')
+parser.add_argument('--cfg',default=None,help='Use the provided configuration file (xml) instead of the default one. Default one is found in api/modelcfg.xml')
 parser.add_argument('infile',help='the dat file')
 parser.add_argument('outfile',help='the output file, format automatically determined by line ending')
 args=parser.parse_args()
 
-model=DataModel(args.infile,args.group)
+
+model=DataModel(args.infile,args.group,cfg=ModelConfig(args.cfg))
 if args.filter is not None:
     model.loadFilters(args.filter)
 if args.sort is not None:

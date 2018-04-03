@@ -35,10 +35,7 @@
     <field nm="prorad" prettyname="Profile Radius (nm^-1)" />
     <field nm="detdx"  prettyname="Detector X Shift (mm)"  />
     <field nm="detdy"  prettyname="Detector Y Shift (mm)" />
-    <field nm="reslim" prettyname="Diffraction Resolution Limit (nm^-1)" />
-    <!-- Use this for resolution limit in Angstroms
     <field nm="reslim" prettyname="Diffraction Resolution Limit (A)" mult="10" invert="True" />
-    -->
     <field nm="nref"   prettyname="Number of Reflections"  fmt="%i"/>
     <field nm="nsref"  prettyname="Number of Saturated Reflections" fmt="%i"/>
     <field nm="niref"  prettyname="Number of implausibly negative reflections" fmt="%i"/>
