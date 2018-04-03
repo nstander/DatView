@@ -114,8 +114,10 @@ class MyFigure(FigureCanvas):
                 self.mydraw()
 
     def onMotion(self,event):
+        handled=False
         if event.xdata and event.ydata:
             if self.pan is not None:
+                handled=True
                 if self.manageX:
                     xlim=self.plt.get_xlim()
                     xlim -= (event.xdata - self.pan[0])
@@ -127,6 +129,7 @@ class MyFigure(FigureCanvas):
                 if self.manageX or self.manageY:
                     self.draw()
             elif self.selp is not None:
+                handled=True
                 if self.manageX:
                     if self.selp[0] <= event.xdata:
                         self.sel.set_width(event.xdata - self.selp[0])
@@ -141,6 +144,11 @@ class MyFigure(FigureCanvas):
                         self.sel.set_height(self.selp[1] - event.ydata)
                 if self.manageX or self.manageY:
                     self.draw()
+        if not handled:
+            self.onToolTip(event)
+
+    def onToolTip(self,event):
+        pass
 
     def onFilterChange(self):
         if self.selp is not None:
@@ -237,6 +245,15 @@ class MyHistogram(MyFigure):
                 self.mu = None
                 self.sigma = None
             self.mydraw()
+
+    def onToolTip(self,event):
+        txt=""
+        if event.xdata is not None and event.ydata is not None:
+            txt=str(event.xdata)
+            if self.model.isCategorical(self.field):
+                bar = int(np.round(event.xdata))
+                txt=self.plt.get_xticklabels()[bar].get_text()
+        self.setToolTip(txt)
             
 
 class MyScatter(MyFigure):
