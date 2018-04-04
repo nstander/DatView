@@ -340,6 +340,65 @@ class MyScatter(MyFigure):
         self.plt.set_ylim((self.model.fieldmin(self.yfield),self.model.fieldmax(self.yfield)))
         self.mydraw()
 
+class MyHist2d(MyFigure):
+    def __init__(self,model,xfield,yfield,parent=None,flags=0):
+        MyFigure.__init__(self,parent,flags)
+        self.model=model
+        self.xfield=xfield
+        self.yfield=yfield
+        self.bins=int(64)
+
+        self.fig.canvas.mpl_connect('key_press_event',self.onKey)
+
+        self.manageX=True
+        self.fieldfilterX=self.model.selectionFilter(self.xfield)
+        self.fieldfilterX.modelchange.connect(self.onFilterChange)
+
+        self.manageY=True
+        self.fieldfilterY=self.model.selectionFilter(self.yfield)
+        self.fieldfilterY.modelchange.connect(self.onFilterChange)
+
+        self.model.filterchange.connect(self.mydraw)
+        self.plt.set_xlim((self.model.fieldmin(self.xfield),self.model.fieldmax(self.xfield)))
+        self.plt.set_ylim((self.model.fieldmin(self.yfield),self.model.fieldmax(self.yfield)))
+
+        self.sel=Rectangle((0,0),0,0,color='r',fill=False)
+        self.onFilterChange() # Let this function worry about actual bounds, we just cared about color and fill
+        self.cb=None
+
+        self.mydraw()
+
+    def datadraw(self):
+        # Always use filtered
+        H,xedges,yedges = np.histogram2d(self.model.filtered[self.xfield],self.model.filtered[self.yfield],bins=self.bins,
+                          range=((self.model.fieldmin(self.xfield),self.model.fieldmax(self.xfield)),
+                                 (self.model.fieldmin(self.yfield),self.model.fieldmax(self.yfield))))
+        sc=self.plt.pcolormesh(xedges,yedges,np.transpose(H))
+        if self.cb is None:
+            self.cb=self.fig.colorbar(sc)
+        else:
+            self.cb.on_mappable_changed(sc)
+
+        self.plt.set_xlabel(self.model.prettyname(self.xfield))
+        self.plt.set_ylabel(self.model.prettyname(self.yfield))
+
+    def onKey(self,event):
+        if event.key == '+' or event.key == '=':
+            self.bins *=2
+            self.mydraw()
+        if event.key == '-':
+            self.bins =int(self.bins/2)
+            self.mydraw()
+
+    def onReset(self,event):
+        self.bins=int(64)
+        self.plt.set_xlim((self.model.fieldmin(self.xfield),self.model.fieldmax(self.xfield)))
+        self.plt.set_ylim((self.model.fieldmin(self.yfield),self.model.fieldmax(self.yfield)))
+        self.mydraw()
+
+
+
+
 
 
             

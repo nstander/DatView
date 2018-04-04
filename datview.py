@@ -12,6 +12,7 @@ from api.modelcfg import ModelConfig
 from ui.Ui_MainWindow import Ui_MainWindow
 from ui.datasetPanel import MyDatasetPanel
 from ui.scatterDialog import MyScatterDialog
+from ui.hist2dDialog import MyHist2dDialog
 import ui.plots, ui.filterEditDelegate
 
 class MyMainWindow(QMainWindow):
@@ -32,6 +33,7 @@ class MyMainWindow(QMainWindow):
         self.ui.actionSave_Stream.triggered.connect(self.onSaveStream)
         self.ui.actionSave_Filters.triggered.connect(self.onSaveFilters)
         self.ui.actionScatter.triggered.connect(self.onShowScatter)
+        self.ui.action2D_Histogram.triggered.connect(self.onShowHist2d)
         self.ui.actionOpen.setVisible(False)
         self.ui.actionSave_Plot.setVisible(False)
         
@@ -127,6 +129,10 @@ class MyMainWindow(QMainWindow):
 
     def onShowScatter(self):
         d=MyScatterDialog(self.model,self)
+        d.exec()
+
+    def onShowHist2d(self):
+        d=MyHist2dDialog(self.model,self)
         d.exec()
         
 
