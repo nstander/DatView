@@ -20,6 +20,8 @@ class ModelConfig:
         self.defaultHistograms=set()
         self.internalCols=set()
         self.invert=[]
+        self.scattercmap="jet"
+        self.hist2dcmap="jet"
 
         et=ElementTree.parse(filename)
         root = et.getroot()
@@ -48,6 +50,10 @@ class ModelConfig:
                             self.prettyMap[field.get("nm")]=field.get("prettyname")
                         if "invert" in field.attrib and field.get("invert") == "True":
                             self.invert.append(field.get("nm"))
+            if child.tag == "scattercmap" and child.text:
+                self.scattercmap=child.text
+            if child.tag == "hist2dcmap" and child.text:
+                self.hist2dcmap=child.text
 
     def prettyname(self,field):
         r=field

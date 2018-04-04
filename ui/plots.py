@@ -318,7 +318,7 @@ class MyScatter(MyFigure):
         if self.cfield is not None:
             cAll=self.model.data[self.cfield]
             cFiltered=self.model.filtered[self.cfield]
-            cm=plt.cm.get_cmap('jet')
+            cm=plt.cm.get_cmap(self.model.cfg.scattercmap)
             vmin=self.model.fieldmin(self.cfield)
             vmax=self.model.fieldmax(self.cfield)
 
@@ -373,7 +373,7 @@ class MyHist2d(MyFigure):
         H,xedges,yedges = np.histogram2d(self.model.filtered[self.xfield],self.model.filtered[self.yfield],bins=self.bins,
                           range=((self.model.fieldmin(self.xfield),self.model.fieldmax(self.xfield)),
                                  (self.model.fieldmin(self.yfield),self.model.fieldmax(self.yfield))))
-        sc=self.plt.pcolormesh(xedges,yedges,np.transpose(H))
+        sc=self.plt.pcolormesh(xedges,yedges,np.transpose(H),cmap=plt.cm.get_cmap(self.model.cfg.hist2dcmap))
         if self.cb is None:
             self.cb=self.fig.colorbar(sc)
         else:

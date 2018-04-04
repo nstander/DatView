@@ -84,4 +84,8 @@
 
   <!-- Columns that should be hidden from menus in the GUI (values that make no sense to plot and would just clutter the gui -->
   <hidden names="istart,iend,cstart,cend,pstart,pend,rstart,rend"/>
+
+  <!-- Matplotlib Color Map controls. See https://matplotlib.org/examples/color/colormaps_reference.html -->
+  <scattercmap>jet</scattercmap>
+  <hist2dcmap>jet</hist2dcmap>
 </modelcfg>
