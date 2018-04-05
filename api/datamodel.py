@@ -96,7 +96,7 @@ class DataModel(QObject):
            a bar chart versus histogram. Groups are always categorical, columns stored as strings are
            always categorical and some columns with known limited values are specified categorical such
            as multi """
-        return field.startswith(GroupMgr.prefix) or 'U' in self.cfg.dtype(field) or field in ['subcxi','class','multi','multiid','run']
+        return field.startswith(GroupMgr.prefix) or 'U' in self.cfg.dtype(field) or field in self.cfg.categorical
 
     def intValues(self,field):
         """Meant for categorical values, return list of all possible"""

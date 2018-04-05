@@ -22,6 +22,7 @@ class ModelConfig:
         self.invert=[]
         self.scattercmap="jet"
         self.hist2dcmap="jet"
+        self.categorical=[]
 
         et=ElementTree.parse(filename)
         root = et.getroot()
@@ -33,6 +34,8 @@ class ModelConfig:
                 self.defaultHistograms=set(child.get("names").split(","))
             if child.tag == "hidden":
                 self.internalCols=set(child.get("names").split(","))
+            if child.tag == "categorical":
+                self.categorical=set(child.get("names").split(","))
             if child.tag == "fields":
                 for field in child:
                     if field.get("nm") == "default":
