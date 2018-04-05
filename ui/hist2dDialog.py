@@ -12,6 +12,7 @@ class MyHist2dDialog(QDialog):
         QDialog.__init__(self,parent)
         self.ui=Ui_ScatterDialog()
         self.ui.setupUi(self)
+        self.setWindowTitle("2D Histogram")
         self.model = model
 
         # Hide irrelevant combos so we can keep using the same UI file.

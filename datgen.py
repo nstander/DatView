@@ -108,10 +108,15 @@ class DatGenerator:
             if os.path.isfile(self.curCXIName[:-3] + "h5"):
                 self.curH5=h5py.File(self.curCXIName[:-3] + "h5",'r')
         for col in self.cxicols:
-            if col in self.curCXI and int(cur['event']) < len(self.curCXI[col]):
-                cur[col]=self.curCXI[col][int(cur['event'])]
-            elif self.curH5 and col in self.curH5 and int(cur['event']) < len(self.curH5[col]):
-                cur[col]=self.curH5[col][int(cur['event'])]
+            event=cur.get('event')
+            if event is None:
+                event=0
+            else:
+                event=int(event)
+            if col in self.curCXI and event < len(self.curCXI[col]):
+                cur[col]=self.curCXI[col][event]
+            elif self.curH5 and col in self.curH5 and int(event) < len(self.curH5[col]):
+                cur[col]=self.curH5[col][event]
 
     def groupify(self,cur):
         if self.groupmgr is not None:
