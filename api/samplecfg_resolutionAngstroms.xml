@@ -38,7 +38,7 @@
     <field nm="reslim" prettyname="Diffraction Resolution Limit (A)" mult="10" invert="True" />
     <field nm="nref"   prettyname="Number of Reflections"  fmt="%i"/>
     <field nm="nsref"  prettyname="Number of Saturated Reflections" fmt="%i"/>
-    <field nm="niref"  prettyname="Number of implausibly negative reflections" fmt="%i"/>
+    <field nm="niref"  prettyname="Number of Implausibly Negative Reflections" fmt="%i"/>
     <field nm="o1"     prettyname="astar[0] (nm^-1)" />
     <field nm="o2"     prettyname="astar[1] (nm^-1)" />
     <field nm="o3"     prettyname="astar[2] (nm^-1)" />
@@ -48,16 +48,16 @@
     <field nm="o7"     prettyname="cstar[0] (nm^-1)" />
     <field nm="o8"     prettyname="cstar[1] (nm^-1)" />
     <field nm="o9"     prettyname="cstar[2] (nm^-1)" />
-    <field nm="ifile"  prettyname="Image file (cxi/hdf5)" dtype="U256" fmt="%s"/>
-    <field nm="sfile"  prettyname="Stream file" dtype="U256" fmt="%s"/>
-    <field nm="istart" prettyname="Beginning of Chunk File Pointer" dtype="i4" fmt="%i"/>
-    <field nm="iend"   prettyname="End of Chunk File Pointer" dtype="i4" fmt="%i"/>
+    <field nm="ifile"  prettyname="Image File (cxi/hdf5)" dtype="U256" fmt="%s"/>
+    <field nm="sfile"  prettyname="Stream File" dtype="U256" fmt="%s"/>
+    <field nm="istart" prettyname="Begin Chunk Pointer" dtype="i4" fmt="%i"/>
+    <field nm="iend"   prettyname="End Chunk Pointer" dtype="i4" fmt="%i"/>
     <field nm="cstart" prettyname="Begin Crystal Pointer" dtype="i4" fmt="%i"/>
     <field nm="cend"   prettyname="End Crystal Pointer" dtype="i4" fmt="%i"/>
-    <field nm="rstart" prettyname="Reflection Start Pointer" dtype="i4" fmt="%i"/>
-    <field nm="rend"   prettyname="Reflection End Pointer" dtype="i4" fmt="%i"/>
-    <field nm="pstart" prettyname="Peak Start Pointer" dtype="i4" fmt="%i"/>
-    <field nm="pend"   prettyname="Peak End Pointer" dtype="i4" fmt="%i"/>
+    <field nm="rstart" prettyname="Begin Reflections Pointer" dtype="i4" fmt="%i"/>
+    <field nm="rend"   prettyname="End Reflections Pointer" dtype="i4" fmt="%i"/>
+    <field nm="pstart" prettyname="Begin Peaks Pointer" dtype="i4" fmt="%i"/>
+    <field nm="pend"   prettyname="End Peaks Pointer" dtype="i4" fmt="%i"/>
     <field nm="aclen"  prettyname="Average Camera Length (m)" fmt="%i"/>
     <field nm="cent"   prettyname="Centering" dtype="U1" fmt="%s"/>
     <field nm="ltype"  prettyname="Lattice Type" dtype="U15" fmt="%s"/>

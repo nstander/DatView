@@ -147,7 +147,7 @@ class DatGenerator:
                     checkre=True
 
                 elif line == 'Peaks from peak search':
-                    cur['pstart']=lineStart
+                    cur['pstart']=lineEnd
                     checkre=False
 
                 elif line == 'Reflections measured after indexing':
