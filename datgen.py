@@ -51,7 +51,7 @@ class DatGenerator:
         self.npsynccols=None
         self.npsyncfields=None
         if groupmgr is not None:
-            for col in self.groupmgr.groups():
+            for col in sorted(self.groupmgr.groups()):
                 if col in self.cols:
                     self.cols[self.cols.index(col)]=GroupMgr.prefix + col
                 else:
