@@ -55,7 +55,7 @@ class GroupGenerator:
                 line = fin.readline()
                 if not line:
                     break
-                fields = list(filter(None,line.split()))
+                fields = list(filter(None,line.strip().split('\t')))
                 assert len(fields) == 5 # proper group file formats have 5 non-empty fields
                 assert fields[0] not in self.added or fields[2] not in self.added[fields[0]] # Shouldn't have same entry multiple times
                 if fields[0] not in self.added:

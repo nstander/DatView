@@ -14,7 +14,7 @@ class GroupMgr:
                 line = fin.readline()
                 if not line:
                     break
-                fields = tuple(filter(None,line.split()))
+                fields = list(filter(None,line.strip().split('\t')))
                 assert len(fields) == 5 # proper group file formats have 5 non-empty fields
                 # Columns should be: group	id	value	matchcol	matchvals
                 if fields[0] not in self.gmaps:
