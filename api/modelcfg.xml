@@ -2,6 +2,10 @@
 <modelcfg>
   <!-- If empty uses np default which is whitespace. You can set to use comma. -->
   <datsep></datsep>
+
+  <!-- Strip the text between commentchars tags from the first field on the first line, used to remove comments-->
+  <commentchars></commentchars>
+
   <!-- Format: <fieldname options> and options include:
     prettyname (name used for titles in the gui/> 
     dtype (the numpy datatype use unicode if it can be a string whether or not it can be grouped/> 

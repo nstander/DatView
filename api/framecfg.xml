@@ -1,0 +1,58 @@
+<!-- An example configuration for Cheetah's Frame.txt-->
+<modelcfg>
+  <!-- If empty uses np default which is whitespace. You can set to use comma. -->
+  <datsep>, </datsep>
+
+  <!-- Strip the text between commentchars tags from the first field on the first line, used to remove comments-->
+  <commentchars># </commentchars>
+
+  <!-- Format: <fieldname options> and options include:
+    prettyname (name used for titles in the gui/> 
+    dtype (the numpy datatype use unicode if it can be a string whether or not it can be grouped/> 
+    fmt (the output format for python like %.2f)
+    mult (multiply the column by this amount after loading)
+    invert="True" (use to take 1/value like converting nm^-1 to Angstroms)
+  -->
+  <fields>
+    <!-- The defaults when unspecified. -->
+    <field nm="default" dtype="f4" fmt="%f"  mult="1" />
+
+    <!-- Stream columns possible with datgen -->
+    <field nm="eventData->eventName" prettyname="Event Name" dtype="U50" fmt="%s"/>
+    <field nm="eventData->filename" prettyname="Output File Name" dtype="U50" fmt="%s"/>
+    <field nm="eventData->stackSlice"  prettyname="Stack Slice" fmt="%i"/>
+    <field nm="eventData->xtcFrameNumber" prettyname="Frame Number" fmt="%i"/>
+    <field nm="eventData->hit" prettyname="Hit" fmt="%i" />
+    <field nm="eventData->powderClass"  prettyname="Powder Class"/>
+    <field nm="eventData->hitScore" prettyname="Hit Score" />
+    <field nm="eventData->photonEnergyeV" prettyname="Photon Energy (eV)" />
+    <field nm="eventData->wavelengthA" prettyname="Wavelength A" />
+    <field nm="eventData->gmd1" />
+    <field nm="eventData->gmd2" />
+    <field nm="eventData->detector[0].detectorZ"   prettyname="Camera length"  />
+    <field nm="eventData->energySpectrumExist" />
+    <field nm="eventData->nPeaks"  prettyname="Number of Peaks" fmt="%i"/>
+    <field nm="eventData->peakNpix"  prettyname="peakNpix" fmt="%i"  />
+    <field nm="eventData->peakTotal"   prettyname="Total Peaks"  />
+    <field nm="eventData->peakResolution"   prettyname="Peak Resolution"  />
+    <field nm="eventData->peakDensity"  prettyname="Peak Density" />
+    <field nm="eventData->pumpLaserCode" prettyname="Pump Laser Code" />
+    <field nm="eventData->pumpLaserDelay"  prettyname="Pump Laser Delay"  />
+    <field nm="eventData->pumpLaserOn"  prettyname="Pump Laser On" />
+    <field nm="eventData->exposureTime" prettyname="Exposure Time" />
+
+  </fields> 
+
+  <!-- Histograms displayed by default when launching GUI -->
+  <defaulthistograms names="eventData->hit,eventData->nPeaks,eventData->peakResolution"/>
+
+  <!-- Columns that should be hidden from menus in the GUI (values that make no sense to plot and would just clutter the gui) -->
+  <hidden names="eventData->eventName"/>
+
+  <!-- Columns that should be treated as categorical variables. In-set filters are only available for categorical variables. Note that any fields whose datatype is string (starts with U) and all fields starting with a group file prefix are automatically categorical. -->
+  <categorical names="eventData->hit"/>
+
+  <!-- Matplotlib Color Map controls. See https://matplotlib.org/examples/color/colormaps_reference.html -->
+  <scattercmap>jet</scattercmap>
+  <hist2dcmap>jet</hist2dcmap>
+</modelcfg>

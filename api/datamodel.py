@@ -17,15 +17,15 @@ class DataModel(QObject):
             self.cfg = cfg
         self.cols=[]
         with open(filename) as dfile:
-            self.hdrline=dfile.readline()
-            self.cols=self.hdrline.split()
-        self.prettynames=[]
+            self.hdrline=dfile.readline().strip()
+            self.cols=self.hdrline.split(self.cfg.sep)
+            if cfg.commentchar is not None:
+                self.cols[0] = self.cols[0].replace(cfg.commentchar, "")
         dtypes=[]
         convert={}
         todigitize=[]
         self.digitized={}
         for c in self.cols:
-            self.prettynames.append(self.prettyname(c))
             dtypes.append(self.cfg.dtype(c))
             if 'U' in dtypes[-1]:
                 convert[self.cols.index(c)]=np.lib.npyio.asstr
@@ -222,7 +222,10 @@ class DataModel(QObject):
         for c in self.cols:
             formats.append(self.cfg.fmt(c))
         outarr=self.rdata[self.topfilter.keep][self.outArrIndices()]
-        np.savetxt(fname,outarr,fmt=formats,delimiter='\t',header=self.hdrline[:-1],comments='')
+        d='\t'
+        if self.cfg.sep is not None:
+            d=self.cfg.sep
+        np.savetxt(fname,outarr,fmt=formats,delimiter=d,header=self.hdrline,comments='')
         print ("Wrote",fname)
 
     def canSaveLst(self):

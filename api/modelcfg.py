@@ -23,6 +23,7 @@ class ModelConfig:
         self.scattercmap="jet"
         self.hist2dcmap="jet"
         self.categorical=[]
+        self.commentchar=None
 
         et=ElementTree.parse(filename)
         root = et.getroot()
@@ -30,6 +31,8 @@ class ModelConfig:
         for child in root:
             if child.tag == "datsep" and child.text:
                 self.sep=child.text
+            if child.tag == "commentchars" and child.text:
+                self.commentchar=child.text
             if child.tag == "defaulthistograms":
                 self.defaultHistograms=set(child.get("names").split(","))
             if child.tag == "hidden":
