@@ -27,12 +27,17 @@ class GroupMgr:
                 self.gmaps[fields[0]]["matchcol"]=fields[3]
                 
                 mtchs = set()
-                for mtch in filter(None,fields[4].split(',')):
-                    try:
-                        mtch=int(mtch)
-                    except ValueError:
-                        pass
-                    mtchs.add(mtch)
+                if fields[4][0] == '@':
+                    # This field is a file that should be read.
+                    with open(fields[4][1:]) as f:
+                        mtchs.update(f.read().splitlines()) # Use splitlines instead of readlines to avoid \n characters
+                else:
+                    for mtch in filter(None,fields[4].split(',')):
+                        try:
+                            mtch=int(mtch)
+                        except ValueError:
+                            pass
+                        mtchs.add(mtch)
                 self.gmaps[fields[0]]["matches"][int(fields[1])]=mtchs
 
 
