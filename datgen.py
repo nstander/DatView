@@ -7,6 +7,7 @@ import re
 import h5py
 import sys
 import numpy as np
+from math import sqrt, cos,radians
 
 from api.groupmgr import GroupMgr
 
@@ -35,7 +36,7 @@ class DatGenerator:
     allstrcols=['ifile','run','class','subcxi','event','indby','phoen','bmdv','bmbw','aclen','npeak',
                 'ltype','cent','a','b','c','alpha','beta','gamma','prorad','detdx','detdy','reslim','nref',
                 'nsref','niref','o1','o2','o3','o4','o5','o6','o7','o8','o9']
-    internalcols=['sfile','istart','iend','cstart','cend','pstart','pend','rstart','rend','multiid','multi']
+    internalcols=['sfile','istart','iend','cstart','cend','pstart','pend','rstart','rend','multiid','multi','vol']
     allcols=allstrcols+internalcols
                 
     def __init__(self,out,streamcols,cxicols,groupmgr=None):
@@ -170,6 +171,12 @@ class DatGenerator:
                     cur['cstart']=lineStart
 
                 elif line == '--- End crystal':
+                    # Assume if crystal existed than valid cell parameters were found
+                    if 'vol' in self.cols: # But only bother calculating if user asked
+                        cosalpha=cos(radians(float(cur['alpha'])))
+                        cosbeta =cos(radians(float(cur['beta'])))
+                        cosgamma=cos(radians(float(cur['gamma'])))
+                        cur['vol']=float(cur['a'])*float(cur['b'])*float(cur['c'])*sqrt(1 - cosalpha**2 - cosbeta**2 - cosgamma**2 + 2 * cosalpha * cosbeta * cosgamma) 
                     cur['cend']=lineEnd
 
 
