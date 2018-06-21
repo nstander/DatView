@@ -68,6 +68,7 @@
     <field nm="aclen"  prettyname="Average Camera Length (m)" fmt="%i"/>
     <field nm="cent"   prettyname="Centering" dtype="U1" fmt="%s"/>
     <field nm="ltype"  prettyname="Lattice Type" dtype="U15" fmt="%s"/>
+    <field nm="vol"  prettyname="Crystal Volume (nm^-3)"/>
 
     <!-- Some common cxi/h5 fields -->
     <field nm="/LCLS/machineTime" prettyname="Machine Time (s)" fmt="%i"/>
