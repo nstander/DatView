@@ -375,7 +375,10 @@ class MyHist2d(MyFigure):
         self.onFilterChange() # Let this function worry about actual bounds, we just cared about color and fill
         self.cb=None
 
-        self.setWindowTitle("%s - %s - 2D Histogram" % (self.model.prettyname(self.xfield),self.model.prettyname(self.yfield)))
+        logtxt=""
+        if log:
+            logtxt="Log "
+        self.setWindowTitle("%s - %s - %s2D Histogram" % (self.model.prettyname(self.xfield),self.model.prettyname(self.yfield),logtxt))
         self.mydraw()
 
     def datadraw(self):
