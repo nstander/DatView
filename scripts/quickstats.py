@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+# Author: Natasha Stander
+
 import sys,os
 import argparse
 import numpy as np
