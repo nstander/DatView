@@ -243,6 +243,8 @@ class MyHistogram(MyFigure):
                 title += fmt % (self.mu,self.sigma)
         self.plt.set_title(title)
         self.sel.set_height(self.plt.get_ylim()[1])
+        if not self.model.hasLabels(self.field):
+            self.plt.locator_params(axis='x', nbins=6)
 
     def onKey(self,event):
         if event.key == '+' or event.key == '=':
