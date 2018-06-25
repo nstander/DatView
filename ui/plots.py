@@ -195,7 +195,7 @@ class MyFigure(FigureCanvas):
 class MyHistogram(MyFigure):
     def __init__(self,model,field,parent=None,flags=0):
         MyFigure.__init__(self,parent,flags)
-        self.bins=int(64)
+        self.bins=int(model.cfg.hist1Dbins)
         self.model=model
         self.field=field
 
@@ -353,7 +353,7 @@ class MyHist2d(MyFigure):
         self.model=model
         self.xfield=xfield
         self.yfield=yfield
-        self.bins=int(64)
+        self.bins=int(model.cfg.hist2Dbins)
 
         self.fig.canvas.mpl_connect('key_press_event',self.onKey)
 
@@ -396,6 +396,8 @@ class MyHist2d(MyFigure):
             self.mydraw()
         if event.key == '-':
             self.bins =int(self.bins/2)
+            if self.bins < 1:
+                self.bins = 1
             self.mydraw()
 
     def onReset(self,event):

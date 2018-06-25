@@ -29,6 +29,8 @@ class ModelConfig:
         self.categorical=[]
         self.commentchar=None
         self.histperrow=3
+        self.hist1Dbins=32
+        self.hist2Dbins=64
 
         et=ElementTree.parse(filename)
         root = et.getroot()
@@ -67,6 +69,10 @@ class ModelConfig:
                 self.hist2dcmap=child.text
             if child.tag == "histperrow" and child.text:
                 self.histperrow=int(child.text)
+            if child.tag == "hist1Dbins" and child.text:
+                self.hist1Dbins=int(child.text)
+            if child.tag == "hist2Dbins" and child.text:
+                self.hist2Dbins=int(child.text)
 
     def prettyname(self,field):
         r=field

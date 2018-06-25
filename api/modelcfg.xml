@@ -99,4 +99,8 @@
 
   <!-- Number of histograms to display on a row in the main GUI window. Default=3 -->
   <histperrow>3</histperrow>
+
+  <!-- Initial number of bins. Larger numbers take longer to plot. Bins can be changed per graph with +/-. Note that this multiplies/divides by two so default numbers are powers of 2. Default is 32 for 1D and 64 for 2D -->
+  <hist1Dbins>32</hist1Dbins>
+  <hist2Dbins>64</hist2Dbins>
 </modelcfg>
