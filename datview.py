@@ -27,6 +27,7 @@ class MyMainWindow(QMainWindow):
 
         config=ModelConfig(cfg)
         self.model=DataModel(datfile,groupfile,cfg=config)
+        self.histcolumns=config.histperrow
         if filterfile is not None:
             self.model.loadFilters(filterfile)
 
@@ -92,11 +93,11 @@ class MyMainWindow(QMainWindow):
             else:
                 h=ui.plots.MyHistogram(parent=self.ui.scrollAreaWidgetContents,model=self.model,field=field)
                 self.cachedHistograms[field]=h
-            if spot < 3:
+            if spot < self.histcolumns:
                 self.ui.gridLayout.setColumnStretch(spot,1)
-            if spot%3 == 0:
-                self.ui.gridLayout.setRowStretch(int(spot/3),1)
-            self.ui.gridLayout.addWidget(h,int(spot/3),spot%3)
+            if spot%self.histcolumns == 0:
+                self.ui.gridLayout.setRowStretch(int(spot/self.histcolumns),1)
+            self.ui.gridLayout.addWidget(h,int(spot/self.histcolumns),spot%self.histcolumns)
             h.setVisible(True)
             spot += 1
 

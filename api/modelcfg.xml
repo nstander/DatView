@@ -96,4 +96,7 @@
   <!-- Matplotlib Color Map controls. See https://matplotlib.org/examples/color/colormaps_reference.html -->
   <scattercmap>jet</scattercmap>
   <hist2dcmap>jet</hist2dcmap>
+
+  <!-- Number of histograms to display on a row in the main GUI window. Default=3 -->
+  <histperrow>3</histperrow>
 </modelcfg>

@@ -28,6 +28,7 @@ class ModelConfig:
         self.hist2dcmap="jet"
         self.categorical=[]
         self.commentchar=None
+        self.histperrow=3
 
         et=ElementTree.parse(filename)
         root = et.getroot()
@@ -64,6 +65,8 @@ class ModelConfig:
                 self.scattercmap=child.text
             if child.tag == "hist2dcmap" and child.text:
                 self.hist2dcmap=child.text
+            if child.tag == "histperrow" and child.text:
+                self.histperrow=int(child.text)
 
     def prettyname(self,field):
         r=field
