@@ -12,7 +12,8 @@ from math import sqrt, cos,radians
 from api.groupmgr import GroupMgr
 
 class DatGenerator:
-    streamcols=[(('run','class','subcxi'),re.compile('^Image filename: .*r(\d{4})(?:-class(\d))?(?:-c(\d{2}))?\.(?:cxi|h5)')),
+    streamcols=[(('class','subcxi'),re.compile('^Image filename: .*r\d{4}(?:-class(\d))?(?:-c(\d{2}))?\.(?:cxi|h5)')),
+                (('run',),re.compile('^Image filename: .*r(\d{4})')),
                 (('ifile',),re.compile('^Image filename: (.*)')),
                 (('event',),re.compile('^Event: //(\d+)')),
                 (('indby',),re.compile('^indexed_by = ([A-Za-z-]+)')),
