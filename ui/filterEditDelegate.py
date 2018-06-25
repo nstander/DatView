@@ -37,7 +37,7 @@ class FilterItemDelegate(QStyledItemDelegate):
             addOr.setData(index.internalPointer())
             addOr.triggered.connect(self.onAddOr)
 
-            between = top.addMenu("Bewteen")
+            between = top.addMenu("Between")
             greater = top.addMenu(">=")
             less = top.addMenu("<")
             inset = top.addMenu("In")
