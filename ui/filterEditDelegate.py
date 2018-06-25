@@ -1,3 +1,7 @@
+# datview/ui/filterEditDelegate.py
+# The filter panel in the GUI is a generic QTreeView defined in the main gui. This file provides all the interactivity to add and update filters for the filter panel
+# Author Natasha Stander
+
 from PyQt4.QtGui import QStyledItemDelegate, QDoubleSpinBox, QComboBox, QListWidget, QListWidgetItem, QToolButton, QMenu
 from PyQt4.QtCore import  Qt
 import sys

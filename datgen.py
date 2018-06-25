@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+# datview/datgen.py
+# Data reduction script, stream(s) -> dat
+# Author Natasha Stander
+
 import os
 import argparse
 import re

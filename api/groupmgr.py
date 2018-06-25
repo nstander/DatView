@@ -1,5 +1,6 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+# datview/api/groupmgr.py
+# Read-only management of a group file. 
+# Author Natasha Stander
 
 class GroupMgr:
     prefix="g_"

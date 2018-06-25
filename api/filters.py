@@ -1,3 +1,7 @@
+# datview/api/filters.py
+# File contains all filters. Filter objects calculate a boolean array of keepable values and do not directly interact with the model.
+# Author Natasha Stander
+
 import numpy as np
 from PyQt4.QtCore import QObject,pyqtSignal
 import lxml.etree as ElementTree

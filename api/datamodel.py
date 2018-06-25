@@ -1,3 +1,7 @@
+# datview/api/datamodel.py
+# Main api of program. DataModel contains the data and filters, and manages all load and save options. 
+# Author Natasha Stander
+
 from PyQt4.QtCore import QObject,pyqtSignal
 import numpy as np
 from .filters import *

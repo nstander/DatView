@@ -1,3 +1,7 @@
+# datview/api/modelcfg.py
+# Loads and stores GUI configuration file
+# Author Natasha Stander
+
 import os 
 import lxml.etree as ElementTree
 from .groupmgr import GroupMgr

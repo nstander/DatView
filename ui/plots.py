@@ -1,3 +1,7 @@
+# datview/ui/plots.py 
+# This file contains the code interfacing with matplotlib for drawing all plots in the GUI
+# Author Natasha Stander
+
 from PyQt4 import QtGui, QtCore
 import numpy as np
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas

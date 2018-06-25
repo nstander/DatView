@@ -1,5 +1,6 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+# datview/ui/datasetPanel.py 
+# This file interfaces the dataset panel ui with the data model
+# Author Natasha Stander
 
 from PyQt4.QtGui import QWidget, QMenu
 from api.datamodel import DataModel

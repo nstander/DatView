@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+# datview/datexport.py
+# Command line interface to load/export options of GUI 
+# Author Natasha Stander
+
 import sys
 import argparse
 

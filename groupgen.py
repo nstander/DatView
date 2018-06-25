@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+# datview/groupgen.py
+# Program for write-access to group files
+# Author Natasha Stander
+
 import os
 import fnmatch
 import argparse

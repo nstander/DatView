@@ -1,5 +1,6 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+# datview/ui/hist2dDialog.py 
+# This file contains code for scatter plot dialog
+# Author Natasha Stander
 
 from PyQt4.QtGui import QDialog
 from PyQt4.QtCore import Qt

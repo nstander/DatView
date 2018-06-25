@@ -1,3 +1,7 @@
+# datview/api/filtermodel.py
+# QAbstractItemModel for interfacing the filters stored in datamodel.py
+# Author Natasha Stander
+
 from PyQt4.QtCore import QAbstractItemModel, QModelIndex, Qt
 from .filters import *
 

@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+# datview/datview.py
+# Main program and window of GUI.
+# Author Natasha Stander
+
 import sys
 import argparse
 import numpy as np
