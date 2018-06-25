@@ -52,11 +52,14 @@ class Ui_ScatterDialog(object):
         self.cCombo = QtGui.QComboBox(ScatterDialog)
         self.cCombo.setObjectName(_fromUtf8("cCombo"))
         self.gridLayout.addWidget(self.cCombo, 3, 1, 1, 1)
+        self.logCheckBox = QtGui.QCheckBox(ScatterDialog)
+        self.logCheckBox.setObjectName(_fromUtf8("logCheckBox"))
+        self.gridLayout.addWidget(self.logCheckBox, 4, 0, 1, 2)
         self.buttonBox = QtGui.QDialogButtonBox(ScatterDialog)
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
         self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
         self.buttonBox.setObjectName(_fromUtf8("buttonBox"))
-        self.gridLayout.addWidget(self.buttonBox, 4, 0, 1, 2)
+        self.gridLayout.addWidget(self.buttonBox, 5, 0, 1, 2)
 
         self.retranslateUi(ScatterDialog)
         QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("accepted()")), ScatterDialog.accept)
@@ -69,4 +72,5 @@ class Ui_ScatterDialog(object):
         self.label_2.setText(_translate("ScatterDialog", "Y Axis:", None))
         self.label_3.setText(_translate("ScatterDialog", "Z Axis:", None))
         self.label_4.setText(_translate("ScatterDialog", "Color By:", None))
+        self.logCheckBox.setText(_translate("ScatterDialog", "Log Scale (Colors)", None))
 

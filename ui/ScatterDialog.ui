@@ -55,6 +55,13 @@
     <widget class="QComboBox" name="cCombo"/>
    </item>
    <item row="4" column="0" colspan="2">
+    <widget class="QCheckBox" name="logCheckBox">
+     <property name="text">
+      <string>Log Scale (Colors)</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="0" colspan="2">
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>

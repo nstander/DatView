@@ -27,7 +27,7 @@ class MyHist2dDialog(QDialog):
         self.accepted.connect(self.onAccept)
 
     def onAccept(self):
-        p=MyHist2d(self.model,self.ui.xCombo.itemData(self.ui.xCombo.currentIndex()),self.ui.yCombo.itemData(self.ui.yCombo.currentIndex()),parent=self.parent(),flags=Qt.Window)
+        p=MyHist2d(self.model,self.ui.xCombo.itemData(self.ui.xCombo.currentIndex()),self.ui.yCombo.itemData(self.ui.yCombo.currentIndex()),parent=self.parent(),flags=Qt.Window,log=self.ui.logCheckBox.isChecked())
         p.show()
 
         

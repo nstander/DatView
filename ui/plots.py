@@ -9,6 +9,7 @@ from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 import matplotlib.mlab
 from matplotlib.patches import Rectangle
+from matplotlib.colors import LogNorm
 from api.filters import BetweenFilter
 from scipy.stats import norm
 
@@ -348,12 +349,13 @@ class MyScatter(MyFigure):
         self.mydraw()
 
 class MyHist2d(MyFigure):
-    def __init__(self,model,xfield,yfield,parent=None,flags=0):
+    def __init__(self,model,xfield,yfield,log=False,parent=None,flags=0):
         MyFigure.__init__(self,parent,flags)
         self.model=model
         self.xfield=xfield
         self.yfield=yfield
         self.bins=int(model.cfg.hist2Dbins)
+        self.log=log
 
         self.fig.canvas.mpl_connect('key_press_event',self.onKey)
 
@@ -381,7 +383,10 @@ class MyHist2d(MyFigure):
         H,xedges,yedges = np.histogram2d(self.model.filtered[self.xfield],self.model.filtered[self.yfield],bins=self.bins,
                           range=((self.model.fieldmin(self.xfield),self.model.fieldmax(self.xfield)),
                                  (self.model.fieldmin(self.yfield),self.model.fieldmax(self.yfield))))
-        sc=self.plt.pcolormesh(xedges,yedges,np.transpose(H),cmap=plt.cm.get_cmap(self.model.cfg.hist2dcmap))
+        norm=None
+        if self.log:
+            norm=LogNorm()
+        sc=self.plt.pcolormesh(xedges,yedges,np.transpose(H),cmap=plt.cm.get_cmap(self.model.cfg.hist2dcmap),norm=norm)
         if self.cb is None:
             self.cb=self.fig.colorbar(sc)
         else:
