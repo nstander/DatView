@@ -162,7 +162,10 @@ class MyFigure(FigureCanvas):
             self.onToolTip(event)
 
     def onToolTip(self,event):
-        pass
+        txt=""
+        if event.xdata is not None and event.ydata is not None:
+            txt="%.4f,%.4f"%(event.xdata,event.ydata)
+        self.setToolTip(txt)
 
     def onSave(self):
         name=QtGui.QFileDialog.getSaveFileName(self,'Save Plot',filter='*.png')
@@ -231,7 +234,7 @@ class MyHistogram(MyFigure):
                 self.plt.bar(self.dcache[0],self.dcache[1],color='black',align='center')
             if self.model.hasLabels(self.field):
                 lbls=self.model.labels(self.field)
-                self.plt.set_xticks(np.arange(len(lbls)))
+                self.plt.set_xticks(self.model.labelints(self.field))
                 self.plt.set_xticklabels(lbls)
         else:
             if self.model.isFiltered():
@@ -275,7 +278,7 @@ class MyHistogram(MyFigure):
             txt=str(event.xdata)
             if self.model.isCategorical(self.field):
                 bar = int(np.round(event.xdata))
-                txt=self.plt.get_xticklabels()[bar].get_text()
+                txt=self.model.stringValue(self.field,bar)
         self.setToolTip(txt)
             
 

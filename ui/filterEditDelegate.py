@@ -82,7 +82,7 @@ class FilterItemDelegate(QStyledItemDelegate):
                     for i in range(1,lwidget.count()):
                         lwidget.item(i).setFlags(lwidget.item(i).flags() | Qt.ItemIsUserCheckable)
                         # i-1 because item 0 is the full list so need to offset all by -1
-                        lwidget.item(i).setCheckState((i-1) in index.internalPointer().allowed)
+                        lwidget.item(i).setCheckState(index.model().dmodel.intValue(index.internalPointer().field,lwidget.item(i).text()) in index.internalPointer().allowed)
                 else:
                     numbers=np.unique(index.internalPointer().values)
                     for n in numbers:

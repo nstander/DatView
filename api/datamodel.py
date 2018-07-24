@@ -66,6 +66,7 @@ class DataModel(QObject):
         self.filtermodel=FilterModel(self.topfilter,self)
         self.mincache={}
         self.maxcache={}
+        self.labelcache={}
         self.groupmgr=None
         if groupfile:
             self.groupmgr=GroupMgr(groupfile)
@@ -90,10 +91,28 @@ class DataModel(QObject):
     def labels(self,field):
         field=self.datafield(field)
         if self.hasLabels(field):
-            if field in self.digitized:
-                return self.digitized[field]
-            return self.groupmgr.values(field[len(GroupMgr.prefix):])
+            if field not in self.labelcache:
+                self.labelcache[field]={}
+                if field in self.digitized:
+                    self.labelcache[field]["labels"] = self.digitized[field]
+                    self.labelcache[field]["ints"] = np.arange(len(self.digitized[field]))
+                else:
+                    self.labelcache[field]["ints"] = np.unique(self.data[field])
+                    labels=[]
+                    for i in self.labelcache[field]["ints"]:
+                        labels.append(self.groupmgr.value(field[len(GroupMgr.prefix):],i))
+                    self.labelcache[field]["labels"] = labels
+            return self.labelcache[field]["labels"]
         return []
+
+    def labelints(self,field):
+        field=self.datafield(field)
+        if self.hasLabels(field):
+            if field not in self.labelcache:
+                self.labels()
+            return self.labelcache[field]["ints"]
+        return []
+        
 
     def isCategorical(self,field):
         """Return true if values in field are categorical or discrete. Basically flags what should be
