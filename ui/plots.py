@@ -389,6 +389,9 @@ class MyHist2d(MyFigure):
         self.sel=Rectangle((0,0),0,0,color='r',fill=False)
         self.onFilterChange() # Let this function worry about actual bounds, we just cared about color and fill
         self.cb=None
+        self.H=None
+        self.xedges=None
+        self.yedges=None
 
         logtxt=""
         if log:
@@ -403,13 +406,13 @@ class MyHist2d(MyFigure):
             b[0]=len(self.model.labels(self.xfield))
         if self.model.isCategorical(self.yfield):
             b[1]=len(self.model.labels(self.yfield))       
-        H,xedges,yedges = np.histogram2d(self.model.filtered[self.xfield],self.model.filtered[self.yfield],bins=b,
+        self.H,self.xedges,self.yedges = np.histogram2d(self.model.filtered[self.xfield],self.model.filtered[self.yfield],bins=b,
                           range=((self.model.fieldmin(self.xfield),self.model.fieldmax(self.xfield)),
                                  (self.model.fieldmin(self.yfield),self.model.fieldmax(self.yfield))))
         norm=None
         if self.log:
             norm=LogNorm()
-        sc=self.plt.pcolormesh(xedges,yedges,np.transpose(H),cmap=plt.cm.get_cmap(self.model.cfg.hist2dcmap),norm=norm)
+        sc=self.plt.pcolormesh(self.xedges,self.yedges,np.transpose(self.H),cmap=plt.cm.get_cmap(self.model.cfg.hist2dcmap),norm=norm)
         if self.cb is None:
             self.cb=self.fig.colorbar(sc)
         else:
@@ -436,6 +439,23 @@ class MyHist2d(MyFigure):
         self.plt.set_xlim((self.model.fieldmin(self.xfield),self.model.fieldmax(self.xfield)))
         self.plt.set_ylim((self.model.fieldmin(self.yfield),self.model.fieldmax(self.yfield)))
         self.mydraw()
+
+    def onToolTip(self,event):
+        txt=""
+        if event.xdata is not None and event.ydata is not None and self.H is not None:
+            xbin=np.searchsorted(self.xedges,event.xdata)
+            ybin=np.searchsorted(self.yedges,event.ydata)
+            if xbin > 0 and xbin < len(self.xedges) and ybin > 0 and ybin < len(self.yedges):
+                if self.model.isCategorical(self.xfield):
+                    xtxt=self.model.stringValue(self.xfield,xbin-1)
+                else:
+                    xtxt="%.4f-%.4f"%(self.xedges[xbin-1],self.xedges[xbin])
+                if self.model.isCategorical(self.yfield):
+                    ytxt=self.model.stringValue(self.yfield,ybin-1)
+                else:
+                    ytxt="%.4f-%.4f"%(self.yedges[ybin-1],self.yedges[ybin])
+                txt="%s,%s,%i"%(xtxt,ytxt,self.H[xbin-1,ybin-1])
+        self.setToolTip(txt)
 
 
 
