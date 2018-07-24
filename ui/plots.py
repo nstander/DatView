@@ -169,7 +169,7 @@ class MyFigure(FigureCanvas):
         if name is not None:
             self.fig.savefig(name,ext="png")
 
-    def onReset(self,event):
+    def onReset(self):
         self.mydraw(False)
 
     def onFilterChange(self):
@@ -222,8 +222,12 @@ class MyHistogram(MyFigure):
         self.sel=Rectangle((self.fieldfilterX.minimum,0),self.fieldfilterX.maximum-self.fieldfilterX.minimum,0,alpha=0.3,color='r')
         self.sel.set_visible(self.fieldfilterX.isActive())
 
+        rangeAct=self.menu.addAction("Set Range to Current Limits")
+        rangeAct.triggered.connect(self.onSetRange)
+
         self.mu=None
         self.sigma=None
+        self.range=(self.model.fieldmin(self.field),self.model.fieldmax(self.field))
 
         self.plt.get_yaxis().set_visible(False)
         self.dcache=None
@@ -250,7 +254,7 @@ class MyHistogram(MyFigure):
                     range=(self.model.fieldmin(self.field),self.model.fieldmax(self.field)))
             else:
                 b=self.plt.hist(self.model.data[self.field],bins=self.bins,color='black',
-                    range=(self.model.fieldmin(self.field),self.model.fieldmax(self.field)))[1]
+                    range=self.range)[1]
             if self.mu is not None:
                 y=matplotlib.mlab.normpdf(np.array(b),self.mu,self.sigma)
                 self.plt.plot(b,y/np.max(y)*self.plt.get_ylim()[1]*0.95,'r',linewidth=2)
@@ -286,6 +290,14 @@ class MyHistogram(MyFigure):
                 bar = int(np.round(event.xdata))
                 txt=self.model.stringValue(self.field,bar)
         self.setToolTip(txt)
+
+    def onSetRange(self):
+        self.range=tuple(self.plt.get_xlim())
+        self.mydraw()
+
+    def onReset(self):
+        self.range=(self.model.fieldmin(self.field),self.model.fieldmax(self.field))
+        self.mydraw(False)
             
 
 class MyScatter(MyFigure):
@@ -404,6 +416,18 @@ class MyHist2d(MyFigure):
         self.xedges=None
         self.yedges=None
 
+        self.range=((self.model.fieldmin(self.xfield),self.model.fieldmax(self.xfield)),
+                                 (self.model.fieldmin(self.yfield),self.model.fieldmax(self.yfield)))
+
+        rangeAct=self.menu.addAction("Set Range to Current Limits")
+        rangeAct.triggered.connect(self.onSetRange)
+
+        xrangeAct=self.menu.addAction("Set X Range to Current Limits")
+        xrangeAct.triggered.connect(self.onSetXRange)
+
+        yrangeAct=self.menu.addAction("Set Y Range to Current Limits")
+        yrangeAct.triggered.connect(self.onSetYRange)
+
         logtxt=""
         if log:
             logtxt="Log "
@@ -418,8 +442,7 @@ class MyHist2d(MyFigure):
         if self.model.isCategorical(self.yfield):
             b[1]=len(self.model.labels(self.yfield))       
         self.H,self.xedges,self.yedges = np.histogram2d(self.model.filtered[self.xfield],self.model.filtered[self.yfield],bins=b,
-                          range=((self.model.fieldmin(self.xfield),self.model.fieldmax(self.xfield)),
-                                 (self.model.fieldmin(self.yfield),self.model.fieldmax(self.yfield))))
+                          range=self.range)
         norm=None
         if self.log:
             norm=LogNorm()
@@ -467,6 +490,23 @@ class MyHist2d(MyFigure):
                     ytxt="%.4f-%.4f"%(self.yedges[ybin-1],self.yedges[ybin])
                 txt="%s,%s,%i"%(xtxt,ytxt,self.H[xbin-1,ybin-1])
         self.setToolTip(txt)
+
+    def onSetRange(self):
+        self.range=(tuple(self.plt.get_xlim()),tuple(self.plt.get_ylim()))
+        self.mydraw()
+
+    def onSetXRange(self):
+        self.range=(tuple(self.plt.get_xlim()),self.range[1])
+        self.mydraw(False)
+
+    def onSetYRange(self):
+        self.range=(self.range[0],tuple(self.plt.get_ylim()))
+        self.mydraw(False)
+
+    def onReset(self):
+        self.range=((self.model.fieldmin(self.xfield),self.model.fieldmax(self.xfield)),
+                                 (self.model.fieldmin(self.yfield),self.model.fieldmax(self.yfield)))
+        self.mydraw(False)
 
 
 
