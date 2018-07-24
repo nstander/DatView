@@ -162,10 +162,7 @@ class MyFigure(FigureCanvas):
             self.onToolTip(event)
 
     def onToolTip(self,event):
-        txt=""
-        if event.xdata is not None and event.ydata is not None:
-            txt="%.4f,%.4f"%(event.xdata,event.ydata)
-        self.setToolTip(txt)
+        pass
 
     def onSave(self):
         name=QtGui.QFileDialog.getSaveFileName(self,'Save Plot',filter='*.png')
@@ -362,6 +359,20 @@ class MyScatter(MyFigure):
         self.plt.set_xlim((self.model.fieldmin(self.xfield),self.model.fieldmax(self.xfield)))
         self.plt.set_ylim((self.model.fieldmin(self.yfield),self.model.fieldmax(self.yfield)))
         self.mydraw()
+
+    def onToolTip(self,event):
+        txt=""
+        if event.xdata is not None and event.ydata is not None:
+            if self.model.isCategorical(self.xfield):
+                xtxt=self.model.stringValue(self.xfield,int(np.round(event.xdata)))
+            else:
+                xtxt="%.4f"%(event.xdata)
+            if self.model.isCategorical(self.yfield):
+                ytxt=self.model.stringValue(self.yfield,int(np.round(event.ydata)))
+            else:
+                ytxt="%.4f"%(event.ydata)
+            txt="%s,%s"%(xtxt,ytxt)
+        self.setToolTip(txt)
 
 class MyHist2d(MyFigure):
     def __init__(self,model,xfield,yfield,log=False,parent=None,flags=0):
