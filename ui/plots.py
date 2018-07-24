@@ -195,6 +195,18 @@ class MyFigure(FigureCanvas):
             self.sel.set_visible(self.fieldfilterY.isActive() or (self.fieldfilterX is not None and self.fieldfilterX.isActive()))
         self.draw()
 
+    def xlabels(self,model,field):
+        if model.hasLabels(field):
+            lbls=model.labels(field)
+            self.plt.set_xticks(model.labelints(field))
+            self.plt.set_xticklabels(lbls)
+
+    def ylabels(self,model,field):
+        if model.hasLabels(field):
+            lbls=model.labels(field)
+            self.plt.set_yticks(model.labelints(field))
+            self.plt.set_yticklabels(lbls)
+
 
 class MyHistogram(MyFigure):
     def __init__(self,model,field,parent=None,flags=0):
@@ -232,10 +244,7 @@ class MyHistogram(MyFigure):
                 self.plt.bar(fcnts[0],fcnts[1],color='black',align='center')
             else:
                 self.plt.bar(self.dcache[0],self.dcache[1],color='black',align='center')
-            if self.model.hasLabels(self.field):
-                lbls=self.model.labels(self.field)
-                self.plt.set_xticks(self.model.labelints(self.field))
-                self.plt.set_xticklabels(lbls)
+            self.xlabels(self.model,self.field)
         else:
             if self.model.isFiltered():
                 b=self.plt.hist(self.model.data[self.field],bins=self.bins,color='black',alpha=0.5,edgecolor="none",
@@ -346,6 +355,9 @@ class MyScatter(MyFigure):
         if self.cfield is not None and self.cb is None:
             self.cb=self.fig.colorbar(sc)
 
+        self.xlabels(self.model,self.xfield)
+        self.ylabels(self.model,self.yfield)
+
     def onReset(self,event):
         self.plt.set_xlim((self.model.fieldmin(self.xfield),self.model.fieldmax(self.xfield)))
         self.plt.set_ylim((self.model.fieldmin(self.yfield),self.model.fieldmax(self.yfield)))
@@ -400,6 +412,9 @@ class MyHist2d(MyFigure):
 
         self.plt.set_xlabel(self.model.prettyname(self.xfield))
         self.plt.set_ylabel(self.model.prettyname(self.yfield))
+
+        self.xlabels(self.model,self.xfield)
+        self.ylabels(self.model,self.yfield)
 
     def onKey(self,event):
         if event.key == '+' or event.key == '=':
