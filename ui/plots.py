@@ -398,7 +398,12 @@ class MyHist2d(MyFigure):
 
     def datadraw(self):
         # Always use filtered
-        H,xedges,yedges = np.histogram2d(self.model.filtered[self.xfield],self.model.filtered[self.yfield],bins=self.bins,
+        b=[self.bins,self.bins]
+        if self.model.isCategorical(self.xfield):
+            b[0]=len(self.model.labels(self.xfield))
+        if self.model.isCategorical(self.yfield):
+            b[1]=len(self.model.labels(self.yfield))       
+        H,xedges,yedges = np.histogram2d(self.model.filtered[self.xfield],self.model.filtered[self.yfield],bins=b,
                           range=((self.model.fieldmin(self.xfield),self.model.fieldmax(self.xfield)),
                                  (self.model.fieldmin(self.yfield),self.model.fieldmax(self.yfield))))
         norm=None
