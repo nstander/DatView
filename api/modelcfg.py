@@ -31,6 +31,9 @@ class ModelConfig:
         self.histperrow=3
         self.hist1Dbins=32
         self.hist2Dbins=64
+        self.scattermarker='o'
+        self.scatterlinewidth=0
+        self.scattersize=4
 
         et=ElementTree.parse(filename)
         root = et.getroot()
@@ -67,6 +70,12 @@ class ModelConfig:
                 self.scattercmap=child.text
             if child.tag == "hist2dcmap" and child.text:
                 self.hist2dcmap=child.text
+            if child.tag == "scatterlinewidth" and child.text:
+                self.scatterlinewidth=int(child.text)
+            if child.tag == "scattermarker" and child.text:
+                self.scattermarker=child.text
+            if child.tag == "scattersize" and child.text:
+                self.scattersize=int(child.text)
             if child.tag == "histperrow" and child.text:
                 self.histperrow=int(child.text)
             if child.tag == "hist1Dbins" and child.text:

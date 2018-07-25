@@ -341,7 +341,7 @@ class MyScatter(MyFigure):
         cAll="black"
         cFiltered="black"
         cm=None
-        marker='o'
+        marker=self.model.cfg.scattermarker
         vmin=None
         vmax=None
         if self.cfield is not None:
@@ -352,10 +352,10 @@ class MyScatter(MyFigure):
             vmax=self.model.fieldmax(self.cfield)
 
         if self.model.isFiltered():
-            self.plt.scatter(xAll,self.model.data[self.yfield],c=cAll,alpha=0.5,cmap=cm,vmin=vmin,vmax=vmax,marker=marker)
-            sc=self.plt.scatter(xFiltered,self.model.filtered[self.yfield],c=cFiltered,cmap=cm,vmin=vmin,vmax=vmax,marker=marker)
+            self.plt.scatter(xAll,self.model.data[self.yfield],c=cAll,alpha=0.5,cmap=cm,vmin=vmin,vmax=vmax,marker=marker,linewidths=self.model.cfg.scatterlinewidth,s=self.model.cfg.scattersize)
+            sc=self.plt.scatter(xFiltered,self.model.filtered[self.yfield],c=cFiltered,cmap=cm,vmin=vmin,vmax=vmax,marker=marker,linewidths=self.model.cfg.scatterlinewidth,s=self.model.cfg.scattersize)
         else:
-            sc=self.plt.scatter(xAll,self.model.data[self.yfield],c=cAll,cmap=cm,vmin=vmin,vmax=vmax,marker=marker)
+            sc=self.plt.scatter(xAll,self.model.data[self.yfield],c=cAll,cmap=cm,vmin=vmin,vmax=vmax,marker=marker,linewidths=self.model.cfg.scatterlinewidth,s=self.model.cfg.scattersize)
 
         self.plt.set_xlabel(self.model.prettyname(self.xfield))
         self.plt.set_ylabel(self.model.prettyname(self.yfield))

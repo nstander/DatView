@@ -93,4 +93,16 @@
   <!-- Matplotlib Color Map controls. See https://matplotlib.org/examples/color/colormaps_reference.html -->
   <scattercmap>jet</scattercmap>
   <hist2dcmap>hot_r</hist2dcmap>
+
+  <!-- More matplotlib options specifically for scatterplots. Note that the color-by option affects only fill color, so be aware that not all markers are fillable. The default options here remove the line width and make the points small assuming a large number of points -->
+  <scatterlinewidth>0</scatterlinewidth> <!-- linewidths parameter of matplotlib.pyplot.scatter -->
+  <scattermarker>o</scattermarker> <!-- marker parameter of matplotlib.pyplot.scatter -->
+  <scattersize>4</scattersize> <!-- s parameter of matplotlib.pyplot.scatter -->
+
+  <!-- Number of histograms to display on a row in the main GUI window. Default=3 -->
+  <histperrow>3</histperrow>
+
+  <!-- Initial number of bins. Larger numbers take longer to plot. Bins can be changed per graph with +/-. Note that this multiplies/divides by two so default numbers are powers of 2. Default is 32 for 1D and 64 for 2D -->
+  <hist1Dbins>32</hist1Dbins>
+  <hist2Dbins>64</hist2Dbins>
 </modelcfg>
