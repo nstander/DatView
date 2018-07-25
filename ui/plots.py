@@ -446,7 +446,10 @@ class MyHist2d(MyFigure):
         norm=None
         if self.log:
             norm=LogNorm()
-        sc=self.plt.pcolormesh(self.xedges,self.yedges,np.transpose(self.H),cmap=plt.cm.get_cmap(self.model.cfg.hist2dcmap),norm=norm)
+        h=self.H
+        if self.model.cfg.histAlwaysMask0:
+            h=np.ma.masked_values(h,0)
+        sc=self.plt.pcolormesh(self.xedges,self.yedges,np.transpose(h),cmap=plt.cm.get_cmap(self.model.cfg.hist2dcmap),norm=norm)
         if self.cb is None:
             self.cb=self.fig.colorbar(sc)
         else:

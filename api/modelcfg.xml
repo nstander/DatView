@@ -102,6 +102,9 @@
   <scattermarker>o</scattermarker> <!-- marker parameter of matplotlib.pyplot.scatter -->
   <scattersize>4</scattersize> <!-- s parameter of matplotlib.pyplot.scatter -->
 
+  <!-- For histograms, always mask 0's. Masked values appear as white, and occurs whenever log scale colors are used. By default, use for all histograms to distinguish 1 from 0 more easily, but you can change here by setting text to 0. Any other value will be registered as true. -->
+  <histAlwaysMask0>1</histAlwaysMask0>
+
   <!-- Number of histograms to display on a row in the main GUI window. Default=3 -->
   <histperrow>3</histperrow>
 
