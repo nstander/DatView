@@ -48,7 +48,7 @@ class GroupMgr:
 
     def value(self,group,gid):
         """Return the value associated with group and gid. Example: for sample,1 return Phyco"""
-        return self.gmaps[group]["gid"][gid]
+        return self.gmaps[group]["gid"].get(gid,"Unknown")
 
     def values(self,group):
         """Return the list of values associated with group, index is gid. So, for sample, could by ["PSII","Phyco"]"""

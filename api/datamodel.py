@@ -103,6 +103,15 @@ class DataModel(QObject):
                         labels.append(self.groupmgr.value(field[len(GroupMgr.prefix):],i))
                     self.labelcache[field]["labels"] = labels
             return self.labelcache[field]["labels"]
+        elif self.isCategorical(field):
+            # If it is categorical, but doesn't have labels, then it has numerical values and 
+            # the unique values present should be returned. This covers cases like Run or # of 
+            # crystals on a frame.
+            if field not in self.labelcache:
+                self.labelcache[field]={}
+                self.labelcache[field]["labels"]=np.unique(self.data[field])
+                self.labelcache[field]["ints"]=self.labelcache[field]["labels"]
+            return self.labelcache[field]["labels"]
         return []
 
     def labelints(self,field):

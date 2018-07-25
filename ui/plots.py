@@ -440,7 +440,7 @@ class MyHist2d(MyFigure):
         if self.model.isCategorical(self.xfield):
             b[0]=len(self.model.labels(self.xfield))
         if self.model.isCategorical(self.yfield):
-            b[1]=len(self.model.labels(self.yfield))       
+            b[1]=len(self.model.labels(self.yfield))     
         self.H,self.xedges,self.yedges = np.histogram2d(self.model.filtered[self.xfield],self.model.filtered[self.yfield],bins=b,
                           range=self.range)
         norm=None
