@@ -249,9 +249,9 @@ class MyHistogram(MyFigure):
         else:
             if self.model.isFiltered():
                 b=self.plt.hist(self.model.data[self.field],bins=self.bins,color='black',alpha=0.5,edgecolor="none",
-                    range=(self.model.fieldmin(self.field),self.model.fieldmax(self.field)))[1]
+                    range=self.range)[1]
                 self.plt.hist(self.model.filtered[self.field],bins=b,color='black',
-                    range=(self.model.fieldmin(self.field),self.model.fieldmax(self.field)))
+                    range=self.range)
             else:
                 b=self.plt.hist(self.model.data[self.field],bins=self.bins,color='black',
                     range=self.range)[1]

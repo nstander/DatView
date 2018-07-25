@@ -114,7 +114,7 @@ class OrFilter(GroupFilter):
         GroupFilter.__init__(self,shape)
 
     def onchange(self):
-        keep=np.ones(self.shape,dtype=bool)
+        keep=np.zeros(self.shape,dtype=bool)
         for child in self.children:
             if child.isActive():
                 keep |= child.keep

@@ -373,7 +373,7 @@ class DataModel(QObject):
                 loadFilterRecursive(child,f)
             elif child.tag == "and":
                 f=AndFilter(self.data.shape)
-                loadFilterRecursive(child,f)
+                self.loadFilterRecursive(child,f)
             else:
                 assert False #Unsupported
             f.setActive(child.get("active") == "True")
