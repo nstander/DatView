@@ -57,18 +57,18 @@
     <field nm="o9"     prettyname="cstar[2] (nm^-1)" />
     <field nm="ifile"  prettyname="Image File (cxi/hdf5)" dtype="U256" fmt="%s"/>
     <field nm="sfile"  prettyname="Stream File" dtype="U256" fmt="%s"/>
-    <field nm="istart" prettyname="Begin Chunk Pointer" dtype="i4" fmt="%i"/>
-    <field nm="iend"   prettyname="End Chunk Pointer" dtype="i4" fmt="%i"/>
-    <field nm="cstart" prettyname="Begin Crystal Pointer" dtype="i4" fmt="%i"/>
-    <field nm="cend"   prettyname="End Crystal Pointer" dtype="i4" fmt="%i"/>
-    <field nm="rstart" prettyname="Begin Reflections Pointer" dtype="i4" fmt="%i"/>
-    <field nm="rend"   prettyname="End Reflections Pointer" dtype="i4" fmt="%i"/>
-    <field nm="pstart" prettyname="Begin Peaks Pointer" dtype="i4" fmt="%i"/>
-    <field nm="pend"   prettyname="End Peaks Pointer" dtype="i4" fmt="%i"/>
+    <field nm="istart" prettyname="Begin Chunk Pointer" dtype="i8" fmt="%i"/>
+    <field nm="iend"   prettyname="End Chunk Pointer" dtype="i8" fmt="%i"/>
+    <field nm="cstart" prettyname="Begin Crystal Pointer" dtype="i8" fmt="%i"/>
+    <field nm="cend"   prettyname="End Crystal Pointer" dtype="i8" fmt="%i"/>
+    <field nm="rstart" prettyname="Begin Reflections Pointer" dtype="i8" fmt="%i"/>
+    <field nm="rend"   prettyname="End Reflections Pointer" dtype="i8" fmt="%i"/>
+    <field nm="pstart" prettyname="Begin Peaks Pointer" dtype="i8" fmt="%i"/>
+    <field nm="pend"   prettyname="End Peaks Pointer" dtype="i8" fmt="%i"/>
     <field nm="aclen"  prettyname="Average Camera Length (m)" fmt="%i"/>
     <field nm="cent"   prettyname="Centering" dtype="U1" fmt="%s"/>
     <field nm="ltype"  prettyname="Lattice Type" dtype="U15" fmt="%s"/>
-    <field nm="vol"  prettyname="Crystal Volume (nm^3)"/>
+    <field nm="vol"  prettyname="Cell Volume (nm^3)"/>
 
     <!-- Some common cxi/h5 fields -->
     <field nm="/LCLS/machineTime" prettyname="Machine Time (s)" fmt="%i"/>
@@ -81,6 +81,8 @@
     <field nm="col"    prettyname="Chip Column" fmt="%i" />
     <field nm="chiprow" prettyname="Chip Row (by Chip)" fmt="%i" />
     <field nm="chipframe" prettyname="Frame # by Chip" fmt="%i" />
+    <field nm="chip" prettyname="Chip" fmt="%i" />
+    <field nm="sample" prettyname="Sample" fmt="%i" />
 
   </fields> 
 
