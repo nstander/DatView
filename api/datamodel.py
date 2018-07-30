@@ -236,7 +236,7 @@ class DataModel(QObject):
 #########################################
 
     def outArrIndices(self,applyLimit=True):
-        outarr=range(len(self.filtered))
+        outarr=np.arange(len(self.filtered))
         if len(self.sortlst):
             outarr=np.argsort(self.filtered,order=self.sortlst)
             if self.reverseSort:
