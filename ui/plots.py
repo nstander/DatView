@@ -46,6 +46,8 @@ class MyFigure(FigureCanvas):
         self.menu=QtGui.QMenu()
         saveAct=self.menu.addAction("Save PNG")
         saveAct.triggered.connect(self.onSave)
+        saveAct=self.menu.addAction("Save SVG")
+        saveAct.triggered.connect(self.onSaveSVG)
         resetAct=self.menu.addAction("Reset")
         resetAct.triggered.connect(self.onReset)
 
@@ -168,6 +170,11 @@ class MyFigure(FigureCanvas):
         name=QtGui.QFileDialog.getSaveFileName(self,'Save Plot',filter='*.png')
         if name is not None:
             self.fig.savefig(name,ext="png")
+
+    def onSaveSVG(self):
+        name=QtGui.QFileDialog.getSaveFileName(self,'Save Plot',filter='*.svg')
+        if name is not None:
+            self.fig.savefig(name,ext="svg")
 
     def onReset(self):
         self.mydraw(False)
