@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-# Based on Peakogram, but for use with dat files, specifically ones output by stream2dat.py
 # Author: Natasha Stander
 
 import sys
