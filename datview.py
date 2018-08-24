@@ -8,12 +8,19 @@
 import sys
 import argparse
 import numpy as np
-from PyQt4.QtGui import QApplication, QMainWindow,QLabel,QFileDialog, QAction, QTreeView, QHeaderView, QAbstractItemView, QWidget, QMenu
-from PyQt4.QtCore import Qt
+try:
+    from PyQt5.QtWidgets import QApplication, QMainWindow,QLabel,QFileDialog, QAction, QTreeView, QHeaderView, QAbstractItemView, QWidget, QMenu
+    from PyQt5.QtCore import Qt
+    from ui.Ui_MainWindow5 import Ui_MainWindow
+    qt5=True
+except ImportError:
+    from PyQt4.QtGui import QApplication, QMainWindow,QLabel,QFileDialog, QAction, QTreeView, QHeaderView, QAbstractItemView, QWidget, QMenu
+    from PyQt4.QtCore import Qt
+    from ui.Ui_MainWindow import Ui_MainWindow
+    qt5=False
 
 from api.datamodel import DataModel
 from api.modelcfg import ModelConfig
-from ui.Ui_MainWindow import Ui_MainWindow
 from ui.datasetPanel import MyDatasetPanel
 from ui.scatterDialog import MyScatterDialog
 from ui.hist2dDialog import MyHist2dDialog
@@ -64,8 +71,12 @@ class MyMainWindow(QMainWindow):
         self.filterpanel.setModel(self.model.filterModel())
         self.filterpanel.setWindowTitle("Filters")
         self.filterpanel.expand(self.model.filterModel().index(0,0))
-        self.filterpanel.header().setResizeMode(0,QHeaderView.ResizeToContents)
-        self.filterpanel.header().setResizeMode(1,QHeaderView.ResizeToContents)
+        if qt5:
+            self.filterpanel.header().setSectionResizeMode(0,QHeaderView.ResizeToContents)
+            self.filterpanel.header().setSectionResizeMode(1,QHeaderView.ResizeToContents)
+        else:
+            self.filterpanel.header().setResizeMode(0,QHeaderView.ResizeToContents)
+            self.filterpanel.header().setResizeMode(1,QHeaderView.ResizeToContents)
         self.filterpanel.setHeaderHidden(True)
         self.filterpanel.setItemDelegate(ui.filterEditDelegate.FilterItemDelegate())
         self.ui.actionShowFilters.triggered.connect(self.filterpanel.show)

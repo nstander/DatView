@@ -2,8 +2,12 @@
 # The filter panel in the GUI is a generic QTreeView defined in the main gui. This file provides all the interactivity to add and update filters for the filter panel
 # Author Natasha Stander
 
-from PyQt4.QtGui import QStyledItemDelegate, QDoubleSpinBox, QComboBox, QListWidget, QListWidgetItem, QToolButton, QMenu
-from PyQt4.QtCore import  Qt
+try:
+    from PyQt5.QtWidgets import QStyledItemDelegate, QDoubleSpinBox, QComboBox, QListWidget, QListWidgetItem, QToolButton, QMenu
+    from PyQt5.QtCore import  Qt
+except ImportError:
+    from PyQt4.QtGui import QStyledItemDelegate, QDoubleSpinBox, QComboBox, QListWidget, QListWidgetItem, QToolButton, QMenu
+    from PyQt4.QtCore import  Qt
 import sys
 import numpy as np
 sys.path.append("..")

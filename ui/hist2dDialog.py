@@ -2,10 +2,15 @@
 # This file contains code for Histogram 2D Dialog
 # Author Natasha Stander
 
-from PyQt4.QtGui import QDialog
-from PyQt4.QtCore import Qt
+try:
+    from PyQt5.QtWidgets import QDialog
+    from PyQt5.QtCore import Qt
+    from ui.Ui_ScatterDialog5 import Ui_ScatterDialog
+except ImportError:
+    from PyQt4.QtGui import QDialog
+    from PyQt4.QtCore import Qt
+    from ui.Ui_ScatterDialog import Ui_ScatterDialog
 from api.datamodel import DataModel
-from ui.Ui_ScatterDialog import Ui_ScatterDialog
 from ui.plots import MyHist2d
 
 class MyHist2dDialog(QDialog):

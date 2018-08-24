@@ -3,7 +3,10 @@
 # Author Natasha Stander
 
 import numpy as np
-from PyQt4.QtCore import QObject,pyqtSignal
+try:
+    from PyQt5.QtCore import QObject,pyqtSignal
+except ImportError:
+    from PyQt4.QtCore import QObject,pyqtSignal
 import lxml.etree as ElementTree
 
 class DataFilter(QObject):

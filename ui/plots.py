@@ -2,9 +2,17 @@
 # This file contains the code interfacing with matplotlib for drawing all plots in the GUI
 # Author Natasha Stander
 
-from PyQt4 import QtGui, QtCore
+try:
+    from PyQt5 import QtCore
+    from PyQt5.QtWidgets import QSizePolicy, QMenu, QApplication, QFileDialog
+    from PyQt5.QtGui import QCursor
+    from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+except ImportError as e:
+    print(e)
+    from PyQt4 import QtCore
+    from PyQt4.QtGui import QSizePolicy, QMenu, QApplication, QCursor, QFileDialog
+    from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 import numpy as np
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 import matplotlib.mlab
@@ -26,7 +34,7 @@ class MyFigure(FigureCanvas):
         self.fig.set_facecolor('white')
         
         FigureCanvas.setMinimumSize(self, 200, 200)
-        FigureCanvas.setSizePolicy(self,QtGui.QSizePolicy.Expanding,QtGui.QSizePolicy.Expanding)
+        FigureCanvas.setSizePolicy(self,QSizePolicy.Expanding,QSizePolicy.Expanding)
         FigureCanvas.updateGeometry(self)
 
         self.fig.canvas.mpl_connect('scroll_event',self.onScroll)
@@ -43,7 +51,7 @@ class MyFigure(FigureCanvas):
         self.manageX=False
         self.manageY=False
 
-        self.menu=QtGui.QMenu()
+        self.menu=QMenu()
         saveAct=self.menu.addAction("Save PNG")
         saveAct.triggered.connect(self.onSave)
         saveAct=self.menu.addAction("Save SVG")
@@ -88,7 +96,7 @@ class MyFigure(FigureCanvas):
 
     def onPress(self,event):
         if event.button == 1 and event.xdata is not None and event.ydata is not None:
-            if event.key == 'shift' or QtCore.Qt.ShiftModifier & QtGui.QApplication.keyboardModifiers() :
+            if event.key == 'shift' or QtCore.Qt.ShiftModifier & QApplication.keyboardModifiers() :
                 self.selp=(event.xdata,event.ydata)
                 if self.manageX:
                     self.sel.set_x(event.xdata)
@@ -102,7 +110,7 @@ class MyFigure(FigureCanvas):
             else:
                 self.pan=(event.xdata,event.ydata)
         elif event.button == 3:
-            self.menu.popup(QtGui.QCursor.pos())
+            self.menu.popup(QCursor.pos())
 
     def onRelease(self,event):
         if self.pan is not None:
@@ -167,12 +175,12 @@ class MyFigure(FigureCanvas):
         pass
 
     def onSave(self):
-        name=QtGui.QFileDialog.getSaveFileName(self,'Save Plot',filter='*.png')
+        name=QFileDialog.getSaveFileName(self,'Save Plot',filter='*.png')
         if name is not None:
             self.fig.savefig(name,ext="png")
 
     def onSaveSVG(self):
-        name=QtGui.QFileDialog.getSaveFileName(self,'Save Plot',filter='*.svg')
+        name=QFileDialog.getSaveFileName(self,'Save Plot',filter='*.svg')
         if name is not None:
             self.fig.savefig(name,ext="svg")
 

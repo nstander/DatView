@@ -2,9 +2,14 @@
 # This file interfaces the dataset panel ui with the data model
 # Author Natasha Stander
 
-from PyQt4.QtGui import QWidget, QMenu
+try:
+    from PyQt5.QtWidgets import QWidget, QMenu
+    from ui.Ui_DatasetPanel5 import Ui_DatasetPanel
+except ImportError:
+    from PyQt4.QtGui import QWidget, QMenu
+    from ui.Ui_DatasetPanel import Ui_DatasetPanel
 from api.datamodel import DataModel
-from ui.Ui_DatasetPanel import Ui_DatasetPanel
+
 
 class MyDatasetPanel(QWidget):
     def __init__(self,model,parent=None):

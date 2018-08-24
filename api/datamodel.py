@@ -2,7 +2,11 @@
 # Main api of program. DataModel contains the data and filters, and manages all load and save options. 
 # Author Natasha Stander
 
-from PyQt4.QtCore import QObject,pyqtSignal
+try:
+    from PyQt5.QtCore import QObject,pyqtSignal
+except ImportError:
+    from PyQt4.QtCore import QObject,pyqtSignal
+
 import numpy as np
 from .filters import *
 from .filtermodel import FilterModel
