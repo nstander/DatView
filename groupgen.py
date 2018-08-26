@@ -20,7 +20,7 @@ class GroupGenerator:
             if verbose:
                 print('\t%s' % root,end='\r',flush=True)
             for filename in fnmatch.filter(sorted(filenames),glob):
-                self.add(col,os.path.join(root,filename),col,os.path.join(root,filename))
+                self.add(col,os.path.abspath(os.path.join(root,filename)),col,os.path.join(root,filename))
             for dname in fnmatch.filter(dirnames,'indexamajig.[0-9]*'):
                 dirnames.remove(dname)
             dirnames.sort()
