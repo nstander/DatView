@@ -89,7 +89,7 @@ if __name__ == '__main__':
     parser.add_argument('--idir',help='directory to search for cxi (image) files')
     parser.add_argument('--iglob',default='*.cxi',help='pattern to match cxi (image) files. Only used if --idir given')
     parser.add_argument('--group','-g',action='append',nargs='+',help='Add entry to a custom group. Expects 4+ arguments: groupname, entryname, matchcolumn, matchvalues where matchvalues is one or more arguments.')
-    parser.add_argument('--update','-u',action='append',nargs=3,help='Add value to matchvals of custom group. Expects 3 arguments: groupname, entryname, matchvalue.')
+    parser.add_argument('--update','-u',action='append',nargs='+',help='Add value(s) to matchvals of custom group. Expects 3+ arguments: groupname, entryname, matchvalue(s).')
     parser.add_argument('-v',action='store_true',help='Verbose')
     parser.add_argument('--file',default='groupcfg.txt',help='The output file group file. If it already exists, then this command adds to the existing information. Note that adding an entry again will overwrite the previous matchcolumn and matchvalues.')
 
@@ -118,8 +118,8 @@ if __name__ == '__main__':
         if args.v:
             print ("Updating custom groups")
         for lst in args.update:
-            assert len(lst) == 3
-            g.addVal(lst[0],lst[1],lst[2])
+            assert len(lst) >= 3
+            g.addVal(lst[0],lst[1],','.join(lst[2:]))
     if args.v:
         print ("Saving")
     g.save(args.file)
