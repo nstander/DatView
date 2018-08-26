@@ -67,6 +67,7 @@ class DataModel(QObject):
         self.filtered=self.data
         self.topfilter=AndFilter(self.data.shape)
         self.topfilter.filterchange.connect(self.applyFilters)
+        self.overridekeep=self.topfilter.keep
         self.filtermodel=FilterModel(self.topfilter,self)
         self.mincache={}
         self.maxcache={}
@@ -215,6 +216,7 @@ class DataModel(QObject):
         return self.selfilters[field]
 
     def applyFilters(self):
+        self.overridekeep=self.topfilter.keep
         self.filtered=self.data[self.topfilter.keep]
         self.filterchange.emit()
 
@@ -239,6 +241,50 @@ class DataModel(QObject):
         return self.maxcache[field]
 
 #########################################
+###            Partition              ###
+#########################################  
+
+    def partition(self,field,minimum=None,maximum=None,num=None):
+        field=self.datafield(field)
+        maxWasNone = maximum is None
+        if minimum is None:
+            minimum = self.fieldmin(field)
+        if maximum is None:
+            maximum = self.fieldmax(field)
+        if num is None:
+            if self.isCategorical(field):
+                edges=np.array(self.intValues(field))
+                edges=edges[(edges>=minimum) & (edges<=maximum)]
+                if maxWasNone:
+                    edges=np.append(edges,maximum+1)
+            else:
+                edges=np.linspace(minimum,maximum,11)
+        else:
+            edges=np.linspace(minimum,maximum,num+1)
+
+        ret={}
+        for i in range(len(edges)-1):
+            if num is None and self.isCategorical(field):
+                nm=self.stringValue(field,edges[i])
+            else:
+                nm="%.2f-%.2f"%(edges[i],edges[i+1])
+            if i == len(edges)-2 and maxWasNone:
+                dt=self.overridekeep & (self.data[field]>=edges[i]) & (self.data[field]<=edges[i+1])
+            else:
+                dt=self.overridekeep & (self.data[field]>=edges[i]) & (self.data[field]<edges[i+1])
+            if np.count_nonzero(dt):
+                ret[nm]=dt
+        return ret
+
+    def overrideFilter(self,keep):
+        """Use the given data in place of the current selection. To revert, call applyFilters"""
+        self.overridekeep=keep
+        self.filtered=self.data[keep]
+        self.filterchange.emit()
+
+        
+
+#########################################
 ###            Load/Save              ###
 #########################################
 
@@ -260,7 +306,7 @@ class DataModel(QObject):
         formats=[]
         for c in self.cols:
             formats.append(self.cfg.fmt(c))
-        outarr=self.rdata[self.topfilter.keep][self.outArrIndices()]
+        outarr=self.rdata[self.overridekeep][self.outArrIndices()]
         d='\t'
         if self.cfg.sep is not None:
             d=self.cfg.sep
