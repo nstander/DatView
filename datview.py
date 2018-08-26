@@ -125,17 +125,26 @@ class MyMainWindow(QMainWindow):
 
     def onSaveDat(self):
         name=QFileDialog.getSaveFileName(self,'Save Selected As Dat File',filter='*.dat')
-        if name is not None and len(name):
+        if qt5:
+            if name:
+                self.model.saveSelDat(name[0])
+        elif name is not None and len(name):
             self.model.saveSelDat(name)
 
     def onSaveLst(self):
         name=QFileDialog.getSaveFileName(self,'Save Selected As List File',filter='*.lst')
-        if name is not None and len(name):
+        if qt5:
+            if name:
+                self.model.saveSelLst(name[0])
+        elif name is not None and len(name):
             self.model.saveSelLst(name)
 
     def onSaveStream(self):
         name=QFileDialog.getSaveFileName(self,'Save Selected As Stream File',filter='*.stream')
-        if name is not None and len(name):
+        if qt5:
+            if name:
+                self.model.saveSelStream(name[0])
+        elif name is not None and len(name):
             self.model.saveSelStream(name)
 
     def onSaveFilters(self):
