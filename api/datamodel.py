@@ -162,7 +162,10 @@ class DataModel(QObject):
         field=self.datafield(field)
 
         if field in self.digitized:
-            v = self.digitized[field][v]
+            if v >= 0 and v < len(self.digitized[field]):
+                v = self.digitized[field][v]
+            else:
+                v=""
         elif field.startswith(GroupMgr.prefix) and self.groupmgr is not None:
             v = self.groupmgr.value(field[len(GroupMgr.prefix):],v)
         return str(v)
