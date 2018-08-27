@@ -28,7 +28,7 @@ class DataModel(QObject):
         with open(filename) as dfile:
             self.hdrline=dfile.readline().strip()
             if self.hdrline.startswith("CrystFEL stream format"):
-                print("This file looks like a CrystFEL stream file. It should be a dat file. Please run \n\tdatgen.py -o output streamfile(s)\nand run this program on the output.",file=sys.stderr)
+                print("Usage: This input file (%s) looks like a CrystFEL stream file. It should be a dat file. Please run \n\tdatgen.py -o output.dat %s\nand run this program on the output."%(filename,filename),file=sys.stderr)
                 sys.exit()
             self.cols=self.hdrline.split(self.cfg.sep)
             if cfg.commentchar is not None:
