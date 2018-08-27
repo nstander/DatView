@@ -13,6 +13,7 @@ from .filtermodel import FilterModel
 from .groupmgr import GroupMgr
 import lxml.etree as ElementTree
 from .modelcfg import ModelConfig
+import sys
 
 
 class DataModel(QObject):
@@ -26,6 +27,9 @@ class DataModel(QObject):
         self.cols=[]
         with open(filename) as dfile:
             self.hdrline=dfile.readline().strip()
+            if self.hdrline.startswith("CrystFEL stream format"):
+                print("This file looks like a CrystFEL stream file. It should be a dat file. Please run \n\tdatgen.py -o output streamfile(s)\nand run this program on the output.",file=sys.stderr)
+                sys.exit()
             self.cols=self.hdrline.split(self.cfg.sep)
             if cfg.commentchar is not None:
                 self.cols[0] = self.cols[0].replace(cfg.commentchar, "")
