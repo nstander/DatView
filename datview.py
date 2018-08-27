@@ -10,12 +10,12 @@ import argparse
 import numpy as np
 try:
     from PyQt5.QtWidgets import QApplication, QMainWindow,QLabel,QFileDialog, QAction, QTreeView, QHeaderView, QAbstractItemView, QWidget, QMenu
-    from PyQt5.QtCore import Qt
+    from PyQt5.QtCore import Qt, QEvent
     from ui.Ui_MainWindow5 import Ui_MainWindow
     qt5=True
 except ImportError:
     from PyQt4.QtGui import QApplication, QMainWindow,QLabel,QFileDialog, QAction, QTreeView, QHeaderView, QAbstractItemView, QWidget, QMenu
-    from PyQt4.QtCore import Qt
+    from PyQt4.QtCore import Qt, QEvent
     from ui.Ui_MainWindow import Ui_MainWindow
     qt5=False
 
@@ -85,6 +85,14 @@ class MyMainWindow(QMainWindow):
         self.datasetpanel=MyDatasetPanel(self.model,parent=self)
         self.datasetpanel.setWindowFlags(Qt.Window)
         self.ui.actionShowDatasetPanel.triggered.connect(self.datasetpanel.show)
+
+        if qt5:
+            self.ui.plotScrollArea.viewport().installEventFilter(self)
+
+    def eventFilter(self, source, event):
+        if (event.type() == QEvent.Wheel and source is self.ui.plotScrollArea.viewport()):
+            return True
+        return super(QMainWindow, self).eventFilter(source, event)
 
     def addHistogramMenu(self, lst, checked=False):
         for col in sorted(lst,key=self.model.prettyname):
