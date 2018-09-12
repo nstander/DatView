@@ -17,6 +17,9 @@
     <!-- The defaults when unspecified. -->
     <field nm="default" dtype="f4" fmt="%f"  mult="1" />
 
+    <!-- This column is created and maintained by the software and never output. If you need to change the raw name, change DataModel.sortColumnName in api/datamodel.py. -->
+    <field nm="datview_sort_order" prettyname="Current Sort Order"  dtype="u4" fmt="%i"/>
+
     <!-- Stream columns possible with datgen -->
     <field nm="run"    prettyname="Run"  fmt="%i"/>
     <field nm="subcxi" prettyname="CXI File #"  fmt="%i"/>

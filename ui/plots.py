@@ -343,15 +343,8 @@ class MyScatter(MyFigure):
         self.mydraw()
 
     def datadraw(self):
-        xAll=None
-        xFiltered=None
-        if self.xfield is None:
-            if len(self.model.sortlst):
-                xAll=np.argsort(self.model.data,order=self.sortlst)
-                xFiltered=self.model.outArrIndices(False)
-        else:
-            xAll=self.model.data[self.xfield]
-            xFiltered=self.model.filtered[self.xfield]
+        xAll=self.model.data[self.xfield]
+        xFiltered=self.model.filtered[self.xfield]
 
         cAll="black"
         cFiltered="black"

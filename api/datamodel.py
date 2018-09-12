@@ -18,6 +18,7 @@ import sys
 
 class DataModel(QObject):
     filterchange=pyqtSignal()
+    sortColumnName="datview_sort_order"
     def __init__(self,filename,groupfile=None,cfg=None):
         QObject.__init__(self)
         if cfg is None:
@@ -54,12 +55,16 @@ class DataModel(QObject):
                     dtypes2.append('i4')
                 else:
                     dtypes2.append(dtype)
+            self.cols.append(DataModel.sortColumnName)
+            dtypes2.append('u4')
             self.data=np.empty(self.rdata.shape,dtype={'names':tuple(self.cols),'formats':tuple(dtypes2)})
             for c in self.cols:
                 if c in todigitize:
                     lbls,inverse=np.unique(self.rdata[c],return_inverse=True)
                     self.digitized[c]=lbls
                     self.data[c]=inverse
+                elif c == DataModel.sortColumnName:
+                    self.data[c]=np.arange(len(self.rdata))
                 else:
                     self.data[c]=self.rdata[c]
                     if c in self.cfg.invert:
@@ -292,6 +297,14 @@ class DataModel(QObject):
 ###            Load/Save              ###
 #########################################
 
+    def onSortChange(self):
+        outarr=np.arange(len(self.data))
+        if len(self.sortlst):
+            outarr=np.argsort(self.data,order=self.sortlst)
+            if self.reverseSort:
+                outarr = np.flipud(outarr)
+        self.data[DataModel.sortColumnName][outarr]=np.arange(len(self.data))
+
     def outArrIndices(self,applyLimit=True):
         outarr=np.arange(len(self.filtered))
         if len(self.sortlst):
@@ -309,7 +322,8 @@ class DataModel(QObject):
     def saveSelDat(self,fname):
         formats=[]
         for c in self.cols:
-            formats.append(self.cfg.fmt(c))
+            if c != DataModel.sortColumnName:
+                formats.append(self.cfg.fmt(c))
         outarr=self.rdata[self.overridekeep][self.outArrIndices()]
         d='\t'
         if self.cfg.sep is not None:

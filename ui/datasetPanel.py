@@ -42,6 +42,7 @@ class MyDatasetPanel(QWidget):
         field=self.sender().data()
         self.ui.sortByListWidget.addItem(self.model.prettyname(field))
         self.model.sortlst.append(field)
+        self.model.onSortChange()
 
     def onSelectionChange(self):
         hasSelection=bool(len(self.ui.sortByListWidget.selectedItems()))
@@ -58,6 +59,7 @@ class MyDatasetPanel(QWidget):
         for r in sorted(rows,reverse=True):
             del self.model.sortlst[r]
             self.ui.sortByListWidget.takeItem(r)
+        self.model.onSortChange()
         self.onSelectionChange()
 
     def onMoveSortFieldUp(self):
@@ -67,7 +69,8 @@ class MyDatasetPanel(QWidget):
         for r in sorted(rows):
             self.model.sortlst.insert(r-1,self.model.sortlst.pop(r))
             self.ui.sortByListWidget.insertItem(r-1,self.ui.sortByListWidget.takeItem(r))
-            self.ui.sortByListWidget.setCurrentItem(self.ui.sortByListWidget.item(r-1))      
+            self.ui.sortByListWidget.setCurrentItem(self.ui.sortByListWidget.item(r-1))   
+        self.model.onSortChange()   
 
     def onLimitChange(self):
         if self.ui.limitCheckBox.isChecked():
@@ -85,7 +88,9 @@ class MyDatasetPanel(QWidget):
         for field in lst:
             self.ui.sortByListWidget.addItem(self.model.prettyname(field))
             self.model.sortlst.append(field)
+        self.model.onSortChange()
 
     def onSortAscendingChange(self):
         self.model.reverseSort = not self.ui.sortAscendingCheckBox.isChecked()
+        self.model.onSortChange()
 
