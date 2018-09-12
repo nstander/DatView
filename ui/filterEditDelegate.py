@@ -144,13 +144,13 @@ class FilterItemDelegate(QStyledItemDelegate):
 
     def onAddAnd(self):
         act=self.sender()
-        par=act.data().internalPointer()
+        par=act.data()
         child=filters.AndFilter(par.shape)
         par.addChild(child)
 
     def onAddOr(self):
         act=self.sender()
-        par=act.data().internalPointer()
+        par=act.data()
         child=filters.OrFilter(par.shape)
         par.addChild(child)
 
