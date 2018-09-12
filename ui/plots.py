@@ -140,7 +140,16 @@ class MyFigure(FigureCanvas):
         self.draw()
 
     def onScroll(self,event):
-        if event.xdata is None or event.ydata is None:
+        xcenter=event.xdata
+        ycenter=event.ydata
+        x,y = event.x,event.y
+        for ax in self.fig.axes:
+            xAxes,yAxes=ax.transAxes.inverted().transform([x,y])
+            if xAxes < 0 and yAxes >= 0 and yAxes <=1: # Hover over y axis
+                ycenter=ax.transData.inverted().transform([0,y])[1]
+            if yAxes < 0 and xAxes >= 0 and xAxes <=1: # Hover over x axis
+                xcenter=ax.transData.inverted().transform([x,0])[0]
+        if xcenter is None and ycenter is None:
             return
         scale=1
         factor=1.5
@@ -149,13 +158,13 @@ class MyFigure(FigureCanvas):
         else:
              scale = 1.0/factor
         if scale != 1:
-            if self.manageX:
+            if self.manageX and xcenter is not None:
                 cur_xlim = self.plt.get_xlim()
-                self.plt.set_xlim([event.xdata - (event.xdata - cur_xlim[0]) / scale, event.xdata + (cur_xlim[1]-event.xdata)/scale ])
-            if self.manageY:
+                self.plt.set_xlim([xcenter - (xcenter - cur_xlim[0]) / scale, xcenter + (cur_xlim[1]-xcenter)/scale ])
+            if self.manageY and ycenter is not None:
                 cur_ylim = self.plt.get_ylim()
-                self.plt.set_ylim([event.ydata - (event.ydata - cur_ylim[0]) / scale, event.ydata + (cur_ylim[1]-event.ydata)/scale ])
-            if self.manageX or self.manageY:
+                self.plt.set_ylim([ycenter - (ycenter - cur_ylim[0]) / scale, ycenter + (cur_ylim[1]-ycenter)/scale ])
+            if (self.manageX and xcenter is not None) or (self.manageY and ycenter is not None):
                 self.draw()
 
     def onPress(self,event):
