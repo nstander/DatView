@@ -74,6 +74,53 @@ class MyFigure(FigureCanvas):
         self.datamenu.addAction(self.drawAll)
         self.datamenu.addAction(self.drawBoth)
         self.datamenu.addAction(self.drawSelection)
+
+        self.range=None
+        self.origRange=None
+
+    def initRange(self, xrange,yrange):
+        if self.manageX and self.manageY:
+            self.origRange=(tuple(xrange),tuple(yrange))
+            rangeAct=self.menu.addAction("Set Range to Current Limits")
+            rangeAct.triggered.connect(self.onSetRange)
+
+            xrangeAct=self.menu.addAction("Set X Range to Current Limits")
+            xrangeAct.triggered.connect(self.onSetXRange)
+
+            yrangeAct=self.menu.addAction("Set Y Range to Current Limits")
+            yrangeAct.triggered.connect(self.onSetYRange)
+        elif self.manageX:
+            self.origRange=tuple(xrange)
+            rangeAct=self.menu.addAction("Set Range to Current Limits")
+            rangeAct.triggered.connect(self.onSetXRange)
+        elif self.manageY:
+            self.origRange=tuple(yrange)
+            rangeAct=self.menu.addAction("Set Range to Current Limits")
+            rangeAct.triggered.connect(self.onSetYRange)
+        self.range=self.origRange
+
+
+    def onSetRange(self):
+        self.range=(tuple(self.plt.get_xlim()),tuple(self.plt.get_ylim()))
+        self.mydraw()
+
+    def onSetXRange(self):
+        if self.manageY:
+            self.range=(tuple(self.plt.get_xlim()),self.range[1])
+        else:
+            self.range=tuple(self.plt.get_xlim())
+        self.mydraw(False)
+
+    def onSetYRange(self):
+        if self.manageX:
+            self.range=(self.range[0],tuple(self.plt.get_ylim()))
+        else:
+            self.range=tuple(self.plt.get_ylim())
+        self.mydraw(False)
+
+    def onReset(self):
+        self.range=self.origRange
+        self.mydraw(False)
         
 
     def datadraw(self):
@@ -201,9 +248,6 @@ class MyFigure(FigureCanvas):
         if name is not None:
             self.fig.savefig(name,ext="svg")
 
-    def onReset(self):
-        self.mydraw(False)
-
     def onFilterChange(self):
         if self.selp is not None:
             return # Selecting is from this plot, wait for both filters to update so we don't clear variables
@@ -254,12 +298,9 @@ class MyHistogram(MyFigure):
         self.sel=Rectangle((self.fieldfilterX.minimum,0),self.fieldfilterX.maximum-self.fieldfilterX.minimum,0,alpha=0.3,color='r')
         self.sel.set_visible(self.fieldfilterX.isActive())
 
-        rangeAct=self.menu.addAction("Set Range to Current Limits")
-        rangeAct.triggered.connect(self.onSetRange)
-
         self.mu=None
         self.sigma=None
-        self.range=(self.model.fieldmin(self.field),self.model.fieldmax(self.field))
+        self.initRange((self.model.fieldmin(self.field),self.model.fieldmax(self.field)),None)
 
         self.plt.get_yaxis().set_visible(False)
         self.dcache=None
@@ -333,10 +374,6 @@ class MyHistogram(MyFigure):
     def onSetRange(self):
         self.range=tuple(self.plt.get_xlim())
         self.mydraw()
-
-    def onReset(self):
-        self.range=(self.model.fieldmin(self.field),self.model.fieldmax(self.field))
-        self.mydraw(False)
             
 
 class MyScatter(MyFigure):
@@ -362,6 +399,9 @@ class MyScatter(MyFigure):
         self.sel=Rectangle((0,0),0,0,color='r',fill=False)
         self.onFilterChange() # Let this function worry about actual bounds, we just cared about color and fill
         self.cb=None
+
+        self.initRange((self.model.fieldmin(self.xfield),self.model.fieldmax(self.xfield)),
+                                 (self.model.fieldmin(self.yfield),self.model.fieldmax(self.yfield)))
 
         self.setWindowTitle("%s - %s - Scatter" % (self.model.prettyname(self.xfield),self.model.prettyname(self.yfield)))
         self.mydraw()
@@ -390,6 +430,9 @@ class MyScatter(MyFigure):
             sc=self.plt.scatter(self.model.filtered[self.xfield],self.model.filtered[self.yfield],c=cFiltered,cmap=cm,vmin=vmin,vmax=vmax,marker=marker,linewidths=self.model.cfg.scatterlinewidth,s=self.model.cfg.scattersize)
         else:
             sc=self.plt.scatter(self.model.data[self.xfield],self.model.data[self.yfield],c=cAll,cmap=cm,vmin=vmin,vmax=vmax,marker=marker,linewidths=self.model.cfg.scatterlinewidth,s=self.model.cfg.scattersize)
+
+        self.plt.set_xlim(self.range[0])
+        self.plt.set_ylim(self.range[1])
 
         self.plt.set_xlabel(self.model.prettyname(self.xfield))
         self.plt.set_ylabel(self.model.prettyname(self.yfield))
@@ -450,20 +493,11 @@ class MyHist2d(MyFigure):
         self.xedges=None
         self.yedges=None
 
-        self.range=((self.model.fieldmin(self.xfield),self.model.fieldmax(self.xfield)),
+        self.initRange((self.model.fieldmin(self.xfield),self.model.fieldmax(self.xfield)),
                                  (self.model.fieldmin(self.yfield),self.model.fieldmax(self.yfield)))
 
         self.drawBoth.setVisible(False)
         self.drawSelection.setChecked(True)
-
-        rangeAct=self.menu.addAction("Set Range to Current Limits")
-        rangeAct.triggered.connect(self.onSetRange)
-
-        xrangeAct=self.menu.addAction("Set X Range to Current Limits")
-        xrangeAct.triggered.connect(self.onSetXRange)
-
-        yrangeAct=self.menu.addAction("Set Y Range to Current Limits")
-        yrangeAct.triggered.connect(self.onSetYRange)
 
         logtxt=""
         if log:
@@ -513,6 +547,7 @@ class MyHist2d(MyFigure):
 
     def onReset(self,event):
         self.bins=int(64)
+        self.range=self.origRange
         self.plt.set_xlim((self.model.fieldmin(self.xfield),self.model.fieldmax(self.xfield)))
         self.plt.set_ylim((self.model.fieldmin(self.yfield),self.model.fieldmax(self.yfield)))
         self.mydraw()
@@ -534,22 +569,7 @@ class MyHist2d(MyFigure):
                 txt="%s,%s,%i"%(xtxt,ytxt,self.H[xbin-1,ybin-1])
         self.setToolTip(txt)
 
-    def onSetRange(self):
-        self.range=(tuple(self.plt.get_xlim()),tuple(self.plt.get_ylim()))
-        self.mydraw()
 
-    def onSetXRange(self):
-        self.range=(tuple(self.plt.get_xlim()),self.range[1])
-        self.mydraw(False)
-
-    def onSetYRange(self):
-        self.range=(self.range[0],tuple(self.plt.get_ylim()))
-        self.mydraw(False)
-
-    def onReset(self):
-        self.range=((self.model.fieldmin(self.xfield),self.model.fieldmax(self.xfield)),
-                                 (self.model.fieldmin(self.yfield),self.model.fieldmax(self.yfield)))
-        self.mydraw(False)
 
 
 
