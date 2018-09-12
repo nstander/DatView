@@ -4,13 +4,13 @@
 
 try:
     from PyQt5 import QtCore
-    from PyQt5.QtWidgets import QSizePolicy, QMenu, QApplication, QFileDialog
+    from PyQt5.QtWidgets import QSizePolicy, QMenu, QApplication, QFileDialog, QActionGroup
     from PyQt5.QtGui import QCursor
     from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 except ImportError as e:
     print(e)
     from PyQt4 import QtCore
-    from PyQt4.QtGui import QSizePolicy, QMenu, QApplication, QCursor, QFileDialog
+    from PyQt4.QtGui import QSizePolicy, QMenu, QApplication, QCursor, QFileDialog, QActionGroup
     from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 import numpy as np
 from matplotlib.figure import Figure
@@ -58,6 +58,23 @@ class MyFigure(FigureCanvas):
         saveAct.triggered.connect(self.onSaveSVG)
         resetAct=self.menu.addAction("Reset")
         resetAct.triggered.connect(self.onReset)
+
+        drawActionGroup = QActionGroup(self)
+        self.drawAll = drawActionGroup.addAction("Draw All (Ignore Selection)")
+        self.drawAll.triggered.connect(self.mydraw)
+        self.drawAll.setCheckable(True)
+        self.drawBoth = drawActionGroup.addAction("Draw All Semi-transparent; Selection Full Color")
+        self.drawBoth.triggered.connect(self.mydraw)
+        self.drawBoth.setCheckable(True)
+        self.drawBoth.setChecked(True)
+        self.drawSelection = drawActionGroup.addAction("Draw Selection Only")
+        self.drawSelection.triggered.connect(self.mydraw)
+        self.drawSelection.setCheckable(True)
+        self.datamenu=self.menu.addMenu("Data")
+        self.datamenu.addAction(self.drawAll)
+        self.datamenu.addAction(self.drawBoth)
+        self.datamenu.addAction(self.drawSelection)
+        
 
     def datadraw(self):
         pass
@@ -251,22 +268,29 @@ class MyHistogram(MyFigure):
     def datadraw(self):
         title=self.model.prettyname(self.field)
         fmt=" %0.2f "+u"\u00B1"+ " %0.2f"
+        drawBoth=self.model.isFiltered() and self.drawBoth.isChecked()
         if self.model.isCategorical(self.field):
             if self.dcache is None:
                 self.dcache=np.unique(self.model.data[self.field],return_counts=True)
-            if self.model.isFiltered():
+            if drawBoth:
                 self.plt.bar(self.dcache[0],self.dcache[1],color='black',alpha=0.5,edgecolor="none",align='center')
+                fcnts=np.unique(self.model.filtered[self.field],return_counts=True)
+                self.plt.bar(fcnts[0],fcnts[1],color='black',align='center')
+            elif self.drawSelection.isChecked():
                 fcnts=np.unique(self.model.filtered[self.field],return_counts=True)
                 self.plt.bar(fcnts[0],fcnts[1],color='black',align='center')
             else:
                 self.plt.bar(self.dcache[0],self.dcache[1],color='black',align='center')
             self.xlabels(self.model,self.field)
         else:
-            if self.model.isFiltered():
+            if drawBoth:
                 b=self.plt.hist(self.model.data[self.field],bins=self.bins,color='black',alpha=0.5,edgecolor="none",
                     range=self.range)[1]
                 self.plt.hist(self.model.filtered[self.field],bins=b,color='black',
                     range=self.range)
+            elif self.drawSelection.isChecked():
+                b=self.plt.hist(self.model.filtered[self.field],bins=self.bins,color='black',
+                    range=self.range)[1]
             else:
                 b=self.plt.hist(self.model.data[self.field],bins=self.bins,color='black',
                     range=self.range)[1]
@@ -359,11 +383,13 @@ class MyScatter(MyFigure):
             vmin=self.model.fieldmin(self.cfield)
             vmax=self.model.fieldmax(self.cfield)
 
-        if self.model.isFiltered():
-            self.plt.scatter(xAll,self.model.data[self.yfield],c=cAll,alpha=0.5,cmap=cm,vmin=vmin,vmax=vmax,marker=marker,linewidths=self.model.cfg.scatterlinewidth,s=self.model.cfg.scattersize)
-            sc=self.plt.scatter(xFiltered,self.model.filtered[self.yfield],c=cFiltered,cmap=cm,vmin=vmin,vmax=vmax,marker=marker,linewidths=self.model.cfg.scatterlinewidth,s=self.model.cfg.scattersize)
+        if self.model.isFiltered() and self.drawBoth.isChecked():
+            self.plt.scatter(self.model.data[self.xfield],self.model.data[self.yfield],c=cAll,alpha=0.3,cmap=cm,vmin=vmin,vmax=vmax,marker=marker,linewidths=self.model.cfg.scatterlinewidth,s=self.model.cfg.scattersize)
+            sc=self.plt.scatter(self.model.filtered[self.xfield],self.model.filtered[self.yfield],c=cFiltered,cmap=cm,vmin=vmin,vmax=vmax,marker=marker,linewidths=self.model.cfg.scatterlinewidth,s=self.model.cfg.scattersize)
+        elif self.drawSelection.isChecked():
+            sc=self.plt.scatter(self.model.filtered[self.xfield],self.model.filtered[self.yfield],c=cFiltered,cmap=cm,vmin=vmin,vmax=vmax,marker=marker,linewidths=self.model.cfg.scatterlinewidth,s=self.model.cfg.scattersize)
         else:
-            sc=self.plt.scatter(xAll,self.model.data[self.yfield],c=cAll,cmap=cm,vmin=vmin,vmax=vmax,marker=marker,linewidths=self.model.cfg.scatterlinewidth,s=self.model.cfg.scattersize)
+            sc=self.plt.scatter(self.model.data[self.xfield],self.model.data[self.yfield],c=cAll,cmap=cm,vmin=vmin,vmax=vmax,marker=marker,linewidths=self.model.cfg.scatterlinewidth,s=self.model.cfg.scattersize)
 
         self.plt.set_xlabel(self.model.prettyname(self.xfield))
         self.plt.set_ylabel(self.model.prettyname(self.yfield))
@@ -427,6 +453,9 @@ class MyHist2d(MyFigure):
         self.range=((self.model.fieldmin(self.xfield),self.model.fieldmax(self.xfield)),
                                  (self.model.fieldmin(self.yfield),self.model.fieldmax(self.yfield)))
 
+        self.drawBoth.setVisible(False)
+        self.drawSelection.setChecked(True)
+
         rangeAct=self.menu.addAction("Set Range to Current Limits")
         rangeAct.triggered.connect(self.onSetRange)
 
@@ -443,13 +472,16 @@ class MyHist2d(MyFigure):
         self.mydraw()
 
     def datadraw(self):
-        # Always use filtered
+        drawfiltered=self.drawSelection.isChecked()
+        model=self.model.filtered
+        if not drawfiltered:
+            model = self.model.data
         b=[self.bins,self.bins]
         if self.model.isCategorical(self.xfield):
             b[0]=len(self.model.labels(self.xfield))
         if self.model.isCategorical(self.yfield):
             b[1]=len(self.model.labels(self.yfield))     
-        self.H,self.xedges,self.yedges = np.histogram2d(self.model.filtered[self.xfield],self.model.filtered[self.yfield],bins=b,
+        self.H,self.xedges,self.yedges = np.histogram2d(model[self.xfield],model[self.yfield],bins=b,
                           range=self.range)
         norm=None
         if self.log:
