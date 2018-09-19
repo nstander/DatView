@@ -379,10 +379,6 @@ class MyHistogram(MyFigure):
                 bar = int(np.round(event.xdata))
                 txt=self.model.stringValue(self.field,bar)
         self.setToolTip(txt)
-
-    def onSetRange(self):
-        self.range=tuple(self.plt.get_xlim())
-        self.mydraw()
             
 
 class MyScatter(MyFigure):
@@ -408,9 +404,6 @@ class MyScatter(MyFigure):
         self.sel=Rectangle((0,0),0,0,color='r',fill=False)
         self.onFilterChange() # Let this function worry about actual bounds, we just cared about color and fill
         self.cb=None
-
-        self.initRange((self.model.fieldmin(self.xfield),self.model.fieldmax(self.xfield)),
-                                 (self.model.fieldmin(self.yfield),self.model.fieldmax(self.yfield)))
 
         self.setWindowTitle("%s - %s - Scatter" % (self.model.prettyname(self.xfield),self.model.prettyname(self.yfield)))
         self.mydraw()
@@ -440,8 +433,6 @@ class MyScatter(MyFigure):
         else:
             sc=self.plt.scatter(self.model.data[self.xfield],self.model.data[self.yfield],c=cAll,cmap=cm,vmin=vmin,vmax=vmax,marker=marker,linewidths=self.model.cfg.scatterlinewidth,s=self.model.cfg.scattersize)
 
-        self.plt.set_xlim(self.range[0])
-        self.plt.set_ylim(self.range[1])
 
         self.plt.set_xlabel(self.model.prettyname(self.xfield))
         self.plt.set_ylabel(self.model.prettyname(self.yfield))
@@ -454,8 +445,13 @@ class MyScatter(MyFigure):
         self.ylabels(self.model,self.yfield)
 
     def onReset(self,event):
-        self.plt.set_xlim((self.model.fieldmin(self.xfield),self.model.fieldmax(self.xfield)))
-        self.plt.set_ylim((self.model.fieldmin(self.yfield),self.model.fieldmax(self.yfield)))
+        xrange=(self.model.fieldmin(self.xfield),self.model.fieldmax(self.xfield))
+        yrange=(self.model.fieldmin(self.yfield),self.model.fieldmax(self.yfield))
+        if self.drawSelection.isChecked() and self.model.isFiltered():
+            xrange=(np.min(self.model.filtered[self.xfield]),np.max(self.model.filtered[self.xfield]))
+            yrange=(np.min(self.model.filtered[self.yfield]),np.max(self.model.filtered[self.yfield]))
+        self.plt.set_xlim(xrange)
+        self.plt.set_ylim(yrange)
         self.mydraw()
 
     def onToolTip(self,event):

@@ -304,6 +304,7 @@ class DataModel(QObject):
             if self.reverseSort:
                 outarr = np.flipud(outarr)
         self.data[DataModel.sortColumnName][outarr]=np.arange(len(self.data))
+        self.filtered=self.data[self.overridekeep]
 
     def outArrIndices(self,applyLimit=True):
         outarr=np.arange(len(self.filtered))
