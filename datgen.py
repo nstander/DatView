@@ -81,6 +81,11 @@ class DatGenerator:
             if i not in self.npsynccols:
                 self.cols.append(self.npcols[i])
 
+    def skipCols(self,skip):
+        for col in skip:
+            if col in self.cols:
+                del self.cols[self.cols.index(col)]
+
     def addNp(self,cur):
         if self.npdata is not None:
             r=self.npdata
@@ -205,14 +210,16 @@ class DatGenerator:
 if __name__ == '__main__':
     parser=argparse.ArgumentParser(description='Create a .dat file from any number of stream files. Output files have one header row and can be appended to eachother with tail -n +1 >> fullfile (to skip the header row) assuming columns are the same.')
     parser.add_argument('--out','-o',type=argparse.FileType('w'),default=sys.stdout,help='Output file')
-    parser.add_argument('--group',default=None,help='The group file output by groupgen.py (groupcfg.txt), keeps files smaller and numeric by enuemrating strings')
-    parser.add_argument('--streamcols',default=DatGenerator.allcols,nargs='+',help='Space separated list of builtin columns to include in output. Defaults to all possible.')
+    parser.add_argument('--group',default=None,help='The group file output by groupgen.py (groupcfg.txt), for custom groups and/or enumerating strings')
+    parser.add_argument('--streamcols',default=DatGenerator.allcols,nargs='+',help='Space separated list of stream columns to include in output. Defaults to all possible.')
     parser.add_argument('--cxi',action='append',default=[],help='Include from cxi/h5 file. Use switch multiple times to include from multiple cxi files. Example: --cxi /cheetah/frameNumber --cxi /LCLS/machineTime')
     parser.add_argument('--npfile',default=None,help='Filepath to numpy file. Columns in numpy file will be synced with stats after cxi columns but before grouping.')
     parser.add_argument('--npcols',nargs='+',default=[],help='Space separated column names for columns in npfile. Defaults to npcol0 npcol1 etc if not provided. Variable length arguments so don\'t use as last switch before stream files.')
     parser.add_argument('--npsynccols',type=int,nargs='+',default=[],help='The column(s) numbers of the npfile to sync on. Defaults to the the first column(s) to the length of the --npsyncfields. So, if --npsyncfields is length 2, and this is not provided, it will default to 0,1. These  columns are not output Variable length arguments so don\'t use as last switch before stream files.')
     parser.add_argument('--npsyncfields',nargs="+",default=['/LCLS/machineTime','/LCLS/machineTimeNanoSeconds'],help='The fields(s) from the stream/cxi file to sync with. Defaults to [/LCLS/machineTime,/LCLS/machineTimeNanoSeconds]. Variable length arguments so don\'t use as last switch before stream files.')
+    parser.add_argument('--skipcols',default=[],nargs='+',help='Remove the given columns from the output. Fast alternative to specifying all but a few columns to other options.')
     parser.add_argument('files',nargs='+',help='one or more crystfel stream files')
+
 
     args=parser.parse_args()
 
@@ -230,6 +237,8 @@ if __name__ == '__main__':
         if len(args.npsynccols) < len(args.npsyncfields):
             args.npsynccols=np.arange(len(args.npsyncfields))
         datgen.setNpSync(npdata,args.npcols,args.npsynccols,args.npsyncfields)
+
+    datgen.skipCols(args.skipcols)
             
     datgen.startout()    
     for f in args.files:
