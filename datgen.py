@@ -38,11 +38,14 @@ class DatGenerator:
                 (('o1','o2','o3'),re.compile('^astar = ([\+-]\d+\.\d+) ([\+-]\d+\.\d+) ([\+-]\d+\.\d+) nm\^-1')),
                 (('o4','o5','o6'),re.compile('^bstar = ([\+-]\d+\.\d+) ([\+-]\d+\.\d+) ([\+-]\d+\.\d+) nm\^-1')),
                 (('o7','o8','o9'),re.compile('^cstar = ([\+-]\d+\.\d+) ([\+-]\d+\.\d+) ([\+-]\d+\.\d+) nm\^-1'))]
+    listcols = [(('class','subcxi'),re.compile('.*r\d{4}(?:-class(\d))?(?:-c(\d{2}))?\.(?:cxi|h5)')),
+                (('run',),re.compile('.*r(\d{4})'))]
     allstrcols=['ifile','run','class','subcxi','event','indby','phoen','bmdv','bmbw','aclen','npeak',
                 'ltype','cent','a','b','c','alpha','beta','gamma','prorad','detdx','detdy','reslim','nref',
                 'nsref','niref','o1','o2','o3','o4','o5','o6','o7','o8','o9']
     internalcols=['sfile','istart','iend','cstart','cend','pstart','pend','rstart','rend','multiid','multi','vol']
-    allcols=allstrcols+internalcols
+    allstreamcols=allstrcols+internalcols
+    alllistcols=['ifile','run','class','subcxi','event','basename']
                 
     def __init__(self,out,streamcols,cxicols,groupmgr=None):
         self.cols=streamcols+cxicols
@@ -56,12 +59,15 @@ class DatGenerator:
         self.npcols=None
         self.npsynccols=None
         self.npsyncfields=None
+        self.groupcols=[]
         if groupmgr is not None:
             for col in sorted(self.groupmgr.groups()):
                 if col in self.cols:
                     self.cols[self.cols.index(col)]=GroupMgr.prefix + col
-                else:
+                    self.groupcols.append(col)
+                elif self.groupmgr.matchcol(col) in self.cols:
                     self.cols.append(GroupMgr.prefix + col)
+                    self.groupcols.append(col)
 
     def startout(self):
         print(*self.cols,sep='\t',file=self.out)
@@ -131,7 +137,7 @@ class DatGenerator:
 
     def groupify(self,cur):
         if self.groupmgr is not None:
-            for g in self.groupmgr.groups():
+            for g in self.groupcols:
                 cur[GroupMgr.prefix + g] = self.groupmgr.match(g,cur[self.groupmgr.matchcol(g)])
         
 
@@ -205,29 +211,59 @@ class DatGenerator:
                             cur.update(zip(streamre[0],mtch.groups()))
                 lineStart=lineEnd
 
+    def parselist(self,filename):
+        with open(filename) as f:
+            while True:
+                line=f.readline()
+                if not line:
+                    break
+                parts = line.strip().split()
+                if len(parts) == 1 or len(parts) == 2:
+                    cur={}
+                    cur['ifile']=parts[0]
+                    if len(parts) == 2:
+                        cur['event']=parts[1][2:]
+                    for ifileRE in DatGenerator.listcols:
+                        mtch=ifileRE[1].search(parts[0])
+                        if mtch:
+                            cur.update(zip(ifileRE[0],mtch.groups()))
+                    cur['basename']=os.path.basename(parts[0])
+                    self.writerow(cur)
+                    
+
 
 
 if __name__ == '__main__':
     parser=argparse.ArgumentParser(description='Create a .dat file from any number of stream files. Output files have one header row and can be appended to eachother with tail -n +1 >> fullfile (to skip the header row) assuming columns are the same.')
     parser.add_argument('--out','-o',type=argparse.FileType('w'),default=sys.stdout,help='Output file')
     parser.add_argument('--group',default=None,help='The group file output by groupgen.py (groupcfg.txt), for custom groups and/or enumerating strings')
-    parser.add_argument('--streamcols',default=DatGenerator.allcols,nargs='+',help='Space separated list of stream columns to include in output. Defaults to all possible.')
+    parser.add_argument('--builtincols',default=None,nargs='+',help='Space separated list of builtin columns to include in output. Defaults to all possible.')
     parser.add_argument('--cxi',action='append',default=[],help='Include from cxi/h5 file. Use switch multiple times to include from multiple cxi files. Example: --cxi /cheetah/frameNumber --cxi /LCLS/machineTime')
     parser.add_argument('--npfile',default=None,help='Filepath to numpy file. Columns in numpy file will be synced with stats after cxi columns but before grouping.')
     parser.add_argument('--npcols',nargs='+',default=[],help='Space separated column names for columns in npfile. Defaults to npcol0 npcol1 etc if not provided. Variable length arguments so don\'t use as last switch before stream files.')
     parser.add_argument('--npsynccols',type=int,nargs='+',default=[],help='The column(s) numbers of the npfile to sync on. Defaults to the the first column(s) to the length of the --npsyncfields. So, if --npsyncfields is length 2, and this is not provided, it will default to 0,1. These  columns are not output Variable length arguments so don\'t use as last switch before stream files.')
     parser.add_argument('--npsyncfields',nargs="+",default=['/LCLS/machineTime','/LCLS/machineTimeNanoSeconds'],help='The fields(s) from the stream/cxi file to sync with. Defaults to [/LCLS/machineTime,/LCLS/machineTimeNanoSeconds]. Variable length arguments so don\'t use as last switch before stream files.')
     parser.add_argument('--skipcols',default=[],nargs='+',help='Remove the given columns from the output. Fast alternative to specifying all but a few columns to other options.')
-    parser.add_argument('files',nargs='+',help='one or more crystfel stream files')
+    parser.add_argument('files',nargs='+',help='Files to process. They can be CrystFEL stream files or CrystFEL list files, but the two shouldn\'t be mixed in the same command. The extension on the first file determines how all remaining files will be processed, with .lst or .txt indicating a list file and anything else is assumed to be a stream file. Events must be specified in the list file (listing CXI files will not read each event seperately. Use CrystFEL\'s list_events to convert a list of CXI files to a list of events).')
 
 
     args=parser.parse_args()
+
+    # First, check if we're dealing with list files or stream files
+    extension = os.path.splitext(args.files[0])[1]
+    listmode = extension == ".lst" or extension == ".txt"
+
+    if args.builtincols is None:
+        if listmode:
+            args.builtincols = DatGenerator.alllistcols
+        else:
+            args.builtincols = DatGenerator.allstreamcols
 
     gmgr=None
     if args.group:
         gmgr=GroupMgr(args.group)
 
-    datgen=DatGenerator(args.out,args.streamcols,args.cxi,gmgr)
+    datgen=DatGenerator(args.out,args.builtincols,args.cxi,gmgr)
 
     if args.npfile is not None:
         npdata=np.load(args.npfile)
@@ -242,4 +278,8 @@ if __name__ == '__main__':
             
     datgen.startout()    
     for f in args.files:
-        datgen.parsestream(f)
+        if listmode:
+            datgen.parselist(f)
+        else:
+            datgen.parsestream(f)
+
