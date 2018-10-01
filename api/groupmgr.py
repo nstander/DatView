@@ -4,11 +4,11 @@
 
 class GroupMgr:
     prefix="g_"
-    def __init__(self,groupfile):
+    def __init__(self,groupfile,loadmatches=False):
         self.gmaps={}
-        self.load(groupfile)
+        self.load(groupfile,loadmatches)
 
-    def load(self,groupfile):
+    def load(self,groupfile,loadmatches=False):
         with open(groupfile) as fin:
             line = fin.readline() # skip header line
             while True:
@@ -26,20 +26,21 @@ class GroupMgr:
                 self.gmaps[fields[0]]["value"][fields[2]]=int(fields[1])
                 self.gmaps[fields[0]]["gid"][int(fields[1])]=fields[2]
                 self.gmaps[fields[0]]["matchcol"]=fields[3]
-                
-                mtchs = set()
-                if fields[4][0] == '@':
-                    # This field is a file that should be read.
-                    with open(fields[4][1:]) as f:
-                        mtchs.update(f.read().splitlines()) # Use splitlines instead of readlines to avoid \n characters
-                else:
-                    for mtch in filter(None,fields[4].split(',')):
-                        try:
-                            mtch=int(mtch)
-                        except ValueError:
-                            pass
-                        mtchs.add(mtch)
-                self.gmaps[fields[0]]["matches"][int(fields[1])]=mtchs
+
+                if loadmatches:
+                    mtchs = set()
+                    if fields[4][0] == '@':
+                        # This field is a file that should be read.
+                        with open(fields[4][1:]) as f:
+                            mtchs.update(f.read().splitlines()) # Use splitlines instead of readlines to avoid \n characters
+                    else:
+                        for mtch in filter(None,fields[4].split(',')):
+                            try:
+                                mtch=int(mtch)
+                            except ValueError:
+                                pass
+                            mtchs.add(mtch)
+                    self.gmaps[fields[0]]["matches"][int(fields[1])]=mtchs
 
 
     def gid(self,group,value):

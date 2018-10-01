@@ -20,7 +20,7 @@ parser.add_argument('--datfile',type=open,default=sys.stdin,help='the dat file')
 parser.add_argument('--outfile',type=argparse.FileType('w'),default=sys.stdout,help='Output file name. Script does not support in-place editing.')
 args=parser.parse_args()
 
-groupmgr=GroupMgr(args.group)
+groupmgr=GroupMgr(args.group,True)
 
 dfile=args.datfile
 out=args.outfile
