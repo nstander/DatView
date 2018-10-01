@@ -62,7 +62,8 @@ class DatGenerator:
         self.groupcols=[]
         self.static={}
         self.static.update(staticlist)
-        self.cols += self.static.keys()
+        for s in staticlist:
+            self.cols.append(s[0])
         if groupmgr is not None:
             for col in sorted(self.groupmgr.groups()):
                 if col in self.cols:
