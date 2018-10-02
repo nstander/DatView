@@ -31,6 +31,7 @@ class MyMainWindow(QMainWindow):
         QMainWindow.__init__(self)
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+        self.setAttribute(Qt.WA_DeleteOnClose)
 
         config=ModelConfig(cfg)
         self.model=DataModel(datfile,groupfile,cfg=config)
@@ -43,6 +44,8 @@ class MyMainWindow(QMainWindow):
         self.ui.actionSave_List.triggered.connect(self.onSaveLst)
         self.ui.actionSave_Stream.setEnabled(self.model.canSaveStream())
         self.ui.actionSave_Stream.triggered.connect(self.onSaveStream)
+        self.ui.actionSave_Numpy.setEnabled(self.model.canSaveNumpy())
+        self.ui.actionSave_Numpy.triggered.connect(self.onSaveNumpy)
         self.ui.actionSave_Filters.triggered.connect(self.onSaveFilters)
         self.ui.actionScatter.triggered.connect(self.onShowScatter)
         self.ui.action2D_Histogram.triggered.connect(self.onShowHist2d)
@@ -155,6 +158,14 @@ class MyMainWindow(QMainWindow):
         elif name is not None and len(name):
             self.model.saveSelStream(name)
 
+    def onSaveNumpy(self):
+        name=QFileDialog.getSaveFileName(self,'Save ALL as compressed numpy file',filter='*.npz')
+        if qt5:
+            if name:
+                self.model.saveAllNumpy(name[0])
+        elif name is not None and len(name):
+            self.model.saveAllNumpy(name)
+
     def onSaveFilters(self):
         name=QFileDialog.getSaveFileName(self,'Save Filters',filter='*.xml')
         if name is not None and len(name):
@@ -176,7 +187,7 @@ def main():
     parser.add_argument('--sort',default=None,nargs='+',help='One or more fields to sort the output by. Field names must match the header of the dat file.')
     parser.add_argument('--limit',default=None,type=int,help='Limit the output to this number, if provided')
     parser.add_argument('--cfg',default=None,help='Use the provided configuration file (xml) instead of the default one. Default one is found in api/modelcfg.xml')
-    parser.add_argument('file',help='the dat file')
+    parser.add_argument('file',help='the dat file (or a .npz file output from datview/datexport)')
     args=parser.parse_args()
 
     app = QApplication(sys.argv)

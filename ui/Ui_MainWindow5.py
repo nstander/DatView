@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'MainWindow.ui'
 #
-# Created by: PyQt5 UI code generator 5.9.2
+# Created by: PyQt5 UI code generator 5.6
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -23,6 +23,7 @@ class Ui_MainWindow(object):
         self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 774, 447))
         self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
         self.gridLayout = QtWidgets.QGridLayout(self.scrollAreaWidgetContents)
+        self.gridLayout.setContentsMargins(0, 0, 0, 0)
         self.gridLayout.setObjectName("gridLayout")
         self.plotScrollArea.setWidget(self.scrollAreaWidgetContents)
         self.verticalLayout.addWidget(self.plotScrollArea)
@@ -66,11 +67,14 @@ class Ui_MainWindow(object):
         self.actionSave_Filters.setObjectName("actionSave_Filters")
         self.actionShowDatasetPanel = QtWidgets.QAction(MainWindow)
         self.actionShowDatasetPanel.setObjectName("actionShowDatasetPanel")
+        self.actionSave_Numpy = QtWidgets.QAction(MainWindow)
+        self.actionSave_Numpy.setObjectName("actionSave_Numpy")
         self.menuSave_Selections_As_2.addAction(self.actionSave_List)
         self.menuSave_Selections_As_2.addAction(self.actionSave_Stream)
         self.menuSave_Selections_As_2.addAction(self.actionSave_Dat)
         self.menuFile.addAction(self.actionOpen)
         self.menuFile.addAction(self.menuSave_Selections_As_2.menuAction())
+        self.menuFile.addAction(self.actionSave_Numpy)
         self.menuFile.addAction(self.actionSave_Plot)
         self.menuFile.addAction(self.actionSave_Filters)
         self.menuHistogram_Bar.addAction(self.actionReset)
@@ -105,4 +109,6 @@ class Ui_MainWindow(object):
         self.actionShowFilters.setText(_translate("MainWindow", "Filters"))
         self.actionSave_Filters.setText(_translate("MainWindow", "Save Filters"))
         self.actionShowDatasetPanel.setText(_translate("MainWindow", "Dataset Panel"))
+        self.actionSave_Numpy.setText(_translate("MainWindow", "Save Numpy"))
+        self.actionSave_Numpy.setToolTip(_translate("MainWindow", "Save all data into compressed npz file"))
 

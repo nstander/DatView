@@ -26,53 +26,17 @@ class DataModel(QObject):
         else:
             self.cfg = cfg
         self.cols=[]
-        with open(filename) as dfile:
-            self.hdrline=dfile.readline().strip()
-            if self.hdrline.startswith("CrystFEL stream format"):
-                print("Usage: This input file (%s) looks like a CrystFEL stream file. It should be a dat file. Please run \n\tdatgen.py -o output.dat %s\nand run this program on the output."%(filename,filename),file=sys.stderr)
-                sys.exit()
-            self.cols=self.hdrline.split(self.cfg.sep)
-            if cfg.commentchar is not None:
-                self.cols[0] = self.cols[0].replace(cfg.commentchar, "")
-        dtypes=[]
-        convert={}
-        todigitize=[]
+        self.hdrline=None
         self.digitized={}
-        for c in self.cols:
-            dtypes.append(self.cfg.dtype(c))
-            if 'U' in dtypes[-1]:
-                convert[self.cols.index(c)]=np.lib.npyio.asstr
-                todigitize.append(c)
-        self.rdata=np.loadtxt(filename,skiprows=1,converters=convert,delimiter=self.cfg.sep,
-                             dtype={'names':tuple(self.cols),'formats':tuple(dtypes)})
-        # We may have string inputs, even with grouping, and it will simplify all the other code
-        # if at this point we digitize any string inputs so other code will only ever see numbers
-        # and the labels are obtained through the common interface used for grouping anyway.
-        if len(todigitize):
-            dtypes2=[]
-            for dtype in dtypes:
-                if 'U' in dtype:
-                    dtypes2.append('i4')
-                else:
-                    dtypes2.append(dtype)
-            self.cols.append(DataModel.sortColumnName)
-            dtypes2.append('u4')
-            self.data=np.empty(self.rdata.shape,dtype={'names':tuple(self.cols),'formats':tuple(dtypes2)})
-            for c in self.cols:
-                if c in todigitize:
-                    lbls,inverse=np.unique(self.rdata[c],return_inverse=True)
-                    self.digitized[c]=lbls
-                    self.data[c]=inverse
-                elif c == DataModel.sortColumnName:
-                    self.data[c]=np.arange(len(self.rdata))
-                else:
-                    self.data[c]=self.rdata[c]
-                    if c in self.cfg.invert:
-                        self.data[c] = 1/self.data[c]
-                    if self.cfg.multvalue(c) != 1:
-                        self.data[c][self.data[c]!=-1]*=self.cfg.multvalue(c)
+        self.rdata = None
+        self.data = None
+        self.npfile = None
+        
+        if filename.endswith(".npz"):
+            self.loadNumpy(filename)
         else:
-            self.data=self.rdata
+            self.loadtxt(filename)
+
         self.filtered=self.data
         self.topfilter=AndFilter(self.data.shape)
         self.topfilter.filterchange.connect(self.applyFilters)
@@ -89,6 +53,60 @@ class DataModel(QObject):
         self.reverseSort=False
         self.limit=None
         self.limitModeRandom = True
+
+    def loadtxt(self,filename):
+        """Called from __init__, not intended to be called by users"""
+        with open(filename) as dfile:
+            self.hdrline=dfile.readline().strip()
+            if self.hdrline.startswith("CrystFEL stream format"):
+                print("Usage: This input file (%s) looks like a CrystFEL stream file. It should be a dat file. Please run \n\tdatgen.py -o output.dat %s\nand run this program on the output."%(filename,filename),file=sys.stderr)
+                sys.exit()
+            self.cols=self.hdrline.split(self.cfg.sep)
+            if self.cfg.commentchar is not None:
+                self.cols[0] = self.cols[0].replace(cfg.commentchar, "")
+        dtypes=[]
+        convert={}
+        todigitize=[]
+        for c in self.cols:
+            dtypes.append(self.cfg.dtype(c))
+            if 'U' in dtypes[-1]:
+                convert[self.cols.index(c)]=np.lib.npyio.asstr
+                todigitize.append(c)
+        self.rdata=np.loadtxt(filename,skiprows=1,converters=convert,delimiter=self.cfg.sep,
+                             dtype={'names':tuple(self.cols),'formats':tuple(dtypes)})
+        # We may have string inputs, even with grouping, and it will simplify all the other code
+        # if at this point we digitize any string inputs so other code will only ever see numbers
+        # and the labels are obtained through the common interface used for grouping anyway. Also,
+        # apply conversions in the configuration file.
+        dtypes2=[]
+        for dtype in dtypes:
+            if 'U' in dtype:
+                dtypes2.append('i4')
+            else:
+                dtypes2.append(dtype)
+        self.cols.append(DataModel.sortColumnName)
+        dtypes2.append('u4')
+        self.data=np.empty(self.rdata.shape,dtype={'names':tuple(self.cols),'formats':tuple(dtypes2)})
+        for c in self.cols:
+            if c in todigitize:
+                lbls,inverse=np.unique(self.rdata[c],return_inverse=True)
+                self.digitized[c]=np.array(lbls.tolist())
+                self.data[c]=inverse
+            elif c == DataModel.sortColumnName:
+                self.data[c]=np.arange(len(self.rdata))
+            else:
+                self.data[c]=self.rdata[c]
+                if c in self.cfg.invert:
+                    self.data[c] = 1/self.data[c]
+                if self.cfg.multvalue(c) != 1:
+                    self.data[c][self.data[c]!=-1]*=self.cfg.multvalue(c)
+
+    def loadNumpy(self,filename):
+        self.npfile = np.load(filename)
+        self.data=self.npfile["data"]
+        self.cols=list(self.data.dtype.names)
+        for dkey in self.npfile["digitizedkeys"].tolist():
+            self.digitized[dkey]=None
         
 
     def prettyname(self,field):
@@ -102,12 +120,21 @@ class DataModel(QObject):
         field=self.datafield(field)
         return self.groupmgr is not None and field.startswith(GroupMgr.prefix) or field in self.digitized
 
+    def canAccessDigitized(self,field):
+        """ Lazy load digitized values from numpy file """
+        if field in self.digitized:
+            if self.digitized[field] is None:
+                assert self.npfile is not None
+                self.digitized[field]=self.npfile[field]
+            return True
+        return False
+
     def labels(self,field):
         field=self.datafield(field)
         if self.hasLabels(field):
             if field not in self.labelcache:
                 self.labelcache[field]={}
-                if field in self.digitized:
+                if self.canAccessDigitized(field):
                     self.labelcache[field]["labels"] = self.digitized[field]
                     self.labelcache[field]["ints"] = np.arange(len(self.digitized[field]))
                 else:
@@ -147,7 +174,7 @@ class DataModel(QObject):
     def intValues(self,field):
         """Meant for categorical values, return list of all possible"""
         field=self.datafield(field)
-        if field in self.digitized:
+        if self.canAccessDigitized(field):
             return range(len(self.digitized[field])) # It's digitized 0:N-1
         elif self.groupmgr is not None and field.startswith(GroupMgr.prefix):
             return range(len(self.groupmgr.values(field[len(GroupMgr.prefix):]))) # Valid groupfiles are 0:N-1 
@@ -171,7 +198,7 @@ class DataModel(QObject):
     def stringValue(self,field,v):
         field=self.datafield(field)
 
-        if field in self.digitized:
+        if self.canAccessDigitized(field):
             if v >= 0 and v < len(self.digitized[field]):
                 v = self.digitized[field][v]
             else:
@@ -184,7 +211,7 @@ class DataModel(QObject):
         field=self.datafield(field)
 
         r=None
-        if field in self.digitized:
+        if self.canAccessDigitized(field):
             r=np.where(self.digitized[field] == i)[0][0]
         elif field.startswith(GroupMgr.prefix) and self.groupmgr is not None:
             r = self.groupmgr.gid(field[len(GroupMgr.prefix):],i)
@@ -325,11 +352,25 @@ class DataModel(QObject):
         for c in self.cols:
             if c != DataModel.sortColumnName:
                 formats.append(self.cfg.fmt(c))
-        outarr=self.rdata[self.overridekeep][self.outArrIndices()]
+        rdata = self.rdata
+        if rdata is None:
+            assert self.npfile is not None
+            rdata = self.npfile["rdata"]
+        outarr=rdata[self.overridekeep][self.outArrIndices()]
         d='\t'
         if self.cfg.sep is not None:
             d=self.cfg.sep
-        np.savetxt(fname,outarr,fmt=formats,delimiter=d,header=self.hdrline,comments='')
+        hline = self.hdrline
+        if hline is None:
+            sep=self.cfg.sep
+            if sep is None:
+                sep = "\t"
+            
+            if self.cfg.commentchar is None:
+                hline = sep.join(rdata.dtype.names)
+            else:
+                hline = sep.join((self.cfg.commentchar,*rdata.dtype.names))          
+        np.savetxt(fname,outarr,fmt=formats,delimiter=d,header=hline,comments='')
         print ("Wrote",fname)
 
     def canSaveLst(self):
@@ -399,6 +440,12 @@ class DataModel(QObject):
             curfile.close()
         print ("Wrote",fname)
 
+    def canSaveNumpy(self):
+        return self.npfile is None # Don't resave a numpy file as a numpy file. Too complicated.
+
+    def saveAllNumpy(self,fname):
+        assert self.canSaveNumpy()
+        np.savez_compressed(fname,data=self.data,rdata=self.rdata,digitizedkeys=np.asarray(sorted(self.digitized.keys())),**self.digitized)
 
     def saveFilters(self,fname):
         root=ElementTree.Element("filters")
