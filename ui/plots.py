@@ -277,16 +277,22 @@ class MyFigure(FigureCanvas):
             self.sel.set_visible(self.fieldfilterY.isActive() or (self.fieldfilterX is not None and self.fieldfilterX.isActive()))
         self.draw()
 
-    def xlabels(self,model,field):
+    def xlabels(self,model,field,distribute=False):
         if model.hasLabels(field):
             lbls=model.labels(field)
-            self.plt.set_xticks(model.labelints(field))
+            ticks=model.labelints(field)
+            if distribute:
+                ticks= ticks.astype(float) + 0.5
+            self.plt.set_xticks(ticks)
             self.plt.set_xticklabels(lbls)
 
-    def ylabels(self,model,field):
+    def ylabels(self,model,field,distribute=False):
         if model.hasLabels(field):
             lbls=model.labels(field)
-            self.plt.set_yticks(model.labelints(field))
+            ticks=model.labelints(field)
+            if distribute:
+                ticks= ticks.astype(float) + 0.5
+            self.plt.set_yticks(ticks)
             self.plt.set_yticklabels(lbls)
 
 
@@ -309,7 +315,8 @@ class MyHistogram(MyFigure):
 
         self.mu=None
         self.sigma=None
-        self.initRange((self.model.fieldmin(self.field),self.model.fieldmax(self.field)),None)
+        if not self.model.isCategorical(self.field):
+            self.initRange((self.model.fieldmin(self.field),self.model.fieldmax(self.field)),None)
 
         self.plt.get_yaxis().set_visible(False)
         self.dcache=None
@@ -498,8 +505,18 @@ class MyHist2d(MyFigure):
         self.xedges=None
         self.yedges=None
 
-        self.initRange((self.model.fieldmin(self.xfield),self.model.fieldmax(self.xfield)),
-                                 (self.model.fieldmin(self.yfield),self.model.fieldmax(self.yfield)))
+        xshift=0
+        if self.model.isCategorical(self.xfield):
+            xshift = 1
+
+        yshift=0
+        if self.model.isCategorical(self.yfield):
+            yshift = 1
+
+        self.initRange((self.model.fieldmin(self.xfield),self.model.fieldmax(self.xfield)+xshift),
+                                 (self.model.fieldmin(self.yfield),self.model.fieldmax(self.yfield)+yshift))
+        self.plt.set_xlim(self.range[0])
+        self.plt.set_ylim(self.range[1])
 
         self.drawBoth.setVisible(False)
         self.drawSelection.setChecked(True)
@@ -517,9 +534,19 @@ class MyHist2d(MyFigure):
             model = self.model.data
         b=[self.bins,self.bins]
         if self.model.isCategorical(self.xfield):
-            b[0]=len(self.model.labels(self.xfield))
+            edges = self.model.labelints(self.xfield)
+            xemin = np.searchsorted(edges,self.range[0][0])
+            xemax = np.searchsorted(edges,self.range[0][1])
+            xedges=edges[xemin:xemax]
+            xedges=np.append(xedges,np.max(xedges)+1)
+            b[0]=xedges
         if self.model.isCategorical(self.yfield):
-            b[1]=len(self.model.labels(self.yfield))     
+            edges = self.model.labelints(self.yfield)
+            yemin = np.searchsorted(edges,self.range[1][0])
+            yemax = np.searchsorted(edges,self.range[1][1])
+            yedges=edges[yemin:yemax]
+            yedges=np.append(yedges,np.max(yedges)+1)
+            b[1]=yedges    
         self.H,self.xedges,self.yedges = np.histogram2d(model[self.xfield],model[self.yfield],bins=b,
                           range=self.range)
         norm=None
@@ -537,8 +564,8 @@ class MyHist2d(MyFigure):
         self.plt.set_xlabel(self.model.prettyname(self.xfield))
         self.plt.set_ylabel(self.model.prettyname(self.yfield))
 
-        self.xlabels(self.model,self.xfield)
-        self.ylabels(self.model,self.yfield)
+        self.xlabels(self.model,self.xfield,True)
+        self.ylabels(self.model,self.yfield,True)
 
     def onKey(self,event):
         if event.key == '+' or event.key == '=':
@@ -553,8 +580,8 @@ class MyHist2d(MyFigure):
     def onReset(self,event):
         self.bins=int(64)
         self.range=self.origRange
-        self.plt.set_xlim((self.model.fieldmin(self.xfield),self.model.fieldmax(self.xfield)))
-        self.plt.set_ylim((self.model.fieldmin(self.yfield),self.model.fieldmax(self.yfield)))
+        self.plt.set_xlim(self.range[0])
+        self.plt.set_ylim(self.range[1])
         self.mydraw()
 
     def onToolTip(self,event):

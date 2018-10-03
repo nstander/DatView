@@ -159,7 +159,7 @@ class DataModel(QObject):
         field=self.datafield(field)
         if self.hasLabels(field):
             if field not in self.labelcache:
-                self.labels()
+                self.labels(field)
             return self.labelcache[field]["ints"]
         return []
         
