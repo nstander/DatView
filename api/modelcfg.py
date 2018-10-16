@@ -36,6 +36,12 @@ class ModelConfig:
         self.scattersize=4
         self.histAlwaysMask0=True
         self.playtime=1000
+        self.imageH5paths=["/entry_1/data_1/data","/data/data"]
+        self.cxiviewHistClipLevelValue=0.0002
+        self.cxiviewHistMax=16384
+        self.cxiviewHistMin=-100
+        self.cxiviewHistPadding=0.05
+
 
         et=ElementTree.parse(filename)
         root = et.getroot()
@@ -88,6 +94,17 @@ class ModelConfig:
                 self.histAlwaysMask0 = int(child.text) != 0
             if child.tag == "playInterval" and child.text:
                 self.playtime=int(child.text)
+            if child.tag == "imageH5paths" and child.text:
+                self.imageH5path=child.text.split(',')
+            if child.tag == "cxiviewHistClipLevelValue" and child.text:
+                self.cxiviewHistClipLevelValue=float(child.text)
+            if child.tag == "cxiviewHistMax" and child.text:
+                self.cxiviewHistMax=int(child.text)
+            if child.tag == "cxiviewHistMin" and child.text:
+                self.cxiviewHistMin=int(child.text)
+            if child.tag == "cxiviewHistPadding" and child.text:
+                self.cxiviewHistPadding=float(child.text)
+
 
     def prettyname(self,field):
         r=field

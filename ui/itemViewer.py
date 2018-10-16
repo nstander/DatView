@@ -14,10 +14,10 @@ except ImportError:
     qt5=False
 from api.datamodel import DataModel
 from api.itemmodel import ItemModel
-from . import richTextDelegate
+from . import richTextDelegate, crystfelImage
 
 class MyItemViewer(QWidget):
-    def __init__(self,dmodel,parent=None):
+    def __init__(self,dmodel,geom,parent=None):
         QWidget.__init__(self,parent)
         self.ui=Ui_ItemViewer()
         self.ui.setupUi(self)
@@ -45,7 +45,7 @@ class MyItemViewer(QWidget):
         else:
             self.ui.tableView.horizontalHeader().setResizeMode(0,QHeaderView.ResizeToContents)
 
-        self.ui.imageView.hide()
+        imageManager=crystfelImage.CrystfelImage(self.model,self.ui.imageView,geom,self)
         self.timer=QTimer()
         self.timer.setInterval(dmodel.cfg.playtime)
         self.timer.timeout.connect(self.model.next)

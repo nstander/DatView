@@ -120,4 +120,15 @@
 
   <!-- Time in msec for going to next image in the Item Viewer. Defaults to 1000 = 1 sec -->
   <playInterval>1000</playInterval>
+
+
+  <!-- Stuff specific to viewing CrystFEL style images (H5/CXI by cheetah, stream files) -->
+  <!-- paths in h5 file to look for image array, regardless of CXI(event) or H5. Event use is determined by event column in dat file. List is comma separated. First path found in file is used. -->
+  <imageH5paths>/entry_1/data_1/data,/data/data</imageH5paths>
+
+  <!--cxiview magic numbers-->
+  <cxiviewHistClipLevelValue>0.0002</cxiviewHistClipLevelValue>
+  <cxiviewHistMax>16384</cxiviewHistMax>
+  <cxiviewHistMin>-100</cxiviewHistMin>
+  <cxiviewHistPadding>0.05</cxiviewHistPadding>
 </modelcfg>

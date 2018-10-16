@@ -28,7 +28,7 @@ from ui.itemViewer import MyItemViewer
 import ui.plots, ui.filterEditDelegate
 
 class MyMainWindow(QMainWindow):
-    def __init__(self,datfile,groupfile,filterfile,cfg):
+    def __init__(self,datfile,groupfile,filterfile,cfg,geom):
         QMainWindow.__init__(self)
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
@@ -91,7 +91,7 @@ class MyMainWindow(QMainWindow):
         self.ui.actionShowDatasetPanel.triggered.connect(self.datasetpanel.show)
 
         # Item Viewer
-        itemviewer=MyItemViewer(self.model,parent=self)
+        itemviewer=MyItemViewer(self.model,geom,parent=self)
         itemviewer.setWindowFlags(Qt.Window)
         self.ui.actionItem_Viewer.triggered.connect(itemviewer.show)
 
@@ -189,6 +189,7 @@ class MyMainWindow(QMainWindow):
 def main():
     parser=argparse.ArgumentParser(description='Display statistics from a dat file and allow filtering and output to new files')
     parser.add_argument('--group',default=None,help='The group file output by groupgen.py (groupcfg.txt), keeps files smaller and numeric by enuemrating strings')
+    parser.add_argument('-g','--geom',default=None,help='A CrystFEL style geometry file (.geom) for displaying images in ItemViewer')
     parser.add_argument('--filter',default=None,help='A filter file to load. Filter files are XML format. The first Between filter in the file for a field will be updated with selection.')
     parser.add_argument('--sort',default=None,nargs='+',help='One or more fields to sort the output by. Field names must match the header of the dat file.')
     parser.add_argument('--limit',default=None,type=int,help='Limit the output to this number, if provided')
@@ -197,7 +198,7 @@ def main():
     args=parser.parse_args()
 
     app = QApplication(sys.argv)
-    w = MyMainWindow(args.file,args.group, args.filter,args.cfg)
+    w = MyMainWindow(args.file,args.group, args.filter,args.cfg,args.geom)
     if args.sort is not None:
         w.datasetpanel.setSort(args.sort)
     if args.limit is not None:
