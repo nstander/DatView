@@ -117,4 +117,7 @@
   <!-- Initial number of bins. Larger numbers take longer to plot. Bins can be changed per graph with +/-. Note that this multiplies/divides by two so default numbers are powers of 2. Default is 32 for 1D and 64 for 2D -->
   <hist1Dbins>32</hist1Dbins>
   <hist2Dbins>64</hist2Dbins>
+
+  <!-- Time in msec for going to next image in the Item Viewer. Defaults to 1000 = 1 sec -->
+  <playInterval>1000</playInterval>
 </modelcfg>

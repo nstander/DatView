@@ -24,6 +24,7 @@ from api.modelcfg import ModelConfig
 from ui.datasetPanel import MyDatasetPanel
 from ui.scatterDialog import MyScatterDialog
 from ui.hist2dDialog import MyHist2dDialog
+from ui.itemViewer import MyItemViewer
 import ui.plots, ui.filterEditDelegate
 
 class MyMainWindow(QMainWindow):
@@ -88,6 +89,11 @@ class MyMainWindow(QMainWindow):
         self.datasetpanel=MyDatasetPanel(self.model,parent=self)
         self.datasetpanel.setWindowFlags(Qt.Window)
         self.ui.actionShowDatasetPanel.triggered.connect(self.datasetpanel.show)
+
+        # Item Viewer
+        itemviewer=MyItemViewer(self.model,parent=self)
+        itemviewer.setWindowFlags(Qt.Window)
+        self.ui.actionItem_Viewer.triggered.connect(itemviewer.show)
 
         if qt5:
             self.ui.plotScrollArea.viewport().installEventFilter(self)

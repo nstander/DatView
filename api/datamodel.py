@@ -18,6 +18,7 @@ import sys
 
 class DataModel(QObject):
     filterchange=pyqtSignal()
+    sortchange=pyqtSignal()
     sortColumnName="datview_sort_order"
     def __init__(self,filename,groupfile=None,cfg=None):
         QObject.__init__(self)
@@ -332,6 +333,7 @@ class DataModel(QObject):
                 outarr = np.flipud(outarr)
         self.data[DataModel.sortColumnName][outarr]=np.arange(len(self.data))
         self.filtered=self.data[self.overridekeep]
+        self.sortchange.emit()
 
     def outArrIndices(self,applyLimit=True):
         outarr=np.arange(len(self.filtered))

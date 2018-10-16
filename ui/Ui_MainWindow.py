@@ -82,6 +82,8 @@ class Ui_MainWindow(object):
         self.actionShowDatasetPanel.setObjectName(_fromUtf8("actionShowDatasetPanel"))
         self.actionSave_Numpy = QtGui.QAction(MainWindow)
         self.actionSave_Numpy.setObjectName(_fromUtf8("actionSave_Numpy"))
+        self.actionItem_Viewer = QtGui.QAction(MainWindow)
+        self.actionItem_Viewer.setObjectName(_fromUtf8("actionItem_Viewer"))
         self.menuSave_Selections_As_2.addAction(self.actionSave_List)
         self.menuSave_Selections_As_2.addAction(self.actionSave_Stream)
         self.menuSave_Selections_As_2.addAction(self.actionSave_Dat)
@@ -96,6 +98,7 @@ class Ui_MainWindow(object):
         self.menuPlot.addAction(self.action2D_Histogram)
         self.menuView.addAction(self.actionShowFilters)
         self.menuView.addAction(self.actionShowDatasetPanel)
+        self.menuView.addAction(self.actionItem_Viewer)
         self.menubar.addAction(self.menuFile.menuAction())
         self.menubar.addAction(self.menuPlot.menuAction())
         self.menubar.addAction(self.menuView.menuAction())
@@ -123,4 +126,5 @@ class Ui_MainWindow(object):
         self.actionShowDatasetPanel.setText(_translate("MainWindow", "Dataset Panel", None))
         self.actionSave_Numpy.setText(_translate("MainWindow", "Save Numpy", None))
         self.actionSave_Numpy.setToolTip(_translate("MainWindow", "Save all data into compressed npz file", None))
+        self.actionItem_Viewer.setText(_translate("MainWindow", "Item Viewer", None))
 

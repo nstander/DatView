@@ -35,6 +35,7 @@ class ModelConfig:
         self.scatterlinewidth=0
         self.scattersize=4
         self.histAlwaysMask0=True
+        self.playtime=1000
 
         et=ElementTree.parse(filename)
         root = et.getroot()
@@ -85,6 +86,8 @@ class ModelConfig:
                 self.hist2Dbins=int(child.text)
             if child.tag == "histAlwaysMask0" and child.text:
                 self.histAlwaysMask0 = int(child.text) != 0
+            if child.tag == "playInterval" and child.text:
+                self.playtime=int(child.text)
 
     def prettyname(self,field):
         r=field

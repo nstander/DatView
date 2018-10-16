@@ -82,6 +82,7 @@
     </property>
     <addaction name="actionShowFilters"/>
     <addaction name="actionShowDatasetPanel"/>
+    <addaction name="actionItem_Viewer"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuPlot"/>
@@ -149,6 +150,11 @@
    </property>
    <property name="toolTip">
     <string>Save all data into compressed npz file</string>
+   </property>
+  </action>
+  <action name="actionItem_Viewer">
+   <property name="text">
+    <string>Item Viewer</string>
    </property>
   </action>
  </widget>
