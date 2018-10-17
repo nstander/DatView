@@ -39,9 +39,13 @@ class DataModel(QObject):
             self.loadtxt(filename)
 
         self.filtered=self.data
-        self.topfilter=AndFilter(self.data.shape)
-        self.topfilter.filterchange.connect(self.applyFilters)
-        self.overridekeep=self.topfilter.keep
+        self.rootfilter=AndFilter(self.data.shape) # Includes filters, partitions, flags
+        self.topfilter=AndFilter(self.data.shape) # Top of filters Tree
+        self.rootfilter.addChild(self.topfilter)
+        self.partitionfilter=DataFilter(np.ones(self.data.shape,dtype=bool))
+        self.rootfilter.addChild(self.partitionfilter)
+        self.rootfilter.filterchange.connect(self.applyFilters)
+
         self.filtermodel=FilterModel(self.topfilter,self)
         self.mincache={}
         self.maxcache={}
@@ -238,7 +242,7 @@ class DataModel(QObject):
 #########################################                
 
     def isFiltered(self):
-        return self.topfilter.isActive()
+        return np.count_nonzero(self.rootfilter.keep) < len(self.data)
 
     def addFilter(self,toAdd):
         self.topfilter.addChild(toAdd)
@@ -253,8 +257,7 @@ class DataModel(QObject):
         return self.selfilters[field]
 
     def applyFilters(self):
-        self.overridekeep=self.topfilter.keep
-        self.filtered=self.data[self.topfilter.keep]
+        self.filtered=self.data[self.rootfilter.keep]
         self.filterchange.emit()
 
     def filterModel(self):
@@ -306,18 +309,16 @@ class DataModel(QObject):
             else:
                 nm="%.2f-%.2f"%(edges[i],edges[i+1])
             if i == len(edges)-2 and maxWasNone:
-                dt=self.overridekeep & (self.data[field]>=edges[i]) & (self.data[field]<=edges[i+1])
+                dt=(self.data[field]>=edges[i]) & (self.data[field]<=edges[i+1])
             else:
-                dt=self.overridekeep & (self.data[field]>=edges[i]) & (self.data[field]<edges[i+1])
+                dt=(self.data[field]>=edges[i]) & (self.data[field]<edges[i+1])
             if np.count_nonzero(dt):
                 ret[nm]=dt
         return ret
 
-    def overrideFilter(self,keep):
-        """Use the given data in place of the current selection. To revert, call applyFilters"""
-        self.overridekeep=keep
-        self.filtered=self.data[keep]
-        self.filterchange.emit()
+    def setPartition(self,keep):
+        """Set the current partition filter's keep."""
+        self.partitionfilter.setkeep(keep)
 
         
 
@@ -332,7 +333,7 @@ class DataModel(QObject):
             if self.reverseSort:
                 outarr = np.flipud(outarr)
         self.data[DataModel.sortColumnName][outarr]=np.arange(len(self.data))
-        self.filtered=self.data[self.overridekeep]
+        self.filtered=self.data[self.rootfilter.keep]
         self.sortchange.emit()
 
     def outArrIndices(self,applyLimit=True):
@@ -358,7 +359,7 @@ class DataModel(QObject):
         if rdata is None:
             assert self.npfile is not None
             rdata = self.npfile["rdata"]
-        outarr=rdata[self.overridekeep][self.outArrIndices()]
+        outarr=rdata[self.rootfilter.keep][self.outArrIndices()]
         d='\t'
         if self.cfg.sep is not None:
             d=self.cfg.sep
@@ -457,6 +458,7 @@ class DataModel(QObject):
         print("Wrote",fname)
 
     def loadFilters(self,fname):
+        self.topfilter.setActive(False) #Invalidate current, easier than deleting
         et=ElementTree.parse(fname)
         root = et.getroot()
         assert root.tag == "filters" and len(list(root)) == 1
@@ -469,7 +471,7 @@ class DataModel(QObject):
             assert False # Top filter must be group filter
         self.topfilter.setActive(child.get("active") == "True")
         self.loadFilterRecursive(child,self.topfilter)
-        self.topfilter.filterchange.connect(self.applyFilters)
+        self.rootfilter.addChild(self.topfilter)
         self.applyFilters()
         self.filtermodel=FilterModel(self.topfilter,self)
 

@@ -77,7 +77,7 @@ class ItemModel(QAbstractTableModel):
         self.dataChanged.emit(self.createIndex(0,0,QModelIndex()),self.createIndex(len(self.model.cols),0,QModelIndex()))
 
     def onListChange(self):
-        self.sortedlist=self.initiallist[self.model.overridekeep]
+        self.sortedlist=self.initiallist[self.model.rootfilter.keep]
         if self.orderMode == 1: # Sorted
             self.validlist=self.sortedlist[self.model.outArrIndices(False)]
         elif self.orderMode == 2 : # Random

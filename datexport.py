@@ -47,7 +47,7 @@ model.reverseSort = args.reversesort
 if args.partition is not None:
     partitions=model.partition(args.partition,args.partmin,args.partmax,args.partnum)
     for k,v in partitions.items():
-        model.overrideFilter(v)
+        model.setPartition(v)
         if '.stream' in args.outfile:
             model.saveSelStream(args.outfile+"_"+k)
         elif '.lst' in args.outfile:
