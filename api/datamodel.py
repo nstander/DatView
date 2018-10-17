@@ -45,6 +45,7 @@ class DataModel(QObject):
         self.partitionfilter=DataFilter(np.ones(self.data.shape,dtype=bool))
         self.rootfilter.addChild(self.partitionfilter)
         self.rootfilter.filterchange.connect(self.applyFilters)
+        self.internalFilterChanges=False
 
         self.mincache={}
         self.maxcache={}
@@ -257,7 +258,8 @@ class DataModel(QObject):
 
     def applyFilters(self):
         self.filtered=self.data[self.rootfilter.keep]
-        self.filterchange.emit()
+        if not self.internalFilterChanges:
+            self.filterchange.emit()
 
     def fieldmin(self,field):
         field=self.datafield(field)
@@ -316,6 +318,10 @@ class DataModel(QObject):
         """Set the current partition filter's keep."""
         self.partitionfilter.setkeep(keep)
 
+    def clearPartition(self):
+        """Set the current partition filter's keep."""
+        self.partitionfilter.setkeep(np.ones(self.data.shape,dtype=bool))
+
         
 
 #########################################
@@ -348,9 +354,14 @@ class DataModel(QObject):
 
     def saveByPartitions(self,fname,function,partitions=None):
         if partitions is not None:
+            previous=self.partitionfilter.keep
+            self.internalFilterChanges = True
             for k,v in partitions.items():
                 self.setPartition(v)
-                function(fname+"_"+k)
+                if np.count_nonzero(self.rootfilter.keep):
+                    function(fname+"_"+k)
+            self.setPartition(previous)
+            self.internalFilterChanges = False
         else:
             function(fname)
 

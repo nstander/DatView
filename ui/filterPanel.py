@@ -4,10 +4,12 @@
 
 try:
     from PyQt5.QtWidgets import QWidget, QHeaderView, QAbstractItemView, QFileDialog
+    from PyQt5.QtCore import QStringListModel, Qt
     from ui.Ui_FilterPanel5 import Ui_FilterPanel
     qt5=True
 except ImportError:
-    from PyQt4.QtGui import QWidget, QHeaderView, QAbstractItemView, QFileDialog
+    from PyQt4.QtGui import QWidget, QHeaderView, QAbstractItemView, QFileDialog, QStringListModel
+    from PyQt4.QtCore import Qt
     from ui.Ui_FilterPanel import Ui_FilterPanel
     qt5=False
 from api.datamodel import DataModel
@@ -22,10 +24,24 @@ class MyFilterPanel(QWidget):
         self.model = dmodel
 
         # Partitions
-        self.ui.partitionBox.hide()
-        self.ui.flaggedBox.hide()
+        for col in sorted(set(self.model.cols) - self.model.cfg.internalCols,key=self.model.prettyname):
+            self.ui.partComboBox.addItem(self.model.prettyname(col),col)
+        self.partitions=None
+        self.partitionModel=QStringListModel()
+        self.ui.partitionList.setModel(self.partitionModel)
+        self.ui.partitionList.selectionModel().currentChanged.connect(self.onSelectPartition)
+
+        self.ui.partComboBox.currentIndexChanged.connect(self.onPartitionComboChange)
+        self.onPartitionComboChange()
+
+        self.ui.partitionBox.toggled.connect(self.calcPartitions)
+        self.ui.partBinSpinBox.valueChanged.connect(self.calcPartitions)
+        self.ui.partMaxSpinBox.valueChanged.connect(self.calcPartitions)
+        self.ui.partMinSpinBox.valueChanged.connect(self.calcPartitions)
+
 
         # Flagged
+        self.ui.flaggedBox.hide()
 
         # Filter Tree View
         self.filtermodel = FilterModel(dmodel.topfilter,dmodel)
@@ -60,5 +76,49 @@ class MyFilterPanel(QWidget):
                 self.model.loadFilters(name[0])
         elif name is not None and len(name):
             self.model.loadFilters(name)
+
+    def onPartitionComboChange(self):
+        field=self.ui.partComboBox.itemData(self.ui.partComboBox.currentIndex())
+        enable=not self.model.isCategorical(field)
+
+        if self.ui.partitionBox.isChecked() or not enable:
+            self.ui.partBinSpinBox.setEnabled(enable)
+            self.ui.partMinSpinBox.setEnabled(enable)
+            self.ui.partMaxSpinBox.setEnabled(enable)
+
+        self.ui.partMinSpinBox.setMinimum(self.model.fieldmin(field))
+        self.ui.partMaxSpinBox.setMinimum(self.model.fieldmin(field))
+        self.ui.partMinSpinBox.setMaximum(self.model.fieldmax(field))
+        self.ui.partMaxSpinBox.setMaximum(self.model.fieldmax(field))
+
+        self.ui.partMinSpinBox.setValue(self.model.fieldmin(field))
+        self.ui.partMaxSpinBox.setValue(self.model.fieldmax(field))
+        self.calcPartitions()
+
+    def calcPartitions(self):
+        self.model.clearPartition()
+        if not self.ui.partitionBox.isChecked():
+            self.partitions=None
+            self.partitionModel.setStringList([])
+            return
+        field=self.ui.partComboBox.itemData(self.ui.partComboBox.currentIndex())
+        num=None
+        minimum=None
+        maximum=None
+        if self.ui.partBinSpinBox.isEnabled():
+            num=self.ui.partBinSpinBox.value()
+            minimum=self.ui.partMinSpinBox.value()
+            maximum=self.ui.partMaxSpinBox.value()
+        self.partitions=self.model.partition(field,minimum,maximum,num)
+        self.partitionModel.setStringList(sorted(self.partitions.keys()))
+
+    def onSelectPartition(self):
+        part=self.partitionModel.data(self.ui.partitionList.selectionModel().currentIndex(),Qt.DisplayRole)
+        self.model.setPartition(self.partitions[part])
+        
+        
+        
+
+        
 
 
