@@ -13,10 +13,10 @@ class FilterModel(QAbstractItemModel):
     def __init__(self,root,dmodel):
         QAbstractItemModel.__init__(self)
         self.root=root
-        root.modelchange.connect(self.onFilterChange)
-        root.beforeAddChild.connect(self.onChildAdd)
-        root.afterAddChild.connect(self.endInsertRows)
+        self.connectGroup(root)
         self.dmodel=dmodel
+        self.dmodel.filterModelChange.connect(self.setRoot)
+
 
     def index(self,row,col,par=QModelIndex()):
         r=QModelIndex()
@@ -90,6 +90,31 @@ class FilterModel(QAbstractItemModel):
             index.internalPointer().setActive(not index.internalPointer().active)
             return True
         return False
+
+    def setRoot(self,root):
+        self.beginResetModel()
+        self.disconnectGroup(self.root)
+        self.root=root
+        self.endResetModel()
+        self.connectGroup(root)
+
+    def connectGroup(self,group):
+        group.modelchange.connect(self.onFilterChange)
+        group.beforeAddChild.connect(self.onChildAdd)
+        group.afterAddChild.connect(self.endInsertRows)
+        for child in group.children:
+            if isinstance(child,GroupFilter):
+                self.connectGroup(child)
+
+    def disconnectGroup(self,group):
+        group.modelchange.disconnect(self.onFilterChange)
+        group.beforeAddChild.disconnect(self.onChildAdd)
+        group.afterAddChild.disconnect(self.endInsertRows)
+        for child in group.children:
+            if isinstance(child,GroupFilter):
+                self.disconnectGroup(child)
+        
+
         
         
         

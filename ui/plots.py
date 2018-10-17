@@ -309,6 +309,7 @@ class MyHistogram(MyFigure):
         self.fieldfilterX=self.model.selectionFilter(self.field)
         self.fieldfilterX.modelchange.connect(self.onFilterChange)
         self.model.filterchange.connect(self.mydraw)
+        self.model.filterModelChange.connect(self.onFilterModelChange)
 
         self.sel=Rectangle((self.fieldfilterX.minimum,0),self.fieldfilterX.maximum-self.fieldfilterX.minimum,0,alpha=0.3,color='r')
         self.sel.set_visible(self.fieldfilterX.isActive())
@@ -386,6 +387,12 @@ class MyHistogram(MyFigure):
                 bar = int(np.round(event.xdata))
                 txt=self.model.stringValue(self.field,bar)
         self.setToolTip(txt)
+
+    def onFilterModelChange(self):
+        self.fieldfilterX.modelchange.disconnect(self.onFilterChange)
+        self.fieldfilterX=self.model.selectionFilter(self.field)
+        self.fieldfilterX.modelchange.connect(self.onFilterChange)
+        self.onFilterChange()
             
 
 class MyScatter(MyFigure):
@@ -405,6 +412,7 @@ class MyScatter(MyFigure):
         self.fieldfilterY.modelchange.connect(self.onFilterChange)
 
         self.model.filterchange.connect(self.mydraw)
+        self.model.filterModelChange.connect(self.onFilterModelChange)
         self.plt.set_xlim((self.model.fieldmin(self.xfield),self.model.fieldmax(self.xfield)))
         self.plt.set_ylim((self.model.fieldmin(self.yfield),self.model.fieldmax(self.yfield)))
 
@@ -475,6 +483,16 @@ class MyScatter(MyFigure):
             txt="%s,%s"%(xtxt,ytxt)
         self.setToolTip(txt)
 
+    def onFilterModelChange(self):
+        self.fieldfilterX.modelchange.disconnect(self.onFilterChange)
+        self.fieldfilterX=self.model.selectionFilter(self.xfield)
+        self.fieldfilterX.modelchange.connect(self.onFilterChange)
+
+        self.fieldfilterY.modelchange.disconnect(self.onFilterChange)
+        self.fieldfilterY=self.model.selectionFilter(self.yfield)
+        self.fieldfilterY.modelchange.connect(self.onFilterChange)
+        self.onFilterChange()
+
 class MyHist2d(MyFigure):
     def __init__(self,model,xfield,yfield,log=False,parent=None,flags=0):
         MyFigure.__init__(self,parent,flags)
@@ -495,6 +513,7 @@ class MyHist2d(MyFigure):
         self.fieldfilterY.modelchange.connect(self.onFilterChange)
 
         self.model.filterchange.connect(self.mydraw)
+        self.model.filterModelChange.connect(self.onFilterModelChange)
         self.plt.set_xlim((self.model.fieldmin(self.xfield),self.model.fieldmax(self.xfield)))
         self.plt.set_ylim((self.model.fieldmin(self.yfield),self.model.fieldmax(self.yfield)))
 
@@ -600,6 +619,16 @@ class MyHist2d(MyFigure):
                     ytxt="%.4f-%.4f"%(self.yedges[ybin-1],self.yedges[ybin])
                 txt="%s,%s,%i"%(xtxt,ytxt,self.H[xbin-1,ybin-1])
         self.setToolTip(txt)
+
+    def onFilterModelChange(self):
+        self.fieldfilterX.modelchange.disconnect(self.onFilterChange)
+        self.fieldfilterX=self.model.selectionFilter(self.xfield)
+        self.fieldfilterX.modelchange.connect(self.onFilterChange)
+
+        self.fieldfilterY.modelchange.disconnect(self.onFilterChange)
+        self.fieldfilterY=self.model.selectionFilter(self.yfield)
+        self.fieldfilterY.modelchange.connect(self.onFilterChange)
+        self.onFilterChange()
 
 
 

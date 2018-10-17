@@ -9,7 +9,6 @@ except ImportError:
 
 import numpy as np
 from .filters import *
-from .filtermodel import FilterModel
 from .groupmgr import GroupMgr
 import lxml.etree as ElementTree
 from .modelcfg import ModelConfig
@@ -19,6 +18,7 @@ import sys
 class DataModel(QObject):
     filterchange=pyqtSignal()
     sortchange=pyqtSignal()
+    filterModelChange=pyqtSignal(GroupFilter)
     sortColumnName="datview_sort_order"
     def __init__(self,filename,groupfile=None,cfg=None):
         QObject.__init__(self)
@@ -46,7 +46,6 @@ class DataModel(QObject):
         self.rootfilter.addChild(self.partitionfilter)
         self.rootfilter.filterchange.connect(self.applyFilters)
 
-        self.filtermodel=FilterModel(self.topfilter,self)
         self.mincache={}
         self.maxcache={}
         self.labelcache={}
@@ -260,9 +259,6 @@ class DataModel(QObject):
         self.filtered=self.data[self.rootfilter.keep]
         self.filterchange.emit()
 
-    def filterModel(self):
-        return self.filtermodel
-
     def fieldmin(self,field):
         field=self.datafield(field)
         if field not in self.mincache:
@@ -468,6 +464,7 @@ class DataModel(QObject):
 
     def loadFilters(self,fname):
         self.topfilter.setActive(False) #Invalidate current, easier than deleting
+        self.selfilters = {} # clear these
         et=ElementTree.parse(fname)
         root = et.getroot()
         assert root.tag == "filters" and len(list(root)) == 1
@@ -481,8 +478,8 @@ class DataModel(QObject):
         self.topfilter.setActive(child.get("active") == "True")
         self.loadFilterRecursive(child,self.topfilter)
         self.rootfilter.addChild(self.topfilter)
+        self.filterModelChange.emit(self.topfilter)
         self.applyFilters()
-        self.filtermodel=FilterModel(self.topfilter,self)
 
     def loadFilterRecursive(self,xmlEl,filterpar):
         for child in xmlEl:

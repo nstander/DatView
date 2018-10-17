@@ -9,12 +9,12 @@ import sys
 import argparse
 import numpy as np
 try:
-    from PyQt5.QtWidgets import QApplication, QMainWindow,QLabel,QFileDialog, QAction, QTreeView, QHeaderView, QAbstractItemView, QWidget, QMenu
+    from PyQt5.QtWidgets import QApplication, QMainWindow,QLabel,QFileDialog, QAction, QWidget, QMenu
     from PyQt5.QtCore import Qt, QEvent
     from ui.Ui_MainWindow5 import Ui_MainWindow
     qt5=True
 except ImportError:
-    from PyQt4.QtGui import QApplication, QMainWindow,QLabel,QFileDialog, QAction, QTreeView, QHeaderView, QAbstractItemView, QWidget, QMenu
+    from PyQt4.QtGui import QApplication, QMainWindow,QLabel,QFileDialog, QAction, QWidget, QMenu
     from PyQt4.QtCore import Qt, QEvent
     from ui.Ui_MainWindow import Ui_MainWindow
     qt5=False
@@ -25,7 +25,8 @@ from ui.datasetPanel import MyDatasetPanel
 from ui.scatterDialog import MyScatterDialog
 from ui.hist2dDialog import MyHist2dDialog
 from ui.itemViewer import MyItemViewer
-import ui.plots, ui.filterEditDelegate
+from ui.filterPanel import MyFilterPanel
+import ui.plots
 
 class MyMainWindow(QMainWindow):
     def __init__(self,datfile,groupfile,filterfile,cfg,geom):
@@ -47,7 +48,6 @@ class MyMainWindow(QMainWindow):
         self.ui.actionSave_Stream.triggered.connect(self.onSaveStream)
         self.ui.actionSave_Numpy.setEnabled(self.model.canSaveNumpy())
         self.ui.actionSave_Numpy.triggered.connect(self.onSaveNumpy)
-        self.ui.actionSave_Filters.triggered.connect(self.onSaveFilters)
         self.ui.actionScatter.triggered.connect(self.onShowScatter)
         self.ui.action2D_Histogram.triggered.connect(self.onShowHist2d)
         self.ui.actionOpen.setVisible(False)
@@ -69,21 +69,10 @@ class MyMainWindow(QMainWindow):
         self.placeHistograms()
 
         # Filter Panel
-        self.filterpanel=QTreeView(parent=self)
+        self.filterpanel=MyFilterPanel(self.model,parent=self)
         self.filterpanel.setWindowFlags(Qt.Window)
-        self.filterpanel.setEditTriggers(QAbstractItemView.AllEditTriggers)
-        self.filterpanel.setModel(self.model.filterModel())
-        self.filterpanel.setWindowTitle("Filters")
-        self.filterpanel.expand(self.model.filterModel().index(0,0))
-        if qt5:
-            self.filterpanel.header().setSectionResizeMode(0,QHeaderView.ResizeToContents)
-            self.filterpanel.header().setSectionResizeMode(1,QHeaderView.ResizeToContents)
-        else:
-            self.filterpanel.header().setResizeMode(0,QHeaderView.ResizeToContents)
-            self.filterpanel.header().setResizeMode(1,QHeaderView.ResizeToContents)
-        self.filterpanel.setHeaderHidden(True)
-        self.filterpanel.setItemDelegate(ui.filterEditDelegate.FilterItemDelegate())
         self.ui.actionShowFilters.triggered.connect(self.filterpanel.show)
+        self.ui.actionSave_Filters.triggered.connect(self.filterpanel.onSaveFilters)
 
         # Dataset Panel
         self.datasetpanel=MyDatasetPanel(self.model,parent=self)
@@ -170,12 +159,7 @@ class MyMainWindow(QMainWindow):
             if name:
                 self.model.saveAllNumpy(name[0])
         elif name is not None and len(name):
-            self.model.saveAllNumpy(name)
-
-    def onSaveFilters(self):
-        name=QFileDialog.getSaveFileName(self,'Save Filters',filter='*.xml')
-        if name is not None and len(name):
-            self.model.saveFilters(name)        
+            self.model.saveAllNumpy(name)     
 
     def onShowScatter(self):
         d=MyScatterDialog(self.model,self)
