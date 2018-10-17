@@ -44,21 +44,15 @@ if args.limit is not None:
 model.limitModeRandom = args.limitmode == "random"
 model.reverseSort = args.reversesort
 
+partitions=None
 if args.partition is not None:
     partitions=model.partition(args.partition,args.partmin,args.partmax,args.partnum)
-    for k,v in partitions.items():
-        model.setPartition(v)
-        if '.stream' in args.outfile:
-            model.saveSelStream(args.outfile+"_"+k)
-        elif '.lst' in args.outfile:
-            model.saveSelLst(args.outfile+"_"+k)
-        else:
-            model.saveSelDat(args.outfile+"_"+k)
+
+if '.stream' in args.outfile:
+    model.saveByPartitions(args.outfile, model.saveSelStream, partitions)
+elif '.lst' in args.outfile:
+    model.saveByPartitions(args.outfile, model.saveSelLst, partitions)
 else:
-    if '.stream' in args.outfile:
-        model.saveSelStream(args.outfile)
-    elif '.lst' in args.outfile:
-        model.saveSelLst(args.outfile)
-    else:
-        model.saveSelDat(args.outfile)
+    model.saveByPartitions(args.outfile, model.saveSelDat, partitions)
+
 

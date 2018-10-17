@@ -350,6 +350,15 @@ class DataModel(QObject):
                 outarr=outarr[:self.limit]
         return outarr
 
+    def saveByPartitions(self,fname,function,partitions=None):
+        if partitions is not None:
+            for k,v in partitions.items():
+                self.setPartition(v)
+                function(fname+"_"+k)
+        else:
+            function(fname)
+
+
     def saveSelDat(self,fname):
         formats=[]
         for c in self.cols:
