@@ -44,6 +44,9 @@ class DataModel(QObject):
         self.rootfilter.addChild(self.topfilter)
         self.partitionfilter=DataFilter(np.ones(self.data.shape,dtype=bool))
         self.rootfilter.addChild(self.partitionfilter)
+        self.flagFilter=DataFilter(np.zeros(self.data.shape,dtype=bool))
+        self.flagFilter.setActive(False)
+        self.rootfilter.addChild(self.flagFilter)
         self.rootfilter.filterchange.connect(self.applyFilters)
         self.internalFilterChanges=False
 
@@ -242,7 +245,7 @@ class DataModel(QObject):
 #########################################                
 
     def isFiltered(self):
-        return np.count_nonzero(self.rootfilter.keep) < len(self.data)
+        return np.count_nonzero(self.rootfilter.getKeep()) < len(self.data)
 
     def addFilter(self,toAdd):
         self.topfilter.addChild(toAdd)
@@ -257,7 +260,7 @@ class DataModel(QObject):
         return self.selfilters[field]
 
     def applyFilters(self):
-        self.filtered=self.data[self.rootfilter.keep]
+        self.filtered=self.data[self.rootfilter.getKeep()]
         if not self.internalFilterChanges:
             self.filterchange.emit()
 
@@ -335,7 +338,7 @@ class DataModel(QObject):
             if self.reverseSort:
                 outarr = np.flipud(outarr)
         self.data[DataModel.sortColumnName][outarr]=np.arange(len(self.data))
-        self.filtered=self.data[self.rootfilter.keep]
+        self.filtered=self.data[self.rootfilter.getKeep()]
         self.sortchange.emit()
 
     def outArrIndices(self,applyLimit=True):
@@ -354,11 +357,11 @@ class DataModel(QObject):
 
     def saveByPartitions(self,fname,function,partitions=None):
         if partitions is not None:
-            previous=self.partitionfilter.keep
+            previous=self.partitionfilter.getKeep()
             self.internalFilterChanges = True
             for k,v in partitions.items():
                 self.setPartition(v)
-                if np.count_nonzero(self.rootfilter.keep):
+                if np.count_nonzero(self.rootfilter.getKeep()):
                     function(fname+"_"+k)
             self.setPartition(previous)
             self.internalFilterChanges = False
@@ -375,7 +378,7 @@ class DataModel(QObject):
         if rdata is None:
             assert self.npfile is not None
             rdata = self.npfile["rdata"]
-        outarr=rdata[self.rootfilter.keep][self.outArrIndices()]
+        outarr=rdata[self.rootfilter.getKeep()][self.outArrIndices()]
         d='\t'
         if self.cfg.sep is not None:
             d=self.cfg.sep

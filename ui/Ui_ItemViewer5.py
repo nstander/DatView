@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'Viewer.ui'
+# Form implementation generated from reading ui file 'ItemViewer.ui'
 #
 # Created by: PyQt5 UI code generator 5.6
 #
@@ -14,22 +14,20 @@ class Ui_ItemViewer(object):
         ItemViewer.resize(716, 471)
         self.verticalLayout = QtWidgets.QVBoxLayout(ItemViewer)
         self.verticalLayout.setObjectName("verticalLayout")
-        self.horizontalLayout_3 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_3.setObjectName("horizontalLayout_3")
+        self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_2.setObjectName("horizontalLayout_2")
         self.backButton = QtWidgets.QToolButton(ItemViewer)
         self.backButton.setText("")
         self.backButton.setObjectName("backButton")
-        self.horizontalLayout_3.addWidget(self.backButton)
+        self.horizontalLayout_2.addWidget(self.backButton)
         self.playButton = QtWidgets.QToolButton(ItemViewer)
         self.playButton.setText("")
         self.playButton.setObjectName("playButton")
-        self.horizontalLayout_3.addWidget(self.playButton)
+        self.horizontalLayout_2.addWidget(self.playButton)
         self.forwardButton = QtWidgets.QToolButton(ItemViewer)
         self.forwardButton.setText("")
         self.forwardButton.setObjectName("forwardButton")
-        self.horizontalLayout_3.addWidget(self.forwardButton)
-        self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_2.setObjectName("horizontalLayout_2")
+        self.horizontalLayout_2.addWidget(self.forwardButton)
         self.orderGroupBox = QtWidgets.QGroupBox(ItemViewer)
         self.orderGroupBox.setTitle("")
         self.orderGroupBox.setFlat(True)
@@ -56,8 +54,10 @@ class Ui_ItemViewer(object):
         self.rowSpinBox.setMaximum(9999999)
         self.rowSpinBox.setObjectName("rowSpinBox")
         self.horizontalLayout_2.addWidget(self.rowSpinBox)
-        self.horizontalLayout_3.addLayout(self.horizontalLayout_2)
-        self.verticalLayout.addLayout(self.horizontalLayout_3)
+        self.flagCheckBox = QtWidgets.QCheckBox(ItemViewer)
+        self.flagCheckBox.setObjectName("flagCheckBox")
+        self.horizontalLayout_2.addWidget(self.flagCheckBox)
+        self.verticalLayout.addLayout(self.horizontalLayout_2)
         self.splitter = QtWidgets.QSplitter(ItemViewer)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
@@ -82,16 +82,20 @@ class Ui_ItemViewer(object):
         _translate = QtCore.QCoreApplication.translate
         ItemViewer.setWindowTitle(_translate("ItemViewer", "Item Viewer"))
         self.backButton.setToolTip(_translate("ItemViewer", "Previous"))
+        self.backButton.setShortcut(_translate("ItemViewer", "Meta+P"))
         self.playButton.setToolTip(_translate("ItemViewer", "Play"))
         self.forwardButton.setToolTip(_translate("ItemViewer", "Next"))
+        self.forwardButton.setShortcut(_translate("ItemViewer", "Meta+N"))
         self.originalRadioButton.setToolTip(_translate("ItemViewer", "As found in file"))
-        self.originalRadioButton.setText(_translate("ItemViewer", "Original"))
+        self.originalRadioButton.setText(_translate("ItemViewer", "File Order"))
         self.sortedRadioButton.setToolTip(_translate("ItemViewer", "Match current sort order"))
         self.sortedRadioButton.setText(_translate("ItemViewer", "Sorted"))
         self.randomRadioButton.setToolTip(_translate("ItemViewer", "Random order"))
         self.randomRadioButton.setText(_translate("ItemViewer", "Random"))
         self.label.setText(_translate("ItemViewer", "File Row:"))
         self.rowSpinBox.setToolTip(_translate("ItemViewer", "Row Number (Original)"))
+        self.flagCheckBox.setText(_translate("ItemViewer", "Flag"))
+        self.flagCheckBox.setShortcut(_translate("ItemViewer", "Meta+M"))
 
 from .itemSpinBox import ItemSpinBox
 from pyqtgraph import ImageView

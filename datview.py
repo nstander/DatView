@@ -83,6 +83,7 @@ class MyMainWindow(QMainWindow):
         itemviewer=MyItemViewer(self.model,geom,parent=self)
         itemviewer.setWindowFlags(Qt.Window)
         self.ui.actionItem_Viewer.triggered.connect(itemviewer.show)
+        self.filterpanel.flagselected.connect(itemviewer.model.setRow)
 
         if qt5:
             self.ui.plotScrollArea.viewport().installEventFilter(self)

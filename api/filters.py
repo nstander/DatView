@@ -20,11 +20,17 @@ class DataFilter(QObject):
         self.active=True
         self.row=0
         self.par=None
+        self.invert=False
 
     def setkeep(self,keep):
         if not np.array_equal(keep,self.keep):
             self.keep = keep
             self.filterchange.emit()
+
+    def getKeep(self):
+        if self.invert:
+            return np.logical_not(self.keep)
+        return self.keep
 
     def isActive(self):
         return self.active
@@ -55,6 +61,20 @@ class DataFilter(QObject):
 
     def toXML(self,parent):
         pass
+
+    def state(self,row):
+        return self.keep[row]
+
+    def setState(self,row,value):
+        if self.state(row) != value:
+            self.keep[row]=value
+            self.filterchange.emit()
+
+    def setInvert(self,invert):
+        if invert != self.invert:
+            self.invert=invert
+            self.filterchange.emit()
+        
 
 
 
@@ -99,7 +119,7 @@ class AndFilter(GroupFilter):
         keep=np.ones(self.shape,dtype=bool)
         for child in self.children:
             if child.isActive():
-                keep &= child.keep
+                keep &= child.getKeep()
         self.setkeep(keep)
 
     def kind(self):
@@ -120,7 +140,7 @@ class OrFilter(GroupFilter):
         keep=np.zeros(self.shape,dtype=bool)
         for child in self.children:
             if child.isActive():
-                keep |= child.keep
+                keep |= child.getKeep()
         self.setkeep(keep)
 
     def kind(self):

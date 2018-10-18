@@ -104,7 +104,7 @@
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_5">
             <item>
-             <widget class="QRadioButton" name="radioButton">
+             <widget class="QRadioButton" name="flagIgnore">
               <property name="text">
                <string>Ignore</string>
               </property>
@@ -114,20 +114,27 @@
              </widget>
             </item>
             <item>
-             <widget class="QRadioButton" name="radioButton_2">
+             <widget class="QRadioButton" name="flagExclude">
               <property name="text">
                <string>Exclude From Selection</string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QRadioButton" name="radioButton_3">
+             <widget class="QRadioButton" name="flagKeep">
               <property name="text">
                <string>Keep Only Flagged Items</string>
               </property>
              </widget>
             </item>
            </layout>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_4">
+            <property name="text">
+             <string>Currently Flagged:</string>
+            </property>
+           </widget>
           </item>
           <item>
            <widget class="QListView" name="flaggedList"/>
