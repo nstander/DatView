@@ -41,6 +41,11 @@ class ModelConfig:
         self.cxiviewHistMax=16384
         self.cxiviewHistMin=-100
         self.cxiviewHistPadding=0.05
+        self.viewerPeakSymbol='s'
+        self.viewerPeakSize=10
+        self.viewerPeakColor='r'
+        self.peakXH5paths=["/entry_1/result_1/peakXPosRaw","/processing/hitfinder/peakinfo-raw"]
+        self.peakYH5paths=["/entry_1/result_1/peakYPosRaw"]
 
 
         et=ElementTree.parse(filename)
@@ -104,6 +109,16 @@ class ModelConfig:
                 self.cxiviewHistMin=int(child.text)
             if child.tag == "cxiviewHistPadding" and child.text:
                 self.cxiviewHistPadding=float(child.text)
+            if child.tag == "viewerPeakSize" and child.text:
+                self.viewerPeakSize=float(child.text)
+            if child.tag == "viewerPeakSymbol" and child.text:
+                self.viewerPeakSymbol=child.text
+            if child.tag == "viewerPeakColor" and child.text:
+                self.viewerPeakColor=child.text
+            if child.tag == "peakXH5paths" and child.text:
+                self.peakXH5path=child.text.split(',')
+            if child.tag == "peakYH5paths" and child.text:
+                self.peakYH5path=child.text.split(',')
 
 
     def prettyname(self,field):

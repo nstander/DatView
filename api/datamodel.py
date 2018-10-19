@@ -522,6 +522,28 @@ class DataModel(QObject):
             f.setActive(child.get("active") == "True")
             filterpar.addChild(f)
 
+    def hasStreamPeaks(self):
+        return ('sfile' in self.cols or \
+                  ((GroupMgr.prefix+"sfile") in self.cols and self.groupmgr is not None)) \
+                and 'pstart' in self.cols and 'pend' in self.cols
+
+    def streamPeaks(self,datarow):
+        peakx=[]
+        peaky=[]
+        with open(self.value("sfile",datarow,False)) as sfile:
+            sfile.seek(self.data["pstart"][datarow])
+            end=self.data["pend"][datarow]
+            while(sfile.tell() != end):
+                l=sfile.readline().strip().split()
+                try:
+                    x=float(l[0])
+                    y=float(l[1])
+                    peakx.append(x)
+                    peaky.append(y)
+                except ValueError:
+                    pass # First line won't be convertable
+        return peakx, peaky
+
         
 
 
