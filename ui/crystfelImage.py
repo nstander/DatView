@@ -76,6 +76,25 @@ class CrystfelImage(QObject):
         self.peakCanvas=ScatterPlotItem()
         self.iview.getView().addItem(self.peakCanvas)
 
+        reflectionmenu=self.iview.view.menu.addMenu("Reflections")
+        self.reflectionActionGroup=QActionGroup(self)
+        self.reflectionActionGroup.setExclusive(True)
+        self.reflectionActionGroup.triggered.connect(self.drawReflections)
+
+        refNone=reflectionmenu.addAction("None")
+        refNone.setCheckable(True)
+        refNone.setChecked(True)
+        refNone.setData(0)
+        self.reflectionActionGroup.addAction(refNone)
+
+        refStream=reflectionmenu.addAction("Stream")
+        refStream.setCheckable(True)
+        refStream.setEnabled(self.dmodel.hasStreamReflections())
+        refStream.setData(1)
+        self.reflectionActionGroup.addAction(refStream)
+        self.reflectionCanvas=ScatterPlotItem()
+        self.iview.getView().addItem(self.reflectionCanvas)
+
         self.draw()
 
 
@@ -106,6 +125,7 @@ class CrystfelImage(QObject):
 
         # Draw Peaks
         self.drawPeaks()
+        self.drawReflections()
         
 
     def loadGeom(self,filename):
@@ -184,7 +204,27 @@ class CrystfelImage(QObject):
             slab=py*self.slab_shape[1]+px
             px=self.yxmap[0][slab]
             py=self.yxmap[1][slab]
-        self.peakCanvas.setData(px,py,symbol=self.dmodel.cfg.viewerPeakSymbol,size=self.dmodel.cfg.viewerPeakSize,pen=mkPen(self.dmodel.cfg.viewerPeakColor,width=2),brush=(0,0,0,0),pxMode=False)
+        self.peakCanvas.setData(px,py,symbol=self.dmodel.cfg.viewerPeakSymbol,\
+            size=self.dmodel.cfg.viewerPeakSize,pen=\
+            mkPen(self.dmodel.cfg.viewerPeakColor,width=self.dmodel.cfg.viewerPeakPenWidth),\
+            brush=(0,0,0,0),pxMode=False)
+
+    def drawReflections(self):
+        px=[]
+        py=[]
+        if self.reflectionActionGroup.checkedAction().data() == 1: # Stream
+            px,py=self.dmodel.streamReflections(self.imodel.currow)
+
+        if self.yxmap is not None and len(px):
+            px=np.array(px,dtype=np.dtype(int))
+            py=np.array(py,dtype=np.dtype(int))
+            slab=py*self.slab_shape[1]+px
+            px=self.yxmap[0][slab]
+            py=self.yxmap[1][slab]
+        self.reflectionCanvas.setData(px,py,symbol=self.dmodel.cfg.viewerReflectionSymbol,\
+            size=self.dmodel.cfg.viewerReflectionSize,pen=\
+            mkPen(self.dmodel.cfg.viewerReflectionColor,width=self.dmodel.cfg.viewerReflectionPenWidth),\
+            brush=(0,0,0,0),pxMode=False)
             
 
 

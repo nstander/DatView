@@ -44,8 +44,13 @@ class ModelConfig:
         self.viewerPeakSymbol='s'
         self.viewerPeakSize=10
         self.viewerPeakColor='r'
+        self.viewerPeakPenWidth=2
         self.peakXH5paths=["/entry_1/result_1/peakXPosRaw","/processing/hitfinder/peakinfo-raw"]
         self.peakYH5paths=["/entry_1/result_1/peakYPosRaw"]
+        self.viewerReflectionSymbol='s'
+        self.viewerReflectionSize=10
+        self.viewerReflectionColor='r'
+        self.viewerReflectionPenWidth=2
 
 
         et=ElementTree.parse(filename)
@@ -115,10 +120,20 @@ class ModelConfig:
                 self.viewerPeakSymbol=child.text
             if child.tag == "viewerPeakColor" and child.text:
                 self.viewerPeakColor=child.text
+            if child.tag == "viewerPeakPenWidth" and child.text:
+                self.viewerPeakPenWidth=float(child.text)
             if child.tag == "peakXH5paths" and child.text:
                 self.peakXH5path=child.text.split(',')
             if child.tag == "peakYH5paths" and child.text:
                 self.peakYH5path=child.text.split(',')
+            if child.tag == "viewerReflectionSize" and child.text:
+                self.viewerReflectionSize=float(child.text)
+            if child.tag == "viewerReflectionSymbol" and child.text:
+                self.viewerReflectionSymbol=child.text
+            if child.tag == "viewerReflectionColor" and child.text:
+                self.viewerReflectionColor=child.text
+            if child.tag == "viewerReflectionPenWidth" and child.text:
+                self.viewerReflectionPenWidth=float(child.text)
 
 
     def prettyname(self,field):

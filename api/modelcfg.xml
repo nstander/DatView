@@ -139,5 +139,11 @@
   <viewerPeakSymbol>s</viewerPeakSymbol> <!-- String -->
   <viewerPeakSize>10</viewerPeakSize>
   <viewerPeakColor>r</viewerPeakColor> <!-- String -->
+  <viewerPeakPenWidth>2</viewerPeakPenWidth>
+
+  <viewerReflectionSymbol>o</viewerReflectionSymbol> <!-- String -->
+  <viewerReflectionSize>10</viewerReflectionSize>
+  <viewerReflectionColor>b</viewerReflectionColor> <!-- String -->
+  <viewerReflectionPenWidth>2</viewerReflectionPenWidth>
 
 </modelcfg>

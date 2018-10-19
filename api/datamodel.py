@@ -544,6 +544,30 @@ class DataModel(QObject):
                     pass # First line won't be convertable
         return peakx, peaky
 
+    def hasStreamReflections(self):
+        return ('sfile' in self.cols or \
+                  ((GroupMgr.prefix+"sfile") in self.cols and self.groupmgr is not None)) \
+                and 'rstart' in self.cols and 'rend' in self.cols
+
+    def streamReflections(self,datarow):
+        peakx=[]
+        peaky=[]
+        start = self.data["rstart"][datarow]
+        if start != -1: # Have Reflections (might not if not indexed)
+            with open(self.value("sfile",datarow,False)) as sfile:
+                sfile.seek(start)
+                end=self.data["rend"][datarow]
+                while(sfile.tell() != end):
+                    l=sfile.readline().strip().split()
+                    try:
+                        x=float(l[7])
+                        y=float(l[8])
+                        peakx.append(x)
+                        peaky.append(y)
+                    except ValueError:
+                        pass # First line won't be convertable
+        return peakx, peaky
+
         
 
 
