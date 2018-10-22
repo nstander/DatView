@@ -552,6 +552,7 @@ class DataModel(QObject):
     def streamReflections(self,datarow):
         peakx=[]
         peaky=[]
+        hkl=[]
         start = self.data["rstart"][datarow]
         if start != -1: # Have Reflections (might not if not indexed)
             with open(self.value("sfile",datarow,False)) as sfile:
@@ -564,9 +565,10 @@ class DataModel(QObject):
                         y=float(l[8])
                         peakx.append(x)
                         peaky.append(y)
+                        hkl.append(' '.join(l[0:3]))
                     except ValueError:
                         pass # First line won't be convertable
-        return peakx, peaky
+        return peakx, peaky, hkl
 
         
 

@@ -15,7 +15,8 @@ from api.itemmodel import ItemModel
 from api.datamodel import DataModel
 import numpy as np
 from pyqtgraph import ImageView, ColorMap, mkPen, ScatterPlotItem, TextItem
-from scipy import constants
+import scipy.constants
+import scipy.spatial
 import h5py
 from cfelpyutils import cfel_geom
 from cxiview.cfel_imgtools import histogram_clip_levels
@@ -47,6 +48,9 @@ class CrystfelImage(QObject):
         self.geom_pixsize=None
         self.im_out=None
         self.resolutionLambda=None
+        self.pixRadiusToRes=None
+        self.hkl=None
+        self.hklLookup=None
         self.imodel.dataChanged.connect(self.draw)
 
         self.iview.view.menu.addSeparator()
@@ -112,6 +116,11 @@ class CrystfelImage(QObject):
         if geom is not None:
             self.loadGeom(geom)
 
+        self.toolTipsAct=self.iview.view.menu.addAction("Show Position in Tool Tip")
+        self.toolTipsAct.setCheckable(True)
+        self.toolTipsAct.setChecked(True)
+        self.iview.scene.sigMouseMoved.connect(self.mouseMove)
+
         self.draw()
 
 
@@ -162,6 +171,28 @@ class CrystfelImage(QObject):
                 self.loadGeom(name[0])
         elif name is not None and len(name):
             self.loadGeom(name)
+
+    def mouseMove(self,pos):
+        mapped=self.iview.getView().mapSceneToView(pos)
+        txt=""
+        if self.toolTipsAct.isChecked() and mapped.x() >= 0 and mapped.x() < self.iview.image.shape[0] \
+                                        and mapped.y() >= 0 and mapped.y() <self.iview.image.shape[1]:
+            if self.img_shape is not None:
+                x=mapped.x()-self.img_shape[0]/2
+                y=self.img_shape[1]/2-mapped.y()
+            else:
+                x=mapped.x()
+                y=mapped.y()
+            txt="x: %i, y: %i" % (x,y)
+            if self.iview.image is not None:
+                txt += " value: %.2f" % self.iview.image[int(mapped.x()),int(mapped.y())]
+            if self.pixRadiusToRes is not None:
+                txt += " resolution: %.2f"% self.pixRadiusToRes(np.sqrt(x**2+y**2))
+            if self.hklLookup is not None:
+                res=self.hklLookup.query([mapped.x(),mapped.y()],k=1)
+                if len(res) > 0 and res[0] < self.dmodel.cfg.viewerReflectionSize:
+                    txt += " hkl: %s" % self.hkl[res[1]]
+        self.iview.setToolTip(txt)
 
     # Sub functions called by draw, not meant to be called externally
     def fromMaybeEvent(self,paths):
@@ -231,8 +262,10 @@ class CrystfelImage(QObject):
     def drawReflections(self):
         px=[]
         py=[]
+        self.hkl=None
+        self.hklLookup=None
         if self.reflectionActionGroup.checkedAction().data() == 1: # Stream
-            px,py=self.dmodel.streamReflections(self.imodel.currow)
+            px,py,self.hkl=self.dmodel.streamReflections(self.imodel.currow)
 
         if self.yxmap is not None and len(px):
             px=np.array(px,dtype=np.dtype(int))
@@ -244,6 +277,8 @@ class CrystfelImage(QObject):
             size=self.dmodel.cfg.viewerReflectionSize,pen=\
             mkPen(self.dmodel.cfg.viewerReflectionColor,width=self.dmodel.cfg.viewerReflectionPenWidth),\
             brush=(0,0,0,0),pxMode=False)
+        if self.hkl is not None:
+            self.hklLookup=scipy.spatial.cKDTree(np.dstack((px,py))[0])
 
     def calcResLambda(self):
         self.resolutionLambda=None
@@ -266,9 +301,10 @@ class CrystfelImage(QObject):
         if photon_ev is None or photon_ev <= 0 or clen is None or self.yxmap is None:
             return # Not enough info 
 
-        lmbd=constants.h * constants.c /(constants.e * photon_ev)
+        lmbd=scipy.constants.h * scipy.constants.c /(scipy.constants.e * photon_ev)
         self.resolutionLambda=lambda r : (2.0/self.geom_pixsize)*(clen)*np.tan(2.0*np.arcsin(lmbd / \
                     (2.0 * r *1e-10)))
+        self.pixRadiusToRes=lambda r : 1e10*lmbd/(2.0*np.sin(0.5*np.arctan(r*self.geom_pixsize/clen)))
 
     def drawResRings(self):
         if not self.drawResRingsAct.isChecked() or self.resolutionLambda is None:
