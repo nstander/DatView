@@ -128,6 +128,8 @@
   <!-- Software searches for x path first, if 1 column assume x positions and search for y. If more than one column (like Hdf5 old format) than assume 1st column x and 2nd column is y and ignore all other columns (looks like 3rd is total intensity and 4th is the number of pixels). Peaks should be raw as geometry operations are applied when a CrystFEL geometry is provided. -->
   <peakXH5paths>/entry_1/result_1/peakXPosRaw,/processing/hitfinder/peakinfo-raw</peakXH5paths>
   <peakYH5paths>/entry_1/result_1/peakYPosRaw</peakYH5paths> <!-- Should be 1D if found -->
+  <viewerPhotonEvH5Paths>/instrument/photon_energy_eV,/LCLS/photon_energy_eV</viewerPhotonEvH5Paths>
+  <viewerCameraLengthH5Paths>/instrument/detector_1/EncoderValue,/LCLS/detector_1/EncoderValue,/LCLS/detector0-EncoderValue</viewerCameraLengthH5Paths>
 
   <!--cxiview magic numbers-->
   <cxiviewHistClipLevelValue>0.0002</cxiviewHistClipLevelValue>
@@ -145,5 +147,9 @@
   <viewerReflectionSize>10</viewerReflectionSize>
   <viewerReflectionColor>b</viewerReflectionColor> <!-- String -->
   <viewerReflectionPenWidth>2</viewerReflectionPenWidth>
+
+  <viewerResolutionRingsAngstroms>3.0,4.0,6.0,8.0,10.0,20.0</viewerResolutionRingsAngstroms> <!-- Must all be floats -->
+  <viewerResRingColor>b</viewerResRingColor>
+  <viewerResRingWidth>1</viewerResRingWidth>
 
 </modelcfg>

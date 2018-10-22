@@ -14,7 +14,8 @@ except ImportError:
 from api.itemmodel import ItemModel
 from api.datamodel import DataModel
 import numpy as np
-from pyqtgraph import ImageView, ColorMap, mkPen, ScatterPlotItem
+from pyqtgraph import ImageView, ColorMap, mkPen, ScatterPlotItem, TextItem
+from scipy import constants
 import h5py
 from cfelpyutils import cfel_geom
 from cxiview.cfel_imgtools import histogram_clip_levels
@@ -41,10 +42,11 @@ class CrystfelImage(QObject):
         self.checkEvent="event" in self.dmodel.cols
         self.yxmap=None
         self.slab_shape=None
-        self.image_shape=None
+        self.img_shape=None
+        self.geom_coffset=0
+        self.geom_pixsize=None
         self.im_out=None
-        if geom is not None:
-            self.loadGeom(geom)
+        self.resolutionLambda=None
         self.imodel.dataChanged.connect(self.draw)
 
         self.iview.view.menu.addSeparator()
@@ -95,6 +97,21 @@ class CrystfelImage(QObject):
         self.reflectionCanvas=ScatterPlotItem()
         self.iview.getView().addItem(self.reflectionCanvas)
 
+        self.drawResRingsAct=self.iview.view.menu.addAction("Resolution Rings")
+        self.drawResRingsAct.setCheckable(True)
+        self.drawResRingsAct.setChecked(False)
+        self.drawResRingsAct.triggered.connect(self.drawResRings)
+        self.drawResRingsAct.setEnabled(self.yxmap is not None)
+        self.resolutionRingsCanvas=ScatterPlotItem()
+        self.iview.getView().addItem(self.resolutionRingsCanvas)
+        self.resRingsTextItems=[]
+        for x in self.dmodel.cfg.viewerResolutionRingsAngstroms:
+            self.resRingsTextItems.append(TextItem('',anchor=(0.5,0.8)))
+            self.iview.getView().addItem(self.resRingsTextItems[-1])
+
+        if geom is not None:
+            self.loadGeom(geom)
+
         self.draw()
 
 
@@ -123,14 +140,18 @@ class CrystfelImage(QObject):
         self.iview.setLevels(bottom,top)
         self.iview.getHistogramWidget().setHistogramRange(min(bottom,self.dmodel.cfg.cxiviewHistMin),max(top,self.dmodel.cfg.cxiviewHistMax),padding=self.dmodel.cfg.cxiviewHistPadding)
 
-        # Draw Peaks
+        self.calcResLambda()
         self.drawPeaks()
         self.drawReflections()
+        self.drawResRings()
         
 
     def loadGeom(self,filename):
-        self.yxmap,self.slab_shape,img_shape=cfel_geom.pixel_maps_for_image_view(filename)
-        self.im_out=np.zeros(img_shape,dtype=np.dtype(float))
+        self.yxmap,self.slab_shape,self.img_shape=cfel_geom.pixel_maps_for_image_view(filename)
+        self.im_out=np.zeros(self.img_shape,dtype=np.dtype(float))
+        self.geom_coffset=cfel_geom.coffset_from_geometry_file(filename)
+        self.geom_pixsize=1/cfel_geom.res_from_geometry_file(filename)
+        self.drawResRingsAct.setEnabled(True)
         self.lastrow=-1
         self.draw()
 
@@ -143,16 +164,19 @@ class CrystfelImage(QObject):
             self.loadGeom(name)
 
     # Sub functions called by draw, not meant to be called externally
-    def fromMaybeEvent(self,path):
-        r=[]
-        if self.checkEvent:
-            e=self.dmodel.data["event"][self.imodel.currow]
-            if e == -1: # No event
-                r=self.curFile[path][:]
-            else:
-                r=self.curFile[path][e][:]
-        else: # No events
-            r=self.curFile[path][:]
+    def fromMaybeEvent(self,paths):
+        r=None
+        for path in paths:
+            if path in self.curFile:
+                if self.checkEvent:
+                    e=self.dmodel.data["event"][self.imodel.currow]
+                    if e == -1: # No event
+                        r=self.curFile[path]
+                    else:
+                        r=self.curFile[path][e]
+                else: # No events
+                    r=self.curFile[path]
+                break
         return r
 
     def image(self):
@@ -163,31 +187,26 @@ class CrystfelImage(QObject):
                 self.curFile.close()
             self.curFileName = ifile
             self.curFile = h5py.File(ifile,'r')
-        for path in self.dmodel.cfg.imageH5paths:
-            if path in self.curFile:
-                image=self.fromMaybeEvent(path)
-                break
+        image=self.fromMaybeEvent(self.dmodel.cfg.imageH5paths)
         return image
 
     def cxipeaks(self):
         # Since this function should ideally only be called internally from draw, 
         # after image has been successfully generated, assume we have correct and valid ifile.
-        px=[]
-        py=[]
-        for path in self.dmodel.cfg.peakXH5paths:
-            if path in self.curFile:
-                px=self.fromMaybeEvent(path)
-
-                if len(px.shape) > 1:
-                    # Data is two dimension, assume x is first column and y second
-                    py=px[:,1]
-                    px=px[:,0]
-                else:
-                    for path2 in self.dmodel.cfg.peakYH5paths:
-                        if path2 in self.curFile:
-                            py=self.fromMaybeEvent(path2)
-                            break
-                break
+        px=self.fromMaybeEvent(self.dmodel.cfg.peakXH5paths)
+        if px is None:
+            px=[]
+            py=[]
+        else:
+            if len(px.shape) > 1:
+                # Data is two dimension, assume x is first column and y second
+                py=px[:,1]
+                px=px[:,0]
+            else:
+                py=self.fromMaybeEvent(self.dmodel.cfg.peakYH5paths)
+                if py is None:
+                    px = []
+                    py = []
         return px,py
 
     def drawPeaks(self):
@@ -225,7 +244,51 @@ class CrystfelImage(QObject):
             size=self.dmodel.cfg.viewerReflectionSize,pen=\
             mkPen(self.dmodel.cfg.viewerReflectionColor,width=self.dmodel.cfg.viewerReflectionPenWidth),\
             brush=(0,0,0,0),pxMode=False)
-            
+
+    def calcResLambda(self):
+        self.resolutionLambda=None
+
+        photon_ev=None
+        if "phoen" in self.dmodel.cols:
+            photon_ev= self.dmodel.data["phoen"][self.imodel.currow]
+        if photon_ev is None or photon_ev <= 0:
+            photon_ev=self.fromMaybeEvent(self.dmodel.cfg.viewerPhotonEvH5Paths)
+
+        clen=None
+        if "aclen" in self.dmodel.cols:
+            clen=self.dmodel.data["aclen"][self.imodel.currow] # Value is corrected with coffset
+        if clen is None:
+            clen=self.fromMaybeEvent(self.dmodel.cfg.viewerCameraLengthH5Paths)
+            if clen is not None: # Uncorrected, correct here
+                clen +=self.geom_coffset
+
+        # Need valid photon energy, camera length, and geometry (yxmap)
+        if photon_ev is None or photon_ev <= 0 or clen is None or self.yxmap is None:
+            return # Not enough info 
+
+        lmbd=constants.h * constants.c /(constants.e * photon_ev)
+        self.resolutionLambda=lambda r : (2.0/self.geom_pixsize)*(clen)*np.tan(2.0*np.arcsin(lmbd / \
+                    (2.0 * r *1e-10)))
+
+    def drawResRings(self):
+        if not self.drawResRingsAct.isChecked() or self.resolutionLambda is None:
+            self.resolutionRingsCanvas.setData([], [])
+            for ti in self.resRingsTextItems:
+                ti.setText('')
+        else:
+            ring_sizes=self.resolutionLambda(np.array(self.dmodel.cfg.viewerResolutionRingsAngstroms))
+            self.resolutionRingsCanvas.setData([self.img_shape[0]/2]*len(ring_sizes), [self.img_shape[1]/2]*len(ring_sizes),symbol='o',\
+                size=ring_sizes,pen=mkPen(self.dmodel.cfg.viewerResRingColor, width=self.dmodel.cfg.viewerResRingWidth),\
+                brush=(0,0,0,0),pxMode=False)
+            for i,ti in enumerate(self.resRingsTextItems):
+                ti.setText("%.1f A" % self.dmodel.cfg.viewerResolutionRingsAngstroms[i],color=self.dmodel.cfg.viewerResRingColor)
+                ti.setPos(self.img_shape[0]/2,self.img_shape[1]/2+ring_sizes[i]/2)
+
+        
+
+        
+        
+        
 
 
 

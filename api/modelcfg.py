@@ -51,7 +51,11 @@ class ModelConfig:
         self.viewerReflectionSize=10
         self.viewerReflectionColor='r'
         self.viewerReflectionPenWidth=2
-
+        self.viewerPhotonEvH5Paths=["/instrument/photon_energy_eV","/LCLS/photon_energy_eV"]
+        self.viewerCameraLengthH5Paths=["/instrument/detector_1/EncoderValue","/LCLS/detector_1/EncoderValue","/LCLS/detector0-EncoderValue"]
+        self.viewerResolutionRingsAngstroms=[3.0, 4.0, 6.0, 8.0, 10.0, 20.0]
+        self.viewerResRingColor='b'
+        self.viewerResRingWidth=1
 
         et=ElementTree.parse(filename)
         root = et.getroot()
@@ -134,6 +138,18 @@ class ModelConfig:
                 self.viewerReflectionColor=child.text
             if child.tag == "viewerReflectionPenWidth" and child.text:
                 self.viewerReflectionPenWidth=float(child.text)
+            if child.tag == "viewerPhotonEvH5paths" and child.text:
+                self.viewerPhotonEvH5path=child.text.split(',')
+            if child.tag == "viewerCameraLengthH5paths" and child.text:
+                self.viewerCameraLengthH5path=child.text.split(',')
+            if child.tag == "viewerResolutionRingsAngstroms" and child.text:
+                self.viewerResolutionRingsAngstroms=[]
+                for f in child.text.split(','):
+                    self.viewerResolutionRingsAngstroms.append(float(f))
+            if child.tag == "viewerResRingColor" and child.text:
+                self.viewerResRingColor=child.text
+            if child.tag == "viewerResRingWidth" and child.text:
+                self.viewerResRingWidth=float(child.text)
 
 
     def prettyname(self,field):
