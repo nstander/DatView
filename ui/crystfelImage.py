@@ -113,6 +113,14 @@ class CrystfelImage(QObject):
             self.resRingsTextItems.append(TextItem('',anchor=(0.5,0.8)))
             self.iview.getView().addItem(self.resRingsTextItems[-1])
 
+        self.drawResolutionLimitAct=self.iview.view.menu.addAction("Resolution Limit Ring")
+        self.drawResolutionLimitAct.setCheckable(True)
+        self.drawResolutionLimitAct.setChecked(False)
+        self.drawResolutionLimitAct.triggered.connect(self.drawResLimitRing)
+        self.drawResolutionLimitAct.setEnabled(self.yxmap is not None and 'reslim' in self.dmodel.cols)
+        self.resolutionLimitCanvas=ScatterPlotItem()
+        self.iview.getView().addItem(self.resolutionLimitCanvas)
+
         if geom is not None:
             self.loadGeom(geom)
 
@@ -153,6 +161,7 @@ class CrystfelImage(QObject):
         self.drawPeaks()
         self.drawReflections()
         self.drawResRings()
+        self.drawResLimitRing()
         
 
     def loadGeom(self,filename):
@@ -161,6 +170,7 @@ class CrystfelImage(QObject):
         self.geom_coffset=cfel_geom.coffset_from_geometry_file(filename)
         self.geom_pixsize=1/cfel_geom.res_from_geometry_file(filename)
         self.drawResRingsAct.setEnabled(True)
+        self.drawResolutionLimitAct.setEnabled('reslim' in self.dmodel.cols)
         self.lastrow=-1
         self.draw()
 
@@ -319,6 +329,20 @@ class CrystfelImage(QObject):
             for i,ti in enumerate(self.resRingsTextItems):
                 ti.setText("%.1f A" % self.dmodel.cfg.viewerResolutionRingsAngstroms[i],color=self.dmodel.cfg.viewerResRingColor)
                 ti.setPos(self.img_shape[0]/2,self.img_shape[1]/2+ring_sizes[i]/2)
+
+    def drawResLimitRing(self):
+        if not self.drawResolutionLimitAct.isChecked() or self.resolutionLambda is None:
+            self.resolutionLimitCanvas.setData([],[])
+        else:
+            r=self.dmodel.data['reslim'][self.imodel.currow]
+            if r <= 0:
+                self.resolutionLimitCanvas.setData([],[])
+            else:
+                r=10/r
+                self.resolutionLimitCanvas.setData([self.img_shape[0]/2], [self.img_shape[1]/2],symbol='o',\
+                    size=self.resolutionLambda(r),\
+                    pen=mkPen(self.dmodel.cfg.viewerResLimitRingColor, width=self.dmodel.cfg.viewerResLimitRingWidth),\
+                    brush=(0,0,0,0),pxMode=False)
 
         
 

@@ -56,6 +56,8 @@ class ModelConfig:
         self.viewerResolutionRingsAngstroms=[3.0, 4.0, 6.0, 8.0, 10.0, 20.0]
         self.viewerResRingColor='b'
         self.viewerResRingWidth=1
+        self.viewerResLimitRingColor='g'
+        self.viewerResLimitRingWidth=1
 
         et=ElementTree.parse(filename)
         root = et.getroot()
@@ -150,6 +152,10 @@ class ModelConfig:
                 self.viewerResRingColor=child.text
             if child.tag == "viewerResRingWidth" and child.text:
                 self.viewerResRingWidth=float(child.text)
+            if child.tag == "viewerResLimitRingColor" and child.text:
+                self.viewerResLimitRingColor=child.text
+            if child.tag == "viewerResLimitRingWidth" and child.text:
+                self.viewerResLimitRingWidth=float(child.text)
 
 
     def prettyname(self,field):

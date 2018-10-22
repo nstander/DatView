@@ -152,4 +152,7 @@
   <viewerResRingColor>b</viewerResRingColor>
   <viewerResRingWidth>1</viewerResRingWidth>
 
+  <viewerResLimitRingColor>g</viewerResLimitRingColor>
+  <viewerResLimitRingWidth>1</viewerResLimitRingWidth>
+
 </modelcfg>
