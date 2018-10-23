@@ -4,12 +4,14 @@
 
 try:
     from PyQt5 import QtCore
+    from PyQt5.QtCore import QObject
     from PyQt5.QtWidgets import QSizePolicy, QMenu, QApplication, QFileDialog, QActionGroup
     from PyQt5.QtGui import QCursor
     from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 except ImportError as e:
     print(e)
     from PyQt4 import QtCore
+    from PyQt4.QtCore import QObject
     from PyQt4.QtGui import QSizePolicy, QMenu, QApplication, QCursor, QFileDialog, QActionGroup
     from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 import numpy as np
@@ -30,13 +32,36 @@ class MyFigure(FigureCanvas):
         self.setWindowFlags(QtCore.Qt.WindowFlags(flags))
         self.fig.canvas.setFocusPolicy(QtCore.Qt.ClickFocus)
         self.fig.canvas.setFocus()
-        self.plt=self.fig.add_subplot(111)
         self.fig.set_facecolor('white')
         
         FigureCanvas.setMinimumSize(self, 200, 200)
         FigureCanvas.setSizePolicy(self,QSizePolicy.Expanding,QSizePolicy.Expanding)
         FigureCanvas.updateGeometry(self)
 
+    def histogram(self,model,field,axis=None):
+        if axis is None:
+            axis=self.fig.add_subplot(111)
+        p=MyHistogram(model,field,self.fig,axis,self)
+        return p
+
+    def histogram2D(self,model,xfield,yfield,log=False,axis=None):
+        if axis is None:
+            axis=self.fig.add_subplot(111)
+        p=MyHist2d(model,xfield,yfield,log,self.fig,axis,self)
+        return p
+
+    def scatter(self,model,xfield,yfield,cfield,axis=None):
+        if axis is None:
+            axis=self.fig.add_subplot(111)
+        p=MyScatter(model,xfield,yfield,cfield,self.fig,axis,self)
+        return p
+
+
+class MyPlot(QObject):
+    def __init__(self,fig,plt,parent):
+        QtCore.QObject.__init__(self,parent)
+        self.fig = fig
+        self.plt=plt
         self.fig.canvas.mpl_connect('scroll_event',self.onScroll)
         self.fig.canvas.mpl_connect('button_press_event',self.onPress)
         self.fig.canvas.mpl_connect('button_release_event',self.onRelease)
@@ -47,6 +72,7 @@ class MyFigure(FigureCanvas):
         self.fieldfilterX=None # Derived classes should intialize if manageX
         self.fieldfilterY=None # Derived classes should intialize if manageY
         self.selp=None
+        self.cb=None # Colorbar
 
         self.manageX=False
         self.manageY=False
@@ -137,19 +163,23 @@ class MyFigure(FigureCanvas):
             self.plt.set_xlim(xlim)
         if keeplimits and self.manageY:
             self.plt.set_ylim(ylim)
-        self.draw()
+        self.parent().draw()
 
     def onScroll(self,event):
         xcenter=event.xdata
         ycenter=event.ydata
-        x,y = event.x,event.y
-        for ax in self.fig.axes:
-            xAxes,yAxes=ax.transAxes.inverted().transform([x,y])
-            if xAxes < 0 and yAxes >= 0 and yAxes <=1: # Hover over y axis
-                ycenter=ax.transData.inverted().transform([0,y])[1]
-            if yAxes < 0 and xAxes >= 0 and xAxes <=1: # Hover over x axis
-                xcenter=ax.transData.inverted().transform([x,0])[0]
-        if xcenter is None and ycenter is None:
+        x,y,axis = event.x,event.y,event.inaxes
+
+        # Axis scroll
+        xAxes,yAxes=self.plt.transAxes.inverted().transform([x,y])
+        if xAxes < 0 and yAxes >= 0 and yAxes <=1: # Hover over y axis
+            ycenter=self.plt.transData.inverted().transform([0,y])[1]
+            axis=self.plt
+        if yAxes < 0 and xAxes >= 0 and xAxes <=1: # Hover over x axis
+            xcenter=self.plt.transData.inverted().transform([x,0])[0]
+            axis=self.plt
+
+        if xcenter is None and ycenter is None or axis != self.plt:
             return
         scale=1
         factor=1.5
@@ -165,10 +195,10 @@ class MyFigure(FigureCanvas):
                 cur_ylim = self.plt.get_ylim()
                 self.plt.set_ylim([ycenter - (ycenter - cur_ylim[0]) / scale, ycenter + (cur_ylim[1]-ycenter)/scale ])
             if (self.manageX and xcenter is not None) or (self.manageY and ycenter is not None):
-                self.draw()
+                self.parent().draw()
 
     def onPress(self,event):
-        if event.button == 1 and event.xdata is not None and event.ydata is not None:
+        if event.button == 1 and event.xdata is not None and event.ydata is not None and event.inaxes == self.plt:
             if event.key == 'shift' or QtCore.Qt.ShiftModifier & QApplication.keyboardModifiers() :
                 self.selp=(event.xdata,event.ydata)
                 if self.manageX:
@@ -179,7 +209,7 @@ class MyFigure(FigureCanvas):
                     self.sel.set_height(0)
                 if self.manageX or self.manageY:
                     self.sel.set_visible(True)
-                    self.draw()
+                    self.parent().draw()
             else:
                 self.pan=(event.xdata,event.ydata)
         elif event.button == 3:
@@ -212,7 +242,7 @@ class MyFigure(FigureCanvas):
 
     def onMotion(self,event):
         handled=False
-        if event.xdata and event.ydata:
+        if event.xdata and event.ydata and event.inaxes == self.plt:
             if self.pan is not None:
                 handled=True
                 if self.manageX:
@@ -224,7 +254,7 @@ class MyFigure(FigureCanvas):
                     ylim -= (event.ydata - self.pan[1])
                     self.plt.set_ylim(ylim)
                 if self.manageX or self.manageY:
-                    self.draw()
+                    self.parent().draw()
             elif self.selp is not None:
                 handled=True
                 if self.manageX:
@@ -240,7 +270,7 @@ class MyFigure(FigureCanvas):
                         self.sel.set_y(event.ydata)
                         self.sel.set_height(self.selp[1] - event.ydata)
                 if self.manageX or self.manageY:
-                    self.draw()
+                    self.parent().draw()
         if not handled:
             self.onToolTip(event)
 
@@ -275,7 +305,7 @@ class MyFigure(FigureCanvas):
             self.sel.set_y(self.fieldfilterY.minimum)
             self.sel.set_height(self.fieldfilterY.maximum-self.fieldfilterY.minimum)
             self.sel.set_visible(self.fieldfilterY.isActive() or (self.fieldfilterX is not None and self.fieldfilterX.isActive()))
-        self.draw()
+        self.parent().draw()
 
     def xlabels(self,model,field,distribute=False):
         if model.hasLabels(field):
@@ -296,9 +326,9 @@ class MyFigure(FigureCanvas):
             self.plt.set_yticklabels(lbls)
 
 
-class MyHistogram(MyFigure):
-    def __init__(self,model,field,parent=None,flags=0):
-        MyFigure.__init__(self,parent,flags)
+class MyHistogram(MyPlot):
+    def __init__(self,model,field,fig,plt,parent):
+        MyPlot.__init__(self,fig,plt,parent)
         self.bins=int(model.cfg.hist1Dbins)
         self.model=model
         self.field=field
@@ -381,12 +411,12 @@ class MyHistogram(MyFigure):
 
     def onToolTip(self,event):
         txt=""
-        if event.xdata is not None and event.ydata is not None:
+        if event.xdata is not None and event.ydata is not None and event.inaxes == self.plt:
             txt=str(event.xdata)
             if self.model.isCategorical(self.field):
                 bar = int(np.round(event.xdata))
                 txt=self.model.stringValue(self.field,bar)
-        self.setToolTip(txt)
+        self.parent().setToolTip(txt)
 
     def onFilterModelChange(self):
         self.fieldfilterX.modelchange.disconnect(self.onFilterChange)
@@ -395,9 +425,9 @@ class MyHistogram(MyFigure):
         self.onFilterChange()
             
 
-class MyScatter(MyFigure):
-    def __init__(self,model,xfield,yfield,cfield,parent=None,flags=0):
-        MyFigure.__init__(self,parent,flags)
+class MyScatter(MyPlot):
+    def __init__(self,model,xfield,yfield,cfield,fig,plt,parent):
+        MyPlot.__init__(self,fig,plt,parent)
         self.model=model
         self.xfield=xfield
         self.yfield=yfield
@@ -418,9 +448,7 @@ class MyScatter(MyFigure):
 
         self.sel=Rectangle((0,0),0,0,color='r',fill=False)
         self.onFilterChange() # Let this function worry about actual bounds, we just cared about color and fill
-        self.cb=None
 
-        self.setWindowTitle("%s - %s - Scatter" % (self.model.prettyname(self.xfield),self.model.prettyname(self.yfield)))
         self.mydraw()
 
     def datadraw(self):
@@ -471,7 +499,7 @@ class MyScatter(MyFigure):
 
     def onToolTip(self,event):
         txt=""
-        if event.xdata is not None and event.ydata is not None:
+        if event.xdata is not None and event.ydata is not None and event.inaxes == self.plt:
             if self.model.isCategorical(self.xfield):
                 xtxt=self.model.stringValue(self.xfield,int(np.round(event.xdata)))
             else:
@@ -481,7 +509,7 @@ class MyScatter(MyFigure):
             else:
                 ytxt="%.4f"%(event.ydata)
             txt="%s,%s"%(xtxt,ytxt)
-        self.setToolTip(txt)
+        self.parent().setToolTip(txt)
 
     def onFilterModelChange(self):
         self.fieldfilterX.modelchange.disconnect(self.onFilterChange)
@@ -493,9 +521,9 @@ class MyScatter(MyFigure):
         self.fieldfilterY.modelchange.connect(self.onFilterChange)
         self.onFilterChange()
 
-class MyHist2d(MyFigure):
-    def __init__(self,model,xfield,yfield,log=False,parent=None,flags=0):
-        MyFigure.__init__(self,parent,flags)
+class MyHist2d(MyPlot):
+    def __init__(self,model,xfield,yfield,log,fig,plt,parent):
+        MyPlot.__init__(self,fig,plt,parent)
         self.model=model
         self.xfield=xfield
         self.yfield=yfield
@@ -519,7 +547,6 @@ class MyHist2d(MyFigure):
 
         self.sel=Rectangle((0,0),0,0,color='r',fill=False)
         self.onFilterChange() # Let this function worry about actual bounds, we just cared about color and fill
-        self.cb=None
         self.H=None
         self.xedges=None
         self.yedges=None
@@ -540,10 +567,6 @@ class MyHist2d(MyFigure):
         self.drawBoth.setVisible(False)
         self.drawSelection.setChecked(True)
 
-        logtxt=""
-        if log:
-            logtxt="Log "
-        self.setWindowTitle("%s - %s - %s2D Histogram" % (self.model.prettyname(self.xfield),self.model.prettyname(self.yfield),logtxt))
         self.mydraw()
 
     def datadraw(self):
@@ -605,7 +628,7 @@ class MyHist2d(MyFigure):
 
     def onToolTip(self,event):
         txt=""
-        if event.xdata is not None and event.ydata is not None and self.H is not None:
+        if event.xdata is not None and event.ydata is not None and self.H is not None and event.inaxes == self.plt:
             xbin=np.searchsorted(self.xedges,event.xdata)
             ybin=np.searchsorted(self.yedges,event.ydata)
             if xbin > 0 and xbin < len(self.xedges) and ybin > 0 and ybin < len(self.yedges):
@@ -618,7 +641,7 @@ class MyHist2d(MyFigure):
                 else:
                     ytxt="%.4f-%.4f"%(self.yedges[ybin-1],self.yedges[ybin])
                 txt="%s,%s,%i"%(xtxt,ytxt,self.H[xbin-1,ybin-1])
-        self.setToolTip(txt)
+        self.parent().setToolTip(txt)
 
     def onFilterModelChange(self):
         self.fieldfilterX.modelchange.disconnect(self.onFilterChange)

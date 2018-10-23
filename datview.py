@@ -26,7 +26,7 @@ from ui.scatterDialog import MyScatterDialog
 from ui.hist2dDialog import MyHist2dDialog
 from ui.itemViewer import MyItemViewer
 from ui.filterPanel import MyFilterPanel
-import ui.plots
+from ui.plots import MyFigure
 
 class MyMainWindow(QMainWindow):
     def __init__(self,datfile,groupfile,filterfile,cfg,geom):
@@ -109,7 +109,8 @@ class MyMainWindow(QMainWindow):
             if field in self.cachedHistograms:
                 h=self.cachedHistograms[field]
             else:
-                h=ui.plots.MyHistogram(parent=self.ui.scrollAreaWidgetContents,model=self.model,field=field)
+                h=MyFigure(parent=self.ui.scrollAreaWidgetContents)
+                h.histogram(model=self.model,field=field)
                 self.cachedHistograms[field]=h
             if spot < self.histcolumns:
                 self.ui.gridLayout.setColumnStretch(spot,1)

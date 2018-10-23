@@ -11,7 +11,7 @@ except ImportError:
     from PyQt4.QtCore import Qt
     from ui.Ui_ScatterDialog import Ui_ScatterDialog
 from api.datamodel import DataModel
-from ui.plots import MyHist2d
+from ui.plots import MyFigure
 
 class MyHist2dDialog(QDialog):
     def __init__(self,model,parent):
@@ -32,7 +32,14 @@ class MyHist2dDialog(QDialog):
         self.accepted.connect(self.onAccept)
 
     def onAccept(self):
-        p=MyHist2d(self.model,self.ui.xCombo.itemData(self.ui.xCombo.currentIndex()),self.ui.yCombo.itemData(self.ui.yCombo.currentIndex()),parent=self.parent(),flags=Qt.Window,log=self.ui.logCheckBox.isChecked())
+        p=MyFigure(parent=self.parent(),flags=Qt.Window)
+        xfield=self.ui.xCombo.itemData(self.ui.xCombo.currentIndex())
+        yfield=self.ui.yCombo.itemData(self.ui.yCombo.currentIndex())
+        p.histogram2D(self.model,xfield,yfield,log=self.ui.logCheckBox.isChecked())
+        logtxt=""
+        if self.ui.logCheckBox.isChecked():
+            logtxt="Log "
+        p.setWindowTitle("%s - %s - %s2D Histogram" % (self.model.prettyname(xfield),self.model.prettyname(yfield),logtxt))
         p.show()
 
         

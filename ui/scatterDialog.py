@@ -11,7 +11,7 @@ except ImportError:
     from PyQt4.QtCore import Qt
     from ui.Ui_ScatterDialog import Ui_ScatterDialog
 from api.datamodel import DataModel
-from ui.plots import MyScatter
+from ui.plots import MyFigure
 
 class MyScatterDialog(QDialog):
     def __init__(self,model,parent):
@@ -33,7 +33,11 @@ class MyScatterDialog(QDialog):
         self.accepted.connect(self.onAccept)
 
     def onAccept(self):
-        p=MyScatter(self.model,self.ui.xCombo.itemData(self.ui.xCombo.currentIndex()),self.ui.yCombo.itemData(self.ui.yCombo.currentIndex()),self.ui.cCombo.itemData(self.ui.cCombo.currentIndex()),parent=self.parent(),flags=Qt.Window)
+        p=MyFigure(parent=self.parent(),flags=Qt.Window)
+        xfield=self.ui.xCombo.itemData(self.ui.xCombo.currentIndex())
+        yfield=self.ui.yCombo.itemData(self.ui.yCombo.currentIndex())
+        p.scatter(self.model,xfield,yfield,self.ui.cCombo.itemData(self.ui.cCombo.currentIndex()))
+        p.setWindowTitle("%s - %s - Scatter" % (self.model.prettyname(xfield),self.model.prettyname(yfield)))
         p.show()
 
         
