@@ -22,6 +22,8 @@ class ItemSpinBox(QSpinBox):
         self.setMaximum(len(self.imodel.model.data)-1)
 
     def stepBy(self,steps):
+        if len(self.imodel.sortedlist) == 0:
+            return
         cur=np.searchsorted(self.imodel.sortedlist,self.imodel.currow)
         cur += steps
         if cur >= len(self.imodel.sortedlist):

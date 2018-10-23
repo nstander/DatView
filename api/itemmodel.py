@@ -48,6 +48,8 @@ class ItemModel(QAbstractTableModel):
         return r
 
     def next(self):
+        if len(self.sortedlist) == 0:
+            return
         self.internalrow +=1
         if self.internalrow >= len(self.validlist):
             self.internalrow -= len(self.validlist)
@@ -55,6 +57,8 @@ class ItemModel(QAbstractTableModel):
         self.dataChanged.emit(self.createIndex(0,0,QModelIndex()),self.createIndex(len(self.model.cols),0,QModelIndex()))
 
     def previous(self):
+        if len(self.sortedlist) == 0:
+            return
         self.internalrow -=1
         if self.internalrow < 0:
             self.internalrow += len(self.validlist)
@@ -66,15 +70,19 @@ class ItemModel(QAbstractTableModel):
             return
         self.currow=row
         self.updateInternalRow()
+        self.dataChanged.emit(self.createIndex(0,0,QModelIndex()),self.createIndex(len(self.model.cols),0,QModelIndex()))
 
 
     def updateInternalRow(self):
-        closest=np.searchsorted(self.sortedlist,self.currow)
-        if closest >= len(self.sortedlist):
-            closest = len(self.sortedlist)-1
-        val=self.sortedlist[closest]
-        self.internalrow = np.where(self.validlist == val)[0][0]
-        self.dataChanged.emit(self.createIndex(0,0,QModelIndex()),self.createIndex(len(self.model.cols),0,QModelIndex()))
+        if len(self.sortedlist) == 0:
+            self.internalRow = 0
+        else:
+            closest=np.searchsorted(self.sortedlist,self.currow)
+            if closest >= len(self.sortedlist):
+                closest = len(self.sortedlist)-1
+            val=self.sortedlist[closest]
+            self.internalrow = np.where(self.validlist == val)[0][0]
+
 
     def onListChange(self):
         self.sortedlist=self.initiallist[self.model.rootfilter.getKeep()]
