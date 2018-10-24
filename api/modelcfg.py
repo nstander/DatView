@@ -111,7 +111,7 @@ class ModelConfig:
             if child.tag == "playInterval" and child.text:
                 self.playtime=int(child.text)
             if child.tag == "imageH5paths" and child.text:
-                self.imageH5path=child.text.split(',')
+                self.imageH5paths=child.text.split(',')
             if child.tag == "cxiviewHistClipLevelValue" and child.text:
                 self.cxiviewHistClipLevelValue=float(child.text)
             if child.tag == "cxiviewHistMax" and child.text:
