@@ -38,7 +38,7 @@
     <field nm="phoen"  prettyname="Photon Energy (eV)"  />
     <field nm="bmdv"   prettyname="Beam Divergence (rad)"  />
     <field nm="bmbw"   prettyname="Beam Bandwidth (fraction)"  />
-    <field nm="npeak"  prettyname="Number of Cheetah Peaks"  fmt="%i"/>
+    <field nm="npeak"  prettyname="Number of Peaks"  fmt="%i"/>
     <field nm="prorad" prettyname="Profile Radius (nm^-1)" />
     <field nm="detdx"  prettyname="Detector X Shift (mm)"  />
     <field nm="detdy"  prettyname="Detector Y Shift (mm)" />
