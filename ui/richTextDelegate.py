@@ -3,8 +3,8 @@
 # Author Natasha Stander
 
 try:
-    from PyQt5.QtWidgets import QStyledItemDelegate, QTextDocument
-    from PyQt5.QtGui import QAbstractTextDocumentLayout
+    from PyQt5.QtWidgets import QStyledItemDelegate
+    from PyQt5.QtGui import QAbstractTextDocumentLayout,QTextDocument
     from PyQt5.QtCore import QSizeF
 except ImportError:
     from PyQt4.QtGui import QStyledItemDelegate, QTextDocument, QAbstractTextDocumentLayout
