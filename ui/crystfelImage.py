@@ -185,8 +185,9 @@ class CrystfelImage(QObject):
     def mouseMove(self,pos):
         mapped=self.iview.getView().mapSceneToView(pos)
         txt=""
-        if self.toolTipsAct.isChecked() and mapped.x() >= 0 and mapped.x() < self.iview.image.shape[0] \
-                                        and mapped.y() >= 0 and mapped.y() <self.iview.image.shape[1]:
+        if self.toolTipsAct.isChecked() and self.iview.image is not None \
+                                        and mapped.x() >= 0 and mapped.x() < self.iview.image.shape[0] \
+                                        and mapped.y() >= 0 and mapped.y() < self.iview.image.shape[1]:
             if self.img_shape is not None:
                 x=mapped.x()-self.img_shape[0]/2
                 y=self.img_shape[1]/2-mapped.y()
