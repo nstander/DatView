@@ -33,28 +33,56 @@ class MyFigure(FigureCanvas):
         self.fig.canvas.setFocusPolicy(QtCore.Qt.ClickFocus)
         self.fig.canvas.setFocus()
         self.fig.set_facecolor('white')
+        self.plts=[]
         
         FigureCanvas.setMinimumSize(self, 200, 200)
         FigureCanvas.setSizePolicy(self,QSizePolicy.Expanding,QSizePolicy.Expanding)
         FigureCanvas.updateGeometry(self)
 
+        self.fig.canvas.mpl_connect('motion_notify_event',self.onMotion)
+
     def histogram(self,model,field,axis=None):
         if axis is None:
             axis=self.fig.add_subplot(111)
         p=MyHistogram(model,field,self.fig,axis,self)
+        self.plts.append(p)
         return p
 
     def histogram2D(self,model,xfield,yfield,log=False,axis=None):
         if axis is None:
             axis=self.fig.add_subplot(111)
         p=MyHist2d(model,xfield,yfield,log,self.fig,axis,self)
+        self.plts.append(p)
         return p
 
     def scatter(self,model,xfield,yfield,cfield,axis=None):
         if axis is None:
             axis=self.fig.add_subplot(111)
         p=MyScatter(model,xfield,yfield,cfield,self.fig,axis,self)
+        self.plts.append(p)
         return p
+
+    def onMotion(self,event):
+        handled=False
+        for p in self.plts:
+            handled = handled or p.onMotion(event)
+        if not handled:
+            txt=""
+            for p in self.plts:
+                t2=p.toolTip(event)
+                if t2:
+                    txt=t2
+            self.setToolTip(txt)
+
+    def onSave(self):
+        name=QFileDialog.getSaveFileName(self,'Save Plot',filter='*.png')
+        if name is not None:
+            self.fig.savefig(name,ext="png")
+
+    def onSaveSVG(self):
+        name=QFileDialog.getSaveFileName(self,'Save Plot',filter='*.svg')
+        if name is not None:
+            self.fig.savefig(name,ext="svg")
 
 
 class MyPlot(QObject):
@@ -65,7 +93,6 @@ class MyPlot(QObject):
         self.fig.canvas.mpl_connect('scroll_event',self.onScroll)
         self.fig.canvas.mpl_connect('button_press_event',self.onPress)
         self.fig.canvas.mpl_connect('button_release_event',self.onRelease)
-        self.fig.canvas.mpl_connect('motion_notify_event',self.onMotion)
 
         self.pan=None
         self.sel=None # Derived classes should initialize to Rectangle
@@ -79,9 +106,9 @@ class MyPlot(QObject):
 
         self.menu=QMenu()
         saveAct=self.menu.addAction("Save PNG")
-        saveAct.triggered.connect(self.onSave)
+        saveAct.triggered.connect(parent.onSave)
         saveAct=self.menu.addAction("Save SVG")
-        saveAct.triggered.connect(self.onSaveSVG)
+        saveAct.triggered.connect(parent.onSaveSVG)
         resetAct=self.menu.addAction("Reset")
         resetAct.triggered.connect(self.onReset)
 
@@ -172,10 +199,10 @@ class MyPlot(QObject):
 
         # Axis scroll
         xAxes,yAxes=self.plt.transAxes.inverted().transform([x,y])
-        if xAxes < 0 and yAxes >= 0 and yAxes <=1: # Hover over y axis
+        if xAxes < 0 and xAxes >=-0.2 and yAxes >= 0 and yAxes <=1: # Hover over y axis
             ycenter=self.plt.transData.inverted().transform([0,y])[1]
             axis=self.plt
-        if yAxes < 0 and xAxes >= 0 and xAxes <=1: # Hover over x axis
+        if yAxes < 0 and yAxes >=-0.2 and xAxes >= 0 and xAxes <=1: # Hover over x axis
             xcenter=self.plt.transData.inverted().transform([x,0])[0]
             axis=self.plt
 
@@ -212,7 +239,7 @@ class MyPlot(QObject):
                     self.parent().draw()
             else:
                 self.pan=(event.xdata,event.ydata)
-        elif event.button == 3:
+        elif event.button == 3 and event.inaxes == self.plt:
             self.menu.popup(QCursor.pos())
 
     def onRelease(self,event):
@@ -271,21 +298,6 @@ class MyPlot(QObject):
                         self.sel.set_height(self.selp[1] - event.ydata)
                 if self.manageX or self.manageY:
                     self.parent().draw()
-        if not handled:
-            self.onToolTip(event)
-
-    def onToolTip(self,event):
-        pass
-
-    def onSave(self):
-        name=QFileDialog.getSaveFileName(self,'Save Plot',filter='*.png')
-        if name is not None:
-            self.fig.savefig(name,ext="png")
-
-    def onSaveSVG(self):
-        name=QFileDialog.getSaveFileName(self,'Save Plot',filter='*.svg')
-        if name is not None:
-            self.fig.savefig(name,ext="svg")
 
     def onFilterChange(self):
         if self.selp is not None:
@@ -315,6 +327,8 @@ class MyPlot(QObject):
                 ticks= ticks.astype(float) + 0.5
             self.plt.set_xticks(ticks)
             self.plt.set_xticklabels(lbls)
+        else:
+            self.plt.locator_params(axis='x', nbins=model.cfg.numXticks)
 
     def ylabels(self,model,field,distribute=False):
         if model.hasLabels(field):
@@ -369,7 +383,6 @@ class MyHistogram(MyPlot):
                 self.plt.bar(fcnts[0],fcnts[1],color='black',align='center')
             else:
                 self.plt.bar(self.dcache[0],self.dcache[1],color='black',align='center')
-            self.xlabels(self.model,self.field)
         else:
             if drawBoth:
                 b=self.plt.hist(self.model.data[self.field],bins=self.bins,color='black',alpha=0.5,edgecolor="none",
@@ -386,10 +399,9 @@ class MyHistogram(MyPlot):
                 y=matplotlib.mlab.normpdf(np.array(b),self.mu,self.sigma)
                 self.plt.plot(b,y/np.max(y)*self.plt.get_ylim()[1]*0.95,'r',linewidth=2)
                 title += fmt % (self.mu,self.sigma)
+        self.xlabels(self.model,self.field)
         self.plt.set_title(title)
         self.sel.set_height(self.plt.get_ylim()[1])
-        if not self.model.hasLabels(self.field):
-            self.plt.locator_params(axis='x', nbins=6)
 
     def onKey(self,event):
         if event.key == '+' or event.key == '=':
@@ -400,29 +412,40 @@ class MyHistogram(MyPlot):
             self.mydraw()
         if event.key == 'ctrl+f':
             if self.mu is None:
-                # Always fit filtered (if not filtering, will be full model
-                dt=self.model.filtered[self.field]
-                dt = dt[dt != -1] # But don't use empty
-                (self.mu,self.sigma)=norm.fit(dt)
+                self.calcFit()
             else:
-                self.mu = None
-                self.sigma = None
+                self.clearFit()
             self.mydraw()
 
-    def onToolTip(self,event):
+    def calcFit(self):
+        # Always fit filtered (if not filtering, will be full model)
+        dt=self.model.filtered[self.field]
+        dt = dt[dt != -1] # But don't use empty
+        (self.mu,self.sigma)=norm.fit(dt)
+
+    def clearFit(self):
+        self.mu = None
+        self.sigma = None
+
+    def toolTip(self,event):
         txt=""
         if event.xdata is not None and event.ydata is not None and event.inaxes == self.plt:
             txt=str(event.xdata)
             if self.model.isCategorical(self.field):
                 bar = int(np.round(event.xdata))
                 txt=self.model.stringValue(self.field,bar)
-        self.parent().setToolTip(txt)
+        return txt
 
     def onFilterModelChange(self):
         self.fieldfilterX.modelchange.disconnect(self.onFilterChange)
         self.fieldfilterX=self.model.selectionFilter(self.field)
         self.fieldfilterX.modelchange.connect(self.onFilterChange)
         self.onFilterChange()
+
+    def onReset(self):
+        self.bins=int(self.model.cfg.hist1Dbins)
+        self.range=self.origRange
+        self.mydraw(False)
             
 
 class MyScatter(MyPlot):
@@ -440,6 +463,9 @@ class MyScatter(MyPlot):
         self.manageY=True
         self.fieldfilterY=self.model.selectionFilter(self.yfield)
         self.fieldfilterY.modelchange.connect(self.onFilterChange)
+
+        self.vmin=None
+        self.vmax=None
 
         self.model.filterchange.connect(self.mydraw)
         self.model.filterModelChange.connect(self.onFilterModelChange)
@@ -459,22 +485,22 @@ class MyScatter(MyPlot):
         cFiltered="black"
         cm=None
         marker=self.model.cfg.scattermarker
-        vmin=None
-        vmax=None
         if self.cfield is not None:
             cAll=self.model.data[self.cfield]
             cFiltered=self.model.filtered[self.cfield]
             cm=plt.cm.get_cmap(self.model.cfg.scattercmap)
-            vmin=self.model.fieldmin(self.cfield)
-            vmax=self.model.fieldmax(self.cfield)
+            if self.vmin is None:
+                self.vmin=self.model.fieldmin(self.cfield)
+            if self.vmax is None:
+                self.vmax=self.model.fieldmax(self.cfield)
 
         if self.model.isFiltered() and self.drawBoth.isChecked():
-            self.plt.scatter(self.model.data[self.xfield],self.model.data[self.yfield],c=cAll,alpha=0.3,cmap=cm,vmin=vmin,vmax=vmax,marker=marker,linewidths=self.model.cfg.scatterlinewidth,s=self.model.cfg.scattersize)
-            sc=self.plt.scatter(self.model.filtered[self.xfield],self.model.filtered[self.yfield],c=cFiltered,cmap=cm,vmin=vmin,vmax=vmax,marker=marker,linewidths=self.model.cfg.scatterlinewidth,s=self.model.cfg.scattersize)
+            self.plt.scatter(self.model.data[self.xfield],self.model.data[self.yfield],c=cAll,alpha=0.3,cmap=cm,vmin=self.vmin,vmax=self.vmax,marker=marker,linewidths=self.model.cfg.scatterlinewidth,s=self.model.cfg.scattersize)
+            sc=self.plt.scatter(self.model.filtered[self.xfield],self.model.filtered[self.yfield],c=cFiltered,cmap=cm,vmin=self.vmin,vmax=self.vmax,marker=marker,linewidths=self.model.cfg.scatterlinewidth,s=self.model.cfg.scattersize)
         elif self.drawSelection.isChecked():
-            sc=self.plt.scatter(self.model.filtered[self.xfield],self.model.filtered[self.yfield],c=cFiltered,cmap=cm,vmin=vmin,vmax=vmax,marker=marker,linewidths=self.model.cfg.scatterlinewidth,s=self.model.cfg.scattersize)
+            sc=self.plt.scatter(self.model.filtered[self.xfield],self.model.filtered[self.yfield],c=cFiltered,cmap=cm,vmin=self.vmin,vmax=self.vmax,marker=marker,linewidths=self.model.cfg.scatterlinewidth,s=self.model.cfg.scattersize)
         else:
-            sc=self.plt.scatter(self.model.data[self.xfield],self.model.data[self.yfield],c=cAll,cmap=cm,vmin=vmin,vmax=vmax,marker=marker,linewidths=self.model.cfg.scatterlinewidth,s=self.model.cfg.scattersize)
+            sc=self.plt.scatter(self.model.data[self.xfield],self.model.data[self.yfield],c=cAll,cmap=cm,vmin=self.vmin,vmax=self.vmax,marker=marker,linewidths=self.model.cfg.scatterlinewidth,s=self.model.cfg.scattersize)
 
 
         self.plt.set_xlabel(self.model.prettyname(self.xfield))
@@ -482,7 +508,7 @@ class MyScatter(MyPlot):
         if self.cfield is not None:
             self.plt.set_title(self.model.prettyname(self.cfield))
         if self.cfield is not None and self.cb is None:
-            self.cb=self.fig.colorbar(sc)
+            self.cb=self.fig.colorbar(sc,ax=self.plt)
 
         self.xlabels(self.model,self.xfield)
         self.ylabels(self.model,self.yfield)
@@ -497,7 +523,7 @@ class MyScatter(MyPlot):
         self.plt.set_ylim(yrange)
         self.mydraw()
 
-    def onToolTip(self,event):
+    def toolTip(self,event):
         txt=""
         if event.xdata is not None and event.ydata is not None and event.inaxes == self.plt:
             if self.model.isCategorical(self.xfield):
@@ -509,7 +535,7 @@ class MyScatter(MyPlot):
             else:
                 ytxt="%.4f"%(event.ydata)
             txt="%s,%s"%(xtxt,ytxt)
-        self.parent().setToolTip(txt)
+        return txt
 
     def onFilterModelChange(self):
         self.fieldfilterX.modelchange.disconnect(self.onFilterChange)
@@ -527,7 +553,8 @@ class MyHist2d(MyPlot):
         self.model=model
         self.xfield=xfield
         self.yfield=yfield
-        self.bins=int(model.cfg.hist2Dbins)
+        self.xbins=int(model.cfg.hist2Dbins)
+        self.ybins=int(model.cfg.hist2Dbins)
         self.log=log
 
         self.fig.canvas.mpl_connect('key_press_event',self.onKey)
@@ -574,7 +601,7 @@ class MyHist2d(MyPlot):
         model=self.model.filtered
         if not drawfiltered:
             model = self.model.data
-        b=[self.bins,self.bins]
+        b=[self.xbins,self.ybins]
         if self.model.isCategorical(self.xfield):
             edges = self.model.labelints(self.xfield)
             xemin = np.searchsorted(edges,self.range[0][0])
@@ -599,7 +626,7 @@ class MyHist2d(MyPlot):
             h=np.ma.masked_values(h,0)
         sc=self.plt.pcolormesh(self.xedges,self.yedges,np.transpose(h),cmap=plt.cm.get_cmap(self.model.cfg.hist2dcmap),norm=norm)
         if self.cb is None:
-            self.cb=self.fig.colorbar(sc)
+            self.cb=self.fig.colorbar(sc,ax=self.plt)
         else:
             self.cb.on_mappable_changed(sc)
 
@@ -611,22 +638,27 @@ class MyHist2d(MyPlot):
 
     def onKey(self,event):
         if event.key == '+' or event.key == '=':
-            self.bins *=2
+            self.xbins *=2
+            self.ybins *=2
             self.mydraw()
         if event.key == '-':
-            self.bins =int(self.bins/2)
-            if self.bins < 1:
-                self.bins = 1
+            self.xbins =int(self.xbins/2)
+            if self.xbins < 1:
+                self.xbins = 1
+            self.ybins =int(self.ybins/2)
+            if self.ybins < 1:
+                self.ybins = 1
             self.mydraw()
 
     def onReset(self,event):
-        self.bins=int(64)
+        self.xbins=int(self.model.cfg.hist2Dbins)
+        self.ybins=int(self.model.cfg.hist2Dbins)
         self.range=self.origRange
         self.plt.set_xlim(self.range[0])
         self.plt.set_ylim(self.range[1])
         self.mydraw()
 
-    def onToolTip(self,event):
+    def toolTip(self,event):
         txt=""
         if event.xdata is not None and event.ydata is not None and self.H is not None and event.inaxes == self.plt:
             xbin=np.searchsorted(self.xedges,event.xdata)
@@ -641,7 +673,7 @@ class MyHist2d(MyPlot):
                 else:
                     ytxt="%.4f-%.4f"%(self.yedges[ybin-1],self.yedges[ybin])
                 txt="%s,%s,%i"%(xtxt,ytxt,self.H[xbin-1,ybin-1])
-        self.parent().setToolTip(txt)
+        return txt
 
     def onFilterModelChange(self):
         self.fieldfilterX.modelchange.disconnect(self.onFilterChange)

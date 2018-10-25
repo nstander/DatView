@@ -58,6 +58,7 @@ class ModelConfig:
         self.viewerResRingWidth=1
         self.viewerResLimitRingColor='g'
         self.viewerResLimitRingWidth=1
+        self.numXticks=6
 
         et=ElementTree.parse(filename)
         root = et.getroot()
@@ -156,6 +157,8 @@ class ModelConfig:
                 self.viewerResLimitRingColor=child.text
             if child.tag == "viewerResLimitRingWidth" and child.text:
                 self.viewerResLimitRingWidth=float(child.text)
+            if child.tag == "numXticks" and child.text:
+                self.numXticks=int(child.text)
 
 
     def prettyname(self,field):

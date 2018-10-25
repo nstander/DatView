@@ -99,6 +99,8 @@
   <!-- Columns that should be treated as categorical variables. In-set filters are only available for categorical variables. Note that any fields whose datatype is string (starts with U) and all fields starting with a group file prefix are automatically categorical. -->
   <categorical names="subcxi,class,multi,multiid,run"/>
 
+  <!-- Number of ticks on the x axis for non categorical, GUI limits to 6 by default to limit overlapping labels -->
+  <numXticks>6</numXticks>
   <!-- Matplotlib Color Map controls. See https://matplotlib.org/examples/color/colormaps_reference.html -->
   <scattercmap>jet</scattercmap>
   <hist2dcmap>jet</hist2dcmap>
