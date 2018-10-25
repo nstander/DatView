@@ -415,17 +415,22 @@ class MyHistogram(MyPlot):
                 self.calcFit()
             else:
                 self.clearFit()
-            self.mydraw()
+
 
     def calcFit(self):
         # Always fit filtered (if not filtering, will be full model)
         dt=self.model.filtered[self.field]
         dt = dt[dt != -1] # But don't use empty
-        (self.mu,self.sigma)=norm.fit(dt)
+        if len(dt):
+            (self.mu,self.sigma)=norm.fit(dt)
+            self.mydraw()
+        else:
+            self.clearFit()
 
     def clearFit(self):
         self.mu = None
         self.sigma = None
+        self.mydraw()
 
     def toolTip(self,event):
         txt=""

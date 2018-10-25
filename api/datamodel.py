@@ -355,14 +355,17 @@ class DataModel(QObject):
                 outarr=outarr[:self.limit]
         return outarr
 
-    def saveByPartitions(self,fname,function,partitions=None):
+    def saveByPartitions(self,fname,function,partitions=None,internal=True,appendName=True):
         if partitions is not None:
             previous=self.partitionfilter.getKeep()
-            self.internalFilterChanges = True
+            self.internalFilterChanges = internal
             for k,v in partitions.items():
                 self.setPartition(v)
                 if np.count_nonzero(self.rootfilter.getKeep()):
-                    function(fname+"_"+k)
+                    if appendName:
+                        function(fname+"_"+k)
+                    else:
+                        function(fname,k)
             self.setPartition(previous)
             self.internalFilterChanges = False
         else:

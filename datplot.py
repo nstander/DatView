@@ -64,6 +64,7 @@ def histogram(model,myFigure,figArgs,plotNum,plotArgString):
 
     if plotArgs.fit:
         h.calcFit()
+        model.filterchange.connect(h.calcFit)
 
     if plotArgs.datashown == 'raw':
         h.drawAll.setChecked(True)
@@ -176,6 +177,15 @@ def scatter(model,myFigure,figArgs,plotNum,plotArgString):
     if plotArgs.title is not None:
         s.plt.set_title(plotArgs.title)
 
+def saveFigByPartitions(args,partname=None):
+    nm = args.save
+    if partname is not None:
+        nm = args.save % partname
+    if args.save.endswith("svg"):
+        args.qFig.print_figure(nm,format="svg")
+    else:
+        args.qFig.print_figure(nm,format="png",dpi=args.dpi)
+
 if __name__ == '__main__':
     plothelp=io.StringIO()
     plothelp.write("Available Plots:\n")
@@ -217,7 +227,7 @@ Plot Argument Descriptions:
     parser.add_argument('-p','--plot',action='append',default=[],help='Add a plot to the figure, has a single argument (use quotes) to be parsed on its own, see bottom of help text for options')
     parser.add_argument('-r','--rows',default=None,type=int,help="The number of rows in the figure. Defaults to rows in config if more than one plot provided. You should specify this if you start using prowspan and pcolspan in plots.")
     parser.add_argument('-c','--cols',default=None,type=int,help="The number of cols in the figure. Defaults to rows in config divided by number of plots if more than one plot provided. You should specify this if you start using prowspan and pcolspan in plots.")
-    parser.add_argument('--left',default=0.05,type=float,help="left argument to the grid spec")
+    parser.add_argument('--left',default=0.1,type=float,help="left argument to the grid spec")
     parser.add_argument('--right',default=0.95,type=float,help="right argument to the grid spec")
     parser.add_argument('--bottom',default=0.15,type=float,help="bottom argument to the grid spec")
     parser.add_argument('--top',default=0.83,type=float,help="top argument to the grid spec")
@@ -225,6 +235,7 @@ Plot Argument Descriptions:
     parser.add_argument('--hspace',default=0.3,type=float,help="hspace argument to the grid spec")
     parser.add_argument('--figwidth',default=None,type=float,help="fig width in pixels, defaults to 200*cols")
     parser.add_argument('--figheight',default=None,type=float,help="fig height in pixels, defaults to 200*rows")
+    parser.add_argument('--dpi',default=None,type=int,help="DPI for saving")
     parser.add_argument('--showOnSave',action="store_true",help="The saved figure will look different unless the window is shown first, but turning this on causes a flicker.")
 
     parser.add_argument('-t','--title',default=None,help="Overall Figure title")
@@ -290,10 +301,16 @@ Plot Argument Descriptions:
     if args.save is not None:
         if args.showOnSave:
             qFig.show()
-        if args.save.endswith("svg"):
-            qFig.print_figure(args.save,ext="svg")
-        else:
-            qFig.print_figure(args.save,ext="png")
+
+        partitions=None
+        if args.partition is not None:
+            partitions=model.partition(args.partition,args.partmin,args.partmax,args.partnum)
+            if '%' not in args.save:
+                args.save += '_%s'
+
+        args.qFig=qFig
+        model.saveByPartitions(args,saveFigByPartitions,partitions,False,False)
+
         if args.showOnSave:
             qFig.close()
     else:
@@ -302,6 +319,9 @@ Plot Argument Descriptions:
         r= app.exec_()
         app.deleteLater()
         sys.exit(r)
+
+
+    
 
 
 
