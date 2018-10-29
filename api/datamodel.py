@@ -325,6 +325,13 @@ class DataModel(QObject):
         """Set the current partition filter's keep."""
         self.partitionfilter.setkeep(np.ones(self.data.shape,dtype=bool))
 
+    def datacol(self,field,respectPartition=True):
+        field=self.datafield(field)
+        if respectPartition:
+            return self.data[field][self.partitionfilter.getKeep()]
+        else:
+            return self.data[field]
+
         
 
 #########################################

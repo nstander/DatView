@@ -373,7 +373,7 @@ class MyHistogram(MyPlot):
         drawBoth=self.model.isFiltered() and self.drawBoth.isChecked()
         if self.model.isCategorical(self.field):
             if self.dcache is None:
-                self.dcache=np.unique(self.model.data[self.field],return_counts=True)
+                self.dcache=np.unique(self.model.datacol(self.field),return_counts=True)
             if drawBoth:
                 self.plt.bar(self.dcache[0],self.dcache[1],color='black',alpha=0.5,edgecolor="none",align='center')
                 fcnts=np.unique(self.model.filtered[self.field],return_counts=True)
@@ -385,7 +385,7 @@ class MyHistogram(MyPlot):
                 self.plt.bar(self.dcache[0],self.dcache[1],color='black',align='center')
         else:
             if drawBoth:
-                b=self.plt.hist(self.model.data[self.field],bins=self.bins,color='black',alpha=0.5,edgecolor="none",
+                b=self.plt.hist(self.model.datacol(self.field),bins=self.bins,color='black',alpha=0.5,edgecolor="none",
                     range=self.range)[1]
                 self.plt.hist(self.model.filtered[self.field],bins=b,color='black',
                     range=self.range)
@@ -393,7 +393,7 @@ class MyHistogram(MyPlot):
                 b=self.plt.hist(self.model.filtered[self.field],bins=self.bins,color='black',
                     range=self.range)[1]
             else:
-                b=self.plt.hist(self.model.data[self.field],bins=self.bins,color='black',
+                b=self.plt.hist(self.model.datacol(self.field),bins=self.bins,color='black',
                     range=self.range)[1]
             if self.mu is not None:
                 y=matplotlib.mlab.normpdf(np.array(b),self.mu,self.sigma)
@@ -483,15 +483,12 @@ class MyScatter(MyPlot):
         self.mydraw()
 
     def datadraw(self):
-        xAll=self.model.data[self.xfield]
-        xFiltered=self.model.filtered[self.xfield]
-
         cAll="black"
         cFiltered="black"
         cm=None
         marker=self.model.cfg.scattermarker
         if self.cfield is not None:
-            cAll=self.model.data[self.cfield]
+            cAll=self.model.datacol(self.cfield)
             cFiltered=self.model.filtered[self.cfield]
             cm=plt.cm.get_cmap(self.model.cfg.scattercmap)
             if self.vmin is None:
@@ -500,12 +497,13 @@ class MyScatter(MyPlot):
                 self.vmax=self.model.fieldmax(self.cfield)
 
         if self.model.isFiltered() and self.drawBoth.isChecked():
-            self.plt.scatter(self.model.data[self.xfield],self.model.data[self.yfield],c=cAll,alpha=0.3,cmap=cm,vmin=self.vmin,vmax=self.vmax,marker=marker,linewidths=self.model.cfg.scatterlinewidth,s=self.model.cfg.scattersize)
+            self.plt.scatter(self.model.datacol(self.xfield),self.model.datacol(self.yfield),c=cAll,alpha=0.3,cmap=cm, vmin=self.vmin,vmax=self.vmax,marker=marker,linewidths=self.model.cfg.scatterlinewidth,s=self.model.cfg.scattersize)
             sc=self.plt.scatter(self.model.filtered[self.xfield],self.model.filtered[self.yfield],c=cFiltered,cmap=cm,vmin=self.vmin,vmax=self.vmax,marker=marker,linewidths=self.model.cfg.scatterlinewidth,s=self.model.cfg.scattersize)
         elif self.drawSelection.isChecked():
             sc=self.plt.scatter(self.model.filtered[self.xfield],self.model.filtered[self.yfield],c=cFiltered,cmap=cm,vmin=self.vmin,vmax=self.vmax,marker=marker,linewidths=self.model.cfg.scatterlinewidth,s=self.model.cfg.scattersize)
         else:
-            sc=self.plt.scatter(self.model.data[self.xfield],self.model.data[self.yfield],c=cAll,cmap=cm,vmin=self.vmin,vmax=self.vmax,marker=marker,linewidths=self.model.cfg.scatterlinewidth,s=self.model.cfg.scattersize)
+            sc=self.plt.scatter(self.model.datacol(self.xfield),self.model.datacol(self.yfield),c=cAll,cmap=cm,
+vmin=self.vmin,vmax=self.vmax,marker=marker,linewidths=self.model.cfg.scatterlinewidth,s=self.model.cfg.scattersize)
 
 
         self.plt.set_xlabel(self.model.prettyname(self.xfield))
@@ -603,9 +601,6 @@ class MyHist2d(MyPlot):
 
     def datadraw(self):
         drawfiltered=self.drawSelection.isChecked()
-        model=self.model.filtered
-        if not drawfiltered:
-            model = self.model.data
         b=[self.xbins,self.ybins]
         if self.model.isCategorical(self.xfield):
             edges = self.model.labelints(self.xfield)
@@ -620,9 +615,14 @@ class MyHist2d(MyPlot):
             yemax = np.searchsorted(edges,self.range[1][1])
             yedges=edges[yemin:yemax]
             yedges=np.append(yedges,np.max(yedges)+1)
-            b[1]=yedges    
-        self.H,self.xedges,self.yedges = np.histogram2d(model[self.xfield],model[self.yfield],bins=b,
-                          range=self.range)
+            b[1]=yedges
+        if drawfiltered:
+            self.H,self.xedges,self.yedges = np.histogram2d(self.model.filtered[self.xfield],self.model.filtered[self.yfield],bins=b,
+                              range=self.range)
+        else:
+            self.H,self.xedges,self.yedges = np.histogram2d(self.model.datacol(self.xfield),self.model.datacol(self.yfield),bins=b,
+                              range=self.range)
+
         norm=None
         if self.log:
             norm=LogNorm()
