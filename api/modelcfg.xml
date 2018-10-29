@@ -21,13 +21,13 @@
     <field nm="datview_sort_order" prettyname="Current Sort Order"  dtype="u4" fmt="%i"/>
 
     <!-- Stream columns possible with datgen -->
-    <field nm="run"    prettyname="Run"  fmt="%i"/>
-    <field nm="subcxi" prettyname="CXI File #"  fmt="%i"/>
-    <field nm="class"  prettyname="CXI Class" fmt="%i"/>
-    <field nm="event"  prettyname="Event" fmt="%i"/>
+    <field nm="run"    prettyname="Run"  dtype="i4" fmt="%i"/>
+    <field nm="subcxi" prettyname="CXI File #"  dtype="i4" fmt="%i"/>
+    <field nm="class"  prettyname="CXI Class" dtype="i4" fmt="%i"/>
+    <field nm="event"  prettyname="Event" dtype="i4" fmt="%i"/>
     <field nm="id"     prettyname="Internal ID" dtype="U12" fmt="%s"/>
-    <field nm="multi"  prettyname="Crystals Per Frame" fmt="%i"/>
-    <field nm="multiid" prettyname="Crystal # On Frame" fmt="%i"/>
+    <field nm="multi"  prettyname="Crystals Per Frame" dtype="i4" fmt="%i"/>
+    <field nm="multiid" prettyname="Crystal # On Frame" dtype="i4" fmt="%i"/>
     <field nm="a"      prettyname=" A Axis (A)" mult="10" />
     <field nm="b"      prettyname=" B Axis (A)" mult="10" />
     <field nm="c"      prettyname=" C Axis (A)" mult="10" />
@@ -38,7 +38,7 @@
     <field nm="phoen"  prettyname="Photon Energy (eV)"  />
     <field nm="bmdv"   prettyname="Beam Divergence (rad)"  />
     <field nm="bmbw"   prettyname="Beam Bandwidth (fraction)"  />
-    <field nm="npeak"  prettyname="Number of Peaks"  fmt="%i"/>
+    <field nm="npeak"  prettyname="Number of Peaks" dtype="i4"  fmt="%i"/>
     <field nm="prorad" prettyname="Profile Radius (nm^-1)" />
     <field nm="detdx"  prettyname="Detector X Shift (mm)"  />
     <field nm="detdy"  prettyname="Detector Y Shift (mm)" />
@@ -46,9 +46,9 @@
     <!-- Use this for resolution limit in Angstroms
     <field nm="reslim" prettyname="Diffraction Resolution Limit (A)" mult="10" invert="True" />
     -->
-    <field nm="nref"   prettyname="Number of Reflections"  fmt="%i"/>
-    <field nm="nsref"  prettyname="Number of Saturated Reflections" fmt="%i"/>
-    <field nm="niref"  prettyname="Number of Implausibly Negative Reflections" fmt="%i"/>
+    <field nm="nref"   prettyname="Number of Reflections" dtype="i4"  fmt="%i"/>
+    <field nm="nsref"  prettyname="Number of Saturated Reflections" dtype="i4"  fmt="%i"/>
+    <field nm="niref"  prettyname="Number of Implausibly Negative Reflections" dtype="i4" fmt="%i"/>
     <field nm="o1"     prettyname="astar[0] (nm^-1)" />
     <field nm="o2"     prettyname="astar[1] (nm^-1)" />
     <field nm="o3"     prettyname="astar[2] (nm^-1)" />
@@ -75,16 +75,16 @@
     <field nm="basename"  prettyname="Image File Basename" dtype="U50" fmt="%s"/>
 
     <!-- Some common cxi/h5 fields -->
-    <field nm="/LCLS/machineTime" prettyname="Machine Time (s)" fmt="%i"/>
-    <field nm="/LCLS/machineTimeNanoSeconds" prettyname="Machine Time (ns)" fmt="%i"/>
-    <field nm="/LCLS/fiducial" prettyname="Fiducial" fmt="%i"/>
-    <field nm="/cheetah/frameNumber" prettyname="Frame # (by Run)" fmt="%i"/>
+    <field nm="/LCLS/machineTime" prettyname="Machine Time (s)" dtype="i4" fmt="%i"/>
+    <field nm="/LCLS/machineTimeNanoSeconds" prettyname="Machine Time (ns)" dtype="i4" fmt="%i"/>
+    <field nm="/LCLS/fiducial" prettyname="Fiducial" dtype="i4" fmt="%i"/>
+    <field nm="/cheetah/frameNumber" prettyname="Frame # (by Run)" dtype="i4" fmt="%i"/>
 
     <!-- Some common numpy file names -->
-    <field nm="row"    prettyname="Chip Row (by Run)" fmt="%i" />
-    <field nm="col"    prettyname="Chip Column" fmt="%i" />
-    <field nm="chiprow" prettyname="Chip Row (by Chip)" fmt="%i" />
-    <field nm="chipframe" prettyname="Frame # by Chip" fmt="%i" />
+    <field nm="row"    prettyname="Chip Row (by Run)" dtype="i4" fmt="%i" />
+    <field nm="col"    prettyname="Chip Column" dtype="i4" fmt="%i" />
+    <field nm="chiprow" prettyname="Chip Row (by Chip)" dtype="i4" fmt="%i" />
+    <field nm="chipframe" prettyname="Frame # by Chip" dtype="i4" fmt="%i" />
     <field nm="chip" prettyname="Chip" fmt="%i" />
     <field nm="sample" prettyname="Sample" fmt="%i" />
 
@@ -104,6 +104,7 @@
   <!-- Matplotlib Color Map controls. See https://matplotlib.org/examples/color/colormaps_reference.html -->
   <scattercmap>jet</scattercmap>
   <hist2dcmap>jet</hist2dcmap>
+  <pixelcmap>jet</pixelcmap>
 
   <!-- More matplotlib options specifically for scatterplots. Note that the color-by option affects only fill color, so be aware that not all markers are fillable. The default options here remove the line width and make the points small assuming a large number of points -->
   <scatterlinewidth>0</scatterlinewidth> <!-- linewidths parameter of matplotlib.pyplot.scatter -->

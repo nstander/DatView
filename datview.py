@@ -22,8 +22,7 @@ except ImportError:
 from api.datamodel import DataModel
 from api.modelcfg import ModelConfig
 from ui.datasetPanel import MyDatasetPanel
-from ui.scatterDialog import MyScatterDialog
-from ui.hist2dDialog import MyHist2dDialog
+from ui.plotDialogs import MyScatterDialog, MyHist2dDialog, MyPixelPlotDialog
 from ui.itemViewer import MyItemViewer
 from ui.filterPanel import MyFilterPanel
 from ui.plots import MyFigure
@@ -50,6 +49,7 @@ class MyMainWindow(QMainWindow):
         self.ui.actionSave_Numpy.triggered.connect(self.onSaveNumpy)
         self.ui.actionScatter.triggered.connect(self.onShowScatter)
         self.ui.action2D_Histogram.triggered.connect(self.onShowHist2d)
+        self.ui.actionPixel.triggered.connect(self.onShowPixelPlot)
         self.ui.actionOpen.setVisible(False)
         self.ui.actionSave_Plot.setVisible(False)
         
@@ -169,6 +169,10 @@ class MyMainWindow(QMainWindow):
 
     def onShowHist2d(self):
         d=MyHist2dDialog(self.model,self)
+        d.exec()
+
+    def onShowPixelPlot(self):
+        d=MyPixelPlotDialog(self.model,self)
         d.exec()
         
 

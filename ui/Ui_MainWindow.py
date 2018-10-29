@@ -84,6 +84,8 @@ class Ui_MainWindow(object):
         self.actionSave_Numpy.setObjectName(_fromUtf8("actionSave_Numpy"))
         self.actionItem_Viewer = QtGui.QAction(MainWindow)
         self.actionItem_Viewer.setObjectName(_fromUtf8("actionItem_Viewer"))
+        self.actionPixel = QtGui.QAction(MainWindow)
+        self.actionPixel.setObjectName(_fromUtf8("actionPixel"))
         self.menuSave_Selections_As_2.addAction(self.actionSave_List)
         self.menuSave_Selections_As_2.addAction(self.actionSave_Stream)
         self.menuSave_Selections_As_2.addAction(self.actionSave_Dat)
@@ -96,6 +98,7 @@ class Ui_MainWindow(object):
         self.menuPlot.addAction(self.menuHistogram_Bar.menuAction())
         self.menuPlot.addAction(self.actionScatter)
         self.menuPlot.addAction(self.action2D_Histogram)
+        self.menuPlot.addAction(self.actionPixel)
         self.menuView.addAction(self.actionShowFilters)
         self.menuView.addAction(self.actionShowDatasetPanel)
         self.menuView.addAction(self.actionItem_Viewer)
@@ -127,4 +130,6 @@ class Ui_MainWindow(object):
         self.actionSave_Numpy.setText(_translate("MainWindow", "Save Numpy", None))
         self.actionSave_Numpy.setToolTip(_translate("MainWindow", "Save all data into compressed npz file", None))
         self.actionItem_Viewer.setText(_translate("MainWindow", "Item Viewer", None))
+        self.actionPixel.setText(_translate("MainWindow", "Pixel Plot", None))
+        self.actionPixel.setWhatsThis(_translate("MainWindow", "Also called chip plot. Color pixels by field value, pixels by real space coordinates.", None))
 

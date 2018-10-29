@@ -26,6 +26,7 @@ class ModelConfig:
         self.invert=[]
         self.scattercmap="jet"
         self.hist2dcmap="jet"
+        self.pixelcmap="jet"
         self.categorical=[]
         self.commentchar=None
         self.histperrow=3
@@ -95,6 +96,8 @@ class ModelConfig:
                 self.scattercmap=child.text
             if child.tag == "hist2dcmap" and child.text:
                 self.hist2dcmap=child.text
+            if child.tag == "pixelcmap" and child.text:
+                self.pixelcmap=child.text
             if child.tag == "scatterlinewidth" and child.text:
                 self.scatterlinewidth=int(child.text)
             if child.tag == "scattermarker" and child.text:

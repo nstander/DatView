@@ -75,6 +75,7 @@
     <addaction name="menuHistogram_Bar"/>
     <addaction name="actionScatter"/>
     <addaction name="action2D_Histogram"/>
+    <addaction name="actionPixel"/>
    </widget>
    <widget class="QMenu" name="menuView">
     <property name="title">
@@ -155,6 +156,14 @@
   <action name="actionItem_Viewer">
    <property name="text">
     <string>Item Viewer</string>
+   </property>
+  </action>
+  <action name="actionPixel">
+   <property name="text">
+    <string>Pixel Plot</string>
+   </property>
+   <property name="whatsThis">
+    <string>Also called chip plot. Color pixels by field value, pixels by real space coordinates.</string>
    </property>
   </action>
  </widget>

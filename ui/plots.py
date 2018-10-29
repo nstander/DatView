@@ -62,6 +62,13 @@ class MyFigure(FigureCanvas):
         self.plts.append(p)
         return p
 
+    def pixelPlot(self,model,xfield,yfield,cfield,axis=None):
+        if axis is None:
+            axis=self.fig.add_subplot(111)
+        p=MyPixelPlot(model,xfield,yfield,cfield,self.fig,axis,self)
+        self.plts.append(p)
+        return p
+
     def onMotion(self,event):
         handled=False
         for p in self.plts:
@@ -678,6 +685,90 @@ class MyHist2d(MyPlot):
                 else:
                     ytxt="%.4f-%.4f"%(self.yedges[ybin-1],self.yedges[ybin])
                 txt="%s,%s,%i"%(xtxt,ytxt,self.H[xbin-1,ybin-1])
+        return txt
+
+    def onFilterModelChange(self):
+        self.fieldfilterX.modelchange.disconnect(self.onFilterChange)
+        self.fieldfilterX=self.model.selectionFilter(self.xfield)
+        self.fieldfilterX.modelchange.connect(self.onFilterChange)
+
+        self.fieldfilterY.modelchange.disconnect(self.onFilterChange)
+        self.fieldfilterY=self.model.selectionFilter(self.yfield)
+        self.fieldfilterY.modelchange.connect(self.onFilterChange)
+        self.onFilterChange()
+
+class MyPixelPlot(MyPlot):
+    def __init__(self,model,xfield,yfield,cfield,fig,plt,parent):
+        MyPlot.__init__(self,fig,plt,parent)
+        self.model=model
+        self.xfield=xfield
+        self.yfield=yfield
+        self.cfield=cfield
+
+        self.manageX=True
+        self.fieldfilterX=self.model.selectionFilter(self.xfield)
+        self.fieldfilterX.modelchange.connect(self.onFilterChange)
+
+        self.manageY=True
+        self.fieldfilterY=self.model.selectionFilter(self.yfield)
+        self.fieldfilterY.modelchange.connect(self.onFilterChange)
+
+        self.vmin=None
+        self.vmax=None
+
+        self.model.filterchange.connect(self.mydraw)
+        self.model.filterModelChange.connect(self.onFilterModelChange)
+
+        self.sel=Rectangle((0,0),0,0,color='r',fill=False)
+        self.onFilterChange() # Let this function worry about actual bounds, we just cared about color and fill
+
+        self.drawBoth.setVisible(False)
+        self.drawSelection.setChecked(True)
+
+        self.mydraw(False)
+
+    def datadraw(self):
+        drawfiltered=self.drawSelection.isChecked()
+
+        xmax=int(np.max(self.model.datacol(self.xfield)))
+        ymax=int(np.max(self.model.datacol(self.yfield)))
+
+        self.cdat=np.ones((ymax+1,xmax+1))*-1
+        if drawfiltered:
+            valid=(self.model.filtered[self.xfield] >=0) & (self.model.filtered[self.yfield] >= 0)
+            self.cdat[self.model.filtered[self.yfield][valid],self.model.filtered[self.xfield][valid]] = self.model.filtered[self.cfield][valid]
+        else:
+            valid=(self.model.datacol(self.xfield) >=0) & (self.model.datacol(self.yfield) >= 0)
+            self.cdat[self.model.datacol(self.yfield)[valid],self.model.datacol(self.xfield)[valid]] = self.model.datacol(self.cfield)[valid]
+
+        if self.vmin is None:
+            self.vmin=self.model.fieldmin(self.cfield)
+        if self.vmax is None:
+            self.vmax=self.model.fieldmax(self.cfield)
+
+        p=self.plt.pcolormesh(np.ma.masked_values(self.cdat,-1),cmap=plt.cm.get_cmap(self.model.cfg.pixelcmap),vmin=self.vmin,vmax=self.vmax)
+
+        if self.cb is None:
+            self.cb=self.fig.colorbar(p,ax=self.plt)
+        else:
+            self.cb.on_mappable_changed(p)
+        self.plt.set_aspect('equal')
+
+        self.plt.set_xlabel(self.model.prettyname(self.xfield))
+        self.plt.set_ylabel(self.model.prettyname(self.yfield))
+        self.plt.set_title(self.model.prettyname(self.cfield))
+
+
+    def onReset(self,event):
+        self.mydraw(False)
+
+    def toolTip(self,event):
+        txt=""
+        if event.xdata is not None and event.ydata is not None and self.cdat is not None and event.inaxes == self.plt:
+            x=int(event.xdata)
+            y=int(event.ydata)
+            if x >= 0 and x < self.cdat.shape[1] and y >= 0 and y < self.cdat.shape[0]:
+                txt="%0.2f (%i,%i)" % (self.cdat[y,x],x,y)
         return txt
 
     def onFilterModelChange(self):
