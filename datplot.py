@@ -181,6 +181,8 @@ def saveFigByPartitions(args,partname=None):
     nm = args.save
     if partname is not None:
         nm = args.save % partname
+        if '%' in args.title:
+            args.qFig.fig.suptitle(args.title%partname,fontsize=20)
     if args.save.endswith("svg"):
         args.qFig.print_figure(nm,format="svg")
     else:
@@ -233,12 +235,11 @@ Plot Argument Descriptions:
     parser.add_argument('--top',default=0.83,type=float,help="top argument to the grid spec")
     parser.add_argument('--wspace',default=0.4,type=float,help="wspace argument to the grid spec")
     parser.add_argument('--hspace',default=0.3,type=float,help="hspace argument to the grid spec")
-    parser.add_argument('--figwidth',default=None,type=float,help="fig width in pixels, defaults to 200*cols")
-    parser.add_argument('--figheight',default=None,type=float,help="fig height in pixels, defaults to 200*rows")
+    parser.add_argument('--figwidth',default=None,type=float,help="fig width in pixels, defaults to 300*cols")
+    parser.add_argument('--figheight',default=None,type=float,help="fig height in pixels, defaults to 300*rows")
     parser.add_argument('--dpi',default=None,type=int,help="DPI for saving")
-    parser.add_argument('--showOnSave',action="store_true",help="The saved figure will look different unless the window is shown first, but turning this on causes a flicker.")
 
-    parser.add_argument('-t','--title',default=None,help="Overall Figure title")
+    parser.add_argument('-t','--title',default=None,help="Overall Figure title, Use %%s to include partition name")
     parser.add_argument('-s','--save',default=None,help="Save to provided file name instead of displaying. The filename can contain %%s to show the spot to include the partition name. Extension png or svg determines save output type")
 
     parser.add_argument('--group',default=None,help='The group file output by groupgen.py (groupcfg.txt)')
@@ -281,6 +282,7 @@ Plot Argument Descriptions:
     qFig=MyFigure(flags=Qt.Window)
     qFig.setAttribute(Qt.WA_DeleteOnClose)
     qFig.resize(args.figwidth,args.figheight)
+    qFig.fig.set_size_inches(args.figwidth/qFig.fig.dpi,args.figheight/qFig.fig.dpi)
     args.gs=matplotlib.gridspec.GridSpec(args.rows,args.cols,left=args.left,right=args.right,bottom=args.bottom,\
                                         top=args.top,wspace=args.wspace,hspace=args.hspace)
     args.fig=qFig.fig
@@ -299,9 +301,6 @@ Plot Argument Descriptions:
         qFig.fig.suptitle(args.title,fontsize=20)
 
     if args.save is not None:
-        if args.showOnSave:
-            qFig.show()
-
         partitions=None
         if args.partition is not None:
             partitions=model.partition(args.partition,args.partmin,args.partmax,args.partnum)
@@ -311,8 +310,6 @@ Plot Argument Descriptions:
         args.qFig=qFig
         model.saveByPartitions(args,saveFigByPartitions,partitions,False,False)
 
-        if args.showOnSave:
-            qFig.close()
     else:
         app = QApplication(sys.argv)
         qFig.show()
