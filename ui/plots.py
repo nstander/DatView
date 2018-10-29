@@ -69,6 +69,13 @@ class MyFigure(FigureCanvas):
         self.plts.append(p)
         return p
 
+    def image(self,idata,axis=None):
+        if axis is None:
+            axis=self.fig.add_subplot(111)
+        p=MyImage(idata,self.fig,axis,self)
+        self.plts.append(p)
+        return p
+
     def onMotion(self,event):
         handled=False
         for p in self.plts:
@@ -782,6 +789,34 @@ class MyPixelPlot(MyPlot):
         self.onFilterChange()
 
 
+class MyImage(MyPlot):
+    def __init__(self,idata,fig,plt,parent):
+        MyPlot.__init__(self,fig,plt,parent)
+
+        self.idata=idata
+        self.vmin=None
+        self.vmax=None
+        self.cmap=None
+
+        self.sel=Rectangle((0,0),0,0,color='r',fill=False)
+        self.datamenu.setEnabled(False)
+
+        self.mydraw(False)
+
+    def datadraw(self):
+        self.plt.imshow(self.idata,cmap=self.cmap,vmin=self.vmin,vmax=self.vmax)
+
+    def onReset(self,event):
+        self.mydraw(False)
+
+    def toolTip(self,event):
+        txt=""
+        if event.xdata is not None and event.ydata is not None and self.idata is not None and event.inaxes == self.plt:
+            x=int(event.xdata)
+            y=int(event.ydata)
+            if x >= 0 and x < self.idata.shape[1] and y >= 0 and y < self.idata.shape[0]:
+                txt="%0.2f (%i,%i)" % (self.idata[y,x],x,y)
+        return txt
 
 
 

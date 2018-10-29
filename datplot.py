@@ -16,7 +16,10 @@ except ImportError:
     from PyQt4.QtGui import QApplication
     from PyQt4.QtCore import Qt
 
+import shlex
 import numpy as np
+import h5py
+from cfelpyutils import cfel_geom
 import matplotlib.pyplot as plt
 import matplotlib.gridspec
 
@@ -81,7 +84,7 @@ histParser.add_argument('--prowspan',default=1,type=int,help="Plot row span insi
 histParser.add_argument('--pcolspan',default=1,type=int,help="Plot column span inside figure (used in subplot2grid).")
 
 def histogram(model,myFigure,figArgs,plotNum,plotArgString):
-    plotArgs=histParser.parse_args(plotArgString.split()[1:])
+    plotArgs=histParser.parse_args(shlex.split(plotArgString[9:]))
     ax=generateAxis(figArgs,plotNum,plotArgs)
     h=myFigure.histogram(model,plotArgs.xfield,ax)
 
@@ -114,7 +117,7 @@ hist2dParser.add_argument('--prowspan',default=1,type=int,help="Plot row span in
 hist2dParser.add_argument('--pcolspan',default=1,type=int,help="Plot column span inside figure (used in subplot2grid).")
 
 def histogram2d(model,myFigure,figArgs,plotNum,plotArgString):
-    plotArgs=hist2dParser.parse_args(plotArgString.split()[1:])
+    plotArgs=hist2dParser.parse_args(shlex.split(plotArgString[11:]))
     ax=generateAxis(figArgs,plotNum,plotArgs)
     h=myFigure.histogram2D(model,plotArgs.xfield,plotArgs.yfield,plotArgs.log,ax)
 
@@ -145,7 +148,7 @@ scatterParser.add_argument('--prowspan',default=1,type=int,help="Plot row span i
 scatterParser.add_argument('--pcolspan',default=1,type=int,help="Plot column span inside figure (used in subplot2grid).")
 
 def scatter(model,myFigure,figArgs,plotNum,plotArgString):
-    plotArgs=scatterParser.parse_args(plotArgString.split()[1:])
+    plotArgs=scatterParser.parse_args(shlex.split(plotArgString[7:]))
     ax=generateAxis(figArgs,plotNum,plotArgs)
     s=myFigure.scatter(model,plotArgs.xfield,plotArgs.yfield,plotArgs.cfield,ax)
 
@@ -170,12 +173,59 @@ pixelParser.add_argument('--prowspan',default=1,type=int,help="Plot row span ins
 pixelParser.add_argument('--pcolspan',default=1,type=int,help="Plot column span inside figure (used in subplot2grid).")
 
 def pixelPlot(model,myFigure,figArgs,plotNum,plotArgString):
-    plotArgs=pixelParser.parse_args(plotArgString.split()[1:])
+    plotArgs=pixelParser.parse_args(shlex.split(plotArgString[9:]))
     ax=generateAxis(figArgs,plotNum,plotArgs)
     p=myFigure.pixelPlot(model,plotArgs.xfield,plotArgs.yfield,plotArgs.cfield,ax)
 
     limits(p,plotArgs)
     dataAndTitle(p,plotArgs,True)
+
+imageH5Parser=argparse.ArgumentParser(prog="imageh5")
+imageH5Parser.add_argument('-i','--imagefile',required=True,help="The image file path")
+imageH5Parser.add_argument('-g','--geom',default=None,help="CrystFEL Geometry file")
+imageH5Parser.add_argument('-d','--datapath',default=None,help="Path in H5 file to load data from. Checks image file paths from config if not provided")
+imageH5Parser.add_argument('-e','--event',type=int,default=None,help="event number")
+imageH5Parser.add_argument('--cmap',default="jet",help="Color map to use")
+imageH5Parser.add_argument('--cmin',type=float,default=None,help="color minimum")
+imageH5Parser.add_argument('--cmax',type=float,default=None,help="color maximum")
+imageH5Parser.add_argument('-t','--title',default=None,help="Plot title, defaults to datapath")
+imageH5Parser.add_argument('--prow',default=None,type=int,help="Plot row inside figure (used in subplot2grid, first row is 0).")
+imageH5Parser.add_argument('--pcol',default=None,type=int,help="Plot column inside figure (used in subplot2grid, first row is 0).")
+imageH5Parser.add_argument('--prowspan',default=1,type=int,help="Plot row span inside figure (used in subplot2grid).")
+imageH5Parser.add_argument('--pcolspan',default=1,type=int,help="Plot column span inside figure (used in subplot2grid).")
+
+def imageh5(model,myFigure,figArgs,plotNum,plotArgString):
+    plotArgs=imageH5Parser.parse_args(shlex.split(plotArgString[7:]))
+    ax=generateAxis(figArgs,plotNum,plotArgs)
+
+    f=h5py.File(plotArgs.imagefile,'r')
+    path=plotArgs.datapath
+    if path is None:
+        for p in model.cfg.imageH5paths:
+            if p in f:
+                path=p
+                break
+    if path is None:
+        print("Error: need a data path in h5 file. Couldn't find any default paths.")
+        return
+    if plotArgs.event is None:
+        data=f[path]
+    else:
+        data=f[path][e]
+
+    if plotArgs.geom is not None:
+        data=cfel_geom.apply_geometry_from_file(np.array(data),plotArgs.geom)
+
+    img=myFigure.image(data,ax)
+    img.cmap = plotArgs.cmap
+    img.vmin = plotArgs.cmin
+    img.vmax = plotArgs.cmax
+    img.mydraw(True)
+    if plotArgs.title:
+        img.plt.set_title(plotArgs.title)
+    f.close()
+
+
 
 def saveFigByPartitions(args,partname=None):
     nm = args.save
@@ -195,6 +245,7 @@ if __name__ == '__main__':
     hist2dParser.print_usage(plothelp)
     scatterParser.print_usage(plothelp)
     pixelParser.print_usage(plothelp)
+    imageH5Parser.print_usage(plothelp)
     plothelp.write("""
 Plot Argument Descriptions:
   -x XFIELD, --xfield XFIELD
@@ -225,7 +276,13 @@ Plot Argument Descriptions:
   --pcolspan PCOLSPAN   Plot column span inside figure (used in subplot2grid).
   -f, --fit             Plot the fit line - note a provided title overrides
                         the the mean and standard deviation display in title.
-  -l, --log             Use log color scale""")
+  -l, --log             Use log color scale
+  -i, --imagefile       The image file path
+  -g, --geom            CrystFEL geometry file for image file
+  -d, --datapath        Path in H5 file to get image from, guessed from
+                        config if not provided
+  -e, --event           Event number of image file
+  --cmap                Color map name, defaults from config""")
     parser=argparse.ArgumentParser(description="""Command line interface for plotting. Group, filter, sort, and partition\noptions are available, and if partitions are given then output is saved for\neach partition separately. This script supports subplots, so each plot must be\nspecified with --plot/-p and the argument to plot must be quoted to be read in\nas a single string. The argument to plot specifies all the options for the\ngiven plot.""",epilog=plothelp.getvalue().replace("usage:",""),formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('-p','--plot',action='append',default=[],help='Add a plot to the figure, has a single argument (use quotes) to be parsed on its own, see bottom of help text for options')
     parser.add_argument('-r','--rows',default=None,type=int,help="The number of rows in the figure. Defaults to rows in config if more than one plot provided. You should specify this if you start using prowspan and pcolspan in plots.")
@@ -297,6 +354,8 @@ Plot Argument Descriptions:
             scatter(model,qFig,args,i,p)
         elif p.startswith("pixelplot"):
             pixelPlot(model,qFig,args,i,p)
+        elif p.startswith("imageh5"):
+            imageh5(model,qFig,args,i,p)
         else:
             print("Unrecognized plot string: ",p)
 
