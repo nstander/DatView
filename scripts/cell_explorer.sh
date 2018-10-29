@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "Usage: cell_explorer.sh datfile. See datplot.py for more options"
+echo "cell_explorer.sh datfile. See datplot.py for more options"
 datviewpath=~/software/datview
 $datviewpath/datplot.py --plot 'histogram -x a' --plot 'histogram -x b' --plot 'histogram -x c' \
                         --plot 'histogram -x alpha' --plot 'histogram -x beta' --plot 'histogram -x gamma'\

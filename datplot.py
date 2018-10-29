@@ -34,6 +34,39 @@ def generateAxis(figArgs,plotnum,args):
         c=plotnum%figArgs.cols
     return figArgs.fig.add_subplot(figArgs.gs[r:(r+args.prowspan),c:(c+args.pcolspan)])
 
+def xRange(plot,plotArgs):
+    xr=list(plot.plt.get_xlim())
+    if plotArgs.xmin is not None:
+        xr[0]=plotArgs.xmin
+    if plotArgs.xmax is not None:
+        xr[1]=plotArgs.xmax
+    return xr
+
+def yRange(plot,plotArgs):
+    yr=list(plot.plt.get_ylim())
+    if plotArgs.ymin is not None:
+        yr[0]=plotArgs.ymin
+    if plotArgs.ymax is not None:
+        yr[1]=plotArgs.ymax
+    return yr
+
+def limits(plot,plotArgs):
+    plot.plt.set_xlim(tuple(xRange(plot,plotArgs)))
+    plot.plt.set_ylim(tuple(yRange(plot,plotArgs)))
+    plot.vmin=plotArgs.cmin
+    plot.vmax=plotArgs.cmax
+
+def dataAndTitle(plot,plotArgs,keepLimits=False):
+    if plotArgs.datashown == 'raw':
+        plot.drawAll.setChecked(True)
+    elif plotArgs.datashown == 'filtered':
+        plot.drawSelection.setChecked(True)
+
+    plot.mydraw(keepLimits)
+    
+    if plotArgs.title is not None:
+        plot.plt.set_title(plotArgs.title)
+
 histParser=argparse.ArgumentParser(prog="histogram")
 histParser.add_argument('-x','--xfield',required=True)
 histParser.add_argument('--xmin',type=float,default=None,help="x minimum, field minimum (without -1) by default")
@@ -52,12 +85,7 @@ def histogram(model,myFigure,figArgs,plotNum,plotArgString):
     ax=generateAxis(figArgs,plotNum,plotArgs)
     h=myFigure.histogram(model,plotArgs.xfield,ax)
 
-    r=h.plt.get_xlim()
-    if plotArgs.xmin is not None:
-        r[0]=plotArgs.xmin
-    if plotArgs.xmax is not None:
-        r[1]=plotArgs.xmin
-    h.range=tuple(r)
+    h.range=tuple(xRange(h,plotArgs))
 
     if plotArgs.xbins is not None:
         h.bins=plotArgs.xbins
@@ -66,15 +94,7 @@ def histogram(model,myFigure,figArgs,plotNum,plotArgString):
         h.calcFit()
         model.filterchange.connect(h.calcFit)
 
-    if plotArgs.datashown == 'raw':
-        h.drawAll.setChecked(True)
-    elif plotArgs.datashown == 'filtered':
-        h.drawSelection.setChecked(True)
-
-    h.mydraw(False)
-    
-    if plotArgs.title is not None:
-        h.plt.set_title(plotArgs.title)
+    dataAndTitle(h,plotArgs)
 
 hist2dParser=argparse.ArgumentParser(prog="histogram2D")
 hist2dParser.add_argument('-x','--xfield',required=True)
@@ -98,35 +118,14 @@ def histogram2d(model,myFigure,figArgs,plotNum,plotArgString):
     ax=generateAxis(figArgs,plotNum,plotArgs)
     h=myFigure.histogram2D(model,plotArgs.xfield,plotArgs.yfield,plotArgs.log,ax)
 
-    xr=h.plt.get_xlim()
-    if plotArgs.xmin is not None:
-        xr[0]=plotArgs.xmin
-    if plotArgs.xmax is not None:
-        xr[1]=plotArgs.xmin
-
-    yr=h.plt.get_ylim()
-    if plotArgs.ymin is not None:
-        yr[0]=plotArgs.ymin
-    if plotArgs.ymax is not None:
-        yr[1]=plotArgs.ymin
-
-    h.range=(tuple(xr),tuple(yr))
+    h.range=(tuple(xRange(h,plotArgs)),tuple(yRange(h,plotArgs)))
 
     if plotArgs.xbins is not None:
         h.xbins=args.xbins
     if plotArgs.ybins is not None:
         h.xbins=args.ybins
 
-
-    if plotArgs.datashown == 'raw':
-        h.drawAll.setChecked(True)
-    elif plotArgs.datashown == 'filtered':
-        h.drawSelection.setChecked(True)
-
-    h.mydraw(False)
-    
-    if plotArgs.title is not None:
-        h.plt.set_title(plotArgs.title)
+    dataAndTitle(h,plotArgs)
 
 scatterParser=argparse.ArgumentParser(prog="scatter")
 scatterParser.add_argument('-x','--xfield',required=True)
@@ -150,32 +149,33 @@ def scatter(model,myFigure,figArgs,plotNum,plotArgString):
     ax=generateAxis(figArgs,plotNum,plotArgs)
     s=myFigure.scatter(model,plotArgs.xfield,plotArgs.yfield,plotArgs.cfield,ax)
 
-    xr=s.plt.get_xlim()
-    if plotArgs.xmin is not None:
-        xr[0]=plotArgs.xmin
-    if plotArgs.xmax is not None:
-        xr[1]=plotArgs.xmin
+    limits(s,plotArgs)
+    dataAndTitle(s,plotArgs,True)
 
-    yr=s.plt.get_ylim()
-    if plotArgs.ymin is not None:
-        yr[0]=plotArgs.ymin
-    if plotArgs.ymax is not None:
-        yr[1]=plotArgs.ymin
+pixelParser=argparse.ArgumentParser(prog="pixelplot")
+pixelParser.add_argument('-x','--xfield',required=True)
+pixelParser.add_argument('--xmin',type=float,default=None,help="x minimum, field minimum (without -1) by default")
+pixelParser.add_argument('--xmax',type=float,default=None,help="x maximum, field maximum by default")
+pixelParser.add_argument('-y','--yfield',required=True)
+pixelParser.add_argument('--ymin',type=float,default=None,help="x minimum, field minimum (without -1) by default")
+pixelParser.add_argument('--ymax',type=float,default=None,help="x maximum, field maximum by default")
+pixelParser.add_argument('-c','--cfield',required=True,help="Color by field")
+pixelParser.add_argument('--cmin',type=float,default=None,help="color minimum, field minimum (without -1) by default")
+pixelParser.add_argument('--cmax',type=float,default=None,help="color maximum, field maximum by default")
+pixelParser.add_argument('-t','--title',default=None,help="Plot title, defaults to pretty version of color by field name")
+pixelParser.add_argument('--datashown',choices=['raw','filtered'],default='filtered',help="Plot just the filtered or plot the complete dataset")
+pixelParser.add_argument('--prow',default=None,type=int,help="Plot row inside figure (used in subplot2grid, first row is 0).")
+pixelParser.add_argument('--pcol',default=None,type=int,help="Plot column inside figure (used in subplot2grid, first row is 0).")
+pixelParser.add_argument('--prowspan',default=1,type=int,help="Plot row span inside figure (used in subplot2grid).")
+pixelParser.add_argument('--pcolspan',default=1,type=int,help="Plot column span inside figure (used in subplot2grid).")
 
-    s.plt.set_xlim(tuple(xr))
-    s.plt.set_ylim(tuple(yr))
-    s.vmin=plotArgs.cmin
-    s.vmax=plotArgs.cmax
+def pixelPlot(model,myFigure,figArgs,plotNum,plotArgString):
+    plotArgs=pixelParser.parse_args(plotArgString.split()[1:])
+    ax=generateAxis(figArgs,plotNum,plotArgs)
+    p=myFigure.pixelPlot(model,plotArgs.xfield,plotArgs.yfield,plotArgs.cfield,ax)
 
-    if plotArgs.datashown == 'raw':
-        s.drawAll.setChecked(True)
-    elif plotArgs.datashown == 'filtered':
-        s.drawSelection.setChecked(True)
-
-    s.mydraw()
-    
-    if plotArgs.title is not None:
-        s.plt.set_title(plotArgs.title)
+    limits(p,plotArgs)
+    dataAndTitle(p,plotArgs,True)
 
 def saveFigByPartitions(args,partname=None):
     nm = args.save
@@ -194,6 +194,7 @@ if __name__ == '__main__':
     histParser.print_usage(plothelp)
     hist2dParser.print_usage(plothelp)
     scatterParser.print_usage(plothelp)
+    pixelParser.print_usage(plothelp)
     plothelp.write("""
 Plot Argument Descriptions:
   -x XFIELD, --xfield XFIELD
@@ -294,6 +295,8 @@ Plot Argument Descriptions:
             histogram(model,qFig,args,i,p)
         elif p.startswith("scatter"):
             scatter(model,qFig,args,i,p)
+        elif p.startswith("pixelplot"):
+            pixelPlot(model,qFig,args,i,p)
         else:
             print("Unrecognized plot string: ",p)
 
