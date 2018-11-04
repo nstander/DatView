@@ -20,10 +20,10 @@ parser.add_argument('--limit',default=None,type=int,help='Limit the output to th
 parser.add_argument('--limitmode',default="random",choices=['random','top'],help='Whether to take random subset to enforce limit or to take first. Default is random.')
 parser.add_argument('--cfg',default=None,help='Use the provided configuration file (xml) instead of the default one. Default one is found in api/modelcfg.xml')
 
-parser.add_argument('--partnum',default=None,type=int,help='The number of partitions to create. Note that empty partitions are not output so the total output may be less than this number. This defaults to ten for continuous fields or all possible for categorical fields.')
-parser.add_argument('--partmin',default=None,type=float,help='Set the minimum of the range to be partitioned')
-parser.add_argument('--partmax',default=None,type=float,help='Set the maximum of the range to be partitioned')
-parser.add_argument('--partition',default=None,help='Field name to partition on. Partitioning only occurs if this is provided, otherwise partnum, partmin, and partmax are not used. Partition names appended to outfile as outfile_nm')
+parser.add_argument('--partnum',default=[],nargs='+',type=int,help='The number of partitions to create. Note that empty partitions are not output so the total output may be less than this number. This defaults to ten for continuous fields or all possible for categorical fields. Accepts multiple arguments, one for each field. Unspecified arguments default to None')
+parser.add_argument('--partmin',default=[],nargs='+',type=float,help='Set the minimum of the range to be partitioned. Accepts multiple arguments, one for each field. Unspecified arguments default to None')
+parser.add_argument('--partmax',default=[],nargs='+',type=float,help='Set the maximum of the range to be partitioned. Accepts multiple arguments, one for each field. Unspecified arguments default to None')
+parser.add_argument('--partition',default=None,nargs='+',help='Field name(s) to partition on. Partitioning only occurs if this is provided, otherwise partnum, partmin, and partmax are not used. Partition names appended to outfile as outfile_nm')
 
 parser.add_argument('infile',help='the dat file (or a .npz file output from datview/datexport)')
 parser.add_argument('outfile',help='the output file, format automatically determined by line ending')
@@ -46,7 +46,7 @@ model.reverseSort = args.reversesort
 
 partitions=None
 if args.partition is not None:
-    partitions=model.partition(args.partition,args.partmin,args.partmax,args.partnum)
+    partitions=model.partitionMulti(args.partition,args.partmin,args.partmax,args.partnum)
 
 if '.stream' in args.outfile:
     model.saveByPartitions(args.outfile, model.saveSelStream, partitions)

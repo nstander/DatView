@@ -305,10 +305,10 @@ Plot Argument Descriptions:
     parser.add_argument('--sort',default=None,nargs='+',help='One or more fields to sort the output by. Field names must match the header of the dat file. Multiple arguments accepted so don\'t use as last switch before inputs.')
     parser.add_argument('--reversesort',action="store_true",help='Sort descending instead of ascending')
     parser.add_argument('--cfg',default=None,help='Use the provided configuration file (xml) instead of the default one. Default one is found in api/modelcfg.xml')
-    parser.add_argument('--partnum',default=None,type=int,help='The number of partitions to create. Note that empty partitions are not output so the total output may be less than this number. This defaults to ten for continuous fields or all possible for categorical fields.')
-    parser.add_argument('--partmin',default=None,type=float,help='Set the minimum of the range to be partitioned')
-    parser.add_argument('--partmax',default=None,type=float,help='Set the maximum of the range to be partitioned')
-    parser.add_argument('--partition',default=None,help='Field name to partition on. Partitioning only occurs if this is provided and plots are being saved, otherwise partnum, partmin, and partmax are not used. Partition names appended to outfile if %%s is not present')
+    parser.add_argument('--partnum',default=[],nargs='+',type=int,help='The number of partitions to create. Note that empty partitions are not output so the total output may be less than this number. This defaults to ten for continuous fields or all possible for categorical fields. Accepts multiple arguments, one for each field. Unspecified arguments default to None')
+    parser.add_argument('--partmin',default=[],nargs='+',type=float,help='Set the minimum of the range to be partitioned. Accepts multiple arguments, one for each field. Unspecified arguments default to None')
+    parser.add_argument('--partmax',default=[],nargs='+',type=float,help='Set the maximum of the range to be partitioned. Accepts multiple arguments, one for each field. Unspecified arguments default to None')
+    parser.add_argument('--partition',default=None,nargs='+',help='Field name(s) to partition on. Partitioning only occurs if this is provided, otherwise partnum, partmin, and partmax are not used. Partition names appended to outfile as outfile_nm')
 
     parser.add_argument('datfile',help='the dat file (or a .npz file output from datview/datexport)')
     args=parser.parse_args()
@@ -365,7 +365,7 @@ Plot Argument Descriptions:
     if args.save is not None:
         partitions=None
         if args.partition is not None:
-            partitions=model.partition(args.partition,args.partmin,args.partmax,args.partnum)
+            partitions=model.partitionMulti(args.partition,args.partmin,args.partmax,args.partnum)
             if '%' not in args.save:
                 args.save += '_%s'
 

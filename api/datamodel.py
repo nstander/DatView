@@ -285,6 +285,29 @@ class DataModel(QObject):
 ###            Partition              ###
 #########################################  
 
+    def partitionMulti(self,fields,minimums=[],maximums=[],nums=[]):
+        l=len(fields)
+        minimums+=[None]*(l-len(minimums))
+        maximums+=[None]*(l-len(maximums))
+        nums+=[None]*(l-len(nums))
+            
+        cur=None
+        next=None
+        for i,field in enumerate(fields):
+            if cur is None:
+                cur=self.partition(field,minimums[i],maximums[i],nums[i])
+            else:
+                next=self.partition(field,minimums[i],maximums[i],nums[i])
+                tmpcur=cur
+                cur={}
+                for n1,v1 in tmpcur.items():
+                    for n2,v2 in next.items():
+                        v=v1 & v2
+                        if np.count_nonzero(v):
+                            cur[n1+"_"+n2]=v
+        return cur
+                
+
     def partition(self,field,minimum=None,maximum=None,num=None):
         field=self.datafield(field)
         maxWasNone = maximum is None
