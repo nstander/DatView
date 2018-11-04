@@ -5,7 +5,7 @@
 try:
     from PyQt5.QtWidgets import QWidget, QStyle, QHeaderView, QAbstractItemView
     from PyQt5.QtGui import QKeySequence
-    from PyQt5.QtCore import QTimer
+    from PyQt5.QtCore import QTimer, QEvent
     from ui.Ui_ItemViewer5 import Ui_ItemViewer
     qt5=True
 except ImportError:
@@ -59,6 +59,14 @@ class MyItemViewer(QWidget):
         self.timer=QTimer()
         self.timer.setInterval(dmodel.cfg.playtime)
         self.timer.timeout.connect(self.model.next)
+
+        if qt5:
+            self.ui.scrollArea.viewport().installEventFilter(self)
+
+    def eventFilter(self, source, event):
+        if (event.type() == QEvent.Wheel and source is self.ui.scrollArea.viewport()):
+            return True
+        return super(QWidget, self).eventFilter(source, event)
 
     def orderMode(self):
         if self.ui.sortedRadioButton.isChecked():
