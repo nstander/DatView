@@ -60,6 +60,12 @@ class ModelConfig:
         self.viewerResLimitRingColor='g'
         self.viewerResLimitRingWidth=1
         self.numXticks=6
+        self.item1dScatterColor='b'
+        self.item1dScatterMarker='o'
+        self.item1dScatterlinewidth=None
+        self.item1dScattersize=8
+        self.item1dPlots=[]
+
 
         et=ElementTree.parse(filename)
         root = et.getroot()
@@ -162,6 +168,16 @@ class ModelConfig:
                 self.viewerResLimitRingWidth=float(child.text)
             if child.tag == "numXticks" and child.text:
                 self.numXticks=int(child.text)
+            if child.tag == "item1dScatterlinewidth" and child.text:
+                self.item1dScatterlinewidth=int(child.text)
+            if child.tag == "item1dScatterColor" and child.text:
+                self.item1dScatterColor=child.text
+            if child.tag == "item1dScatterMarker" and child.text:
+                self.item1dScatterMarker=child.text
+            if child.tag == "item1dScattersize" and child.text:
+                self.item1dScattersize=int(child.text)
+            if child.tag == "item1dPlots" and child.text:
+                self.item1dPlots=child.text.split(',')
 
 
     def prettyname(self,field):

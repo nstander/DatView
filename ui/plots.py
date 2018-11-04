@@ -76,6 +76,13 @@ class MyFigure(FigureCanvas):
         self.plts.append(p)
         return p
 
+    def staticScatter(self,data,cfg,title,axis=None):
+        if axis is None:
+            axis=self.fig.add_subplot(111)
+        p=MyScatterStatic(data,cfg,title,self.fig,axis,self)
+        self.plts.append(p)
+        return p
+
     def onMotion(self,event):
         handled=False
         for p in self.plts:
@@ -199,7 +206,8 @@ class MyPlot(QObject):
             ylim = self.plt.get_ylim()
         self.plt.cla()
         self.datadraw()
-        self.plt.add_patch(self.sel)
+        if self.sel is not None:
+            self.plt.add_patch(self.sel)
         if keeplimits and self.manageX:
             self.plt.set_xlim(xlim)
         if keeplimits and self.manageY:
@@ -242,13 +250,14 @@ class MyPlot(QObject):
         if event.button == 1 and event.xdata is not None and event.ydata is not None and event.inaxes == self.plt:
             if event.key == 'shift' or QtCore.Qt.ShiftModifier & QApplication.keyboardModifiers() :
                 self.selp=(event.xdata,event.ydata)
-                if self.manageX:
+                if self.manageX and self.fieldfilterX is not None:
                     self.sel.set_x(event.xdata)
                     self.sel.set_width(0)
-                if self.manageY:
+                if self.manageY and self.fieldfilterY is not None:
                     self.sel.set_y(event.ydata)
                     self.sel.set_height(0)
-                if self.manageX or self.manageY:
+                if (self.manageX and self.fieldfilterX is not None) or \
+                   (self.manageY and self.fieldfilterY is not None):
                     self.sel.set_visible(True)
                     self.parent().draw()
             else:
@@ -262,7 +271,7 @@ class MyPlot(QObject):
         elif self.selp is not None:
             if not self.manageX or not self.manageY:
                 self.selp=None # Only managing 0 or  1 axis, clear right away
-            if self.manageX:
+            if self.manageX and self.fieldfilterX is not None:
                 if self.sel.get_width() == 0:
                     self.sel.set_visible(False)
                     self.fieldfilterX.setActive(False)
@@ -270,7 +279,7 @@ class MyPlot(QObject):
                     self.fieldfilterX.setRange(self.sel.get_x(),self.sel.get_width() + self.sel.get_x())
                     self.fieldfilterX.setActive(True)
                 self.selp=None # In case we were managing two axis, clear here
-            if self.manageY:
+            if self.manageY and self.fieldfilterY is not None:
                 if self.sel.get_height() == 0:
                     self.sel.set_visible(False)
                     self.fieldfilterY.setActive(False)
@@ -323,11 +332,11 @@ class MyPlot(QObject):
         self.sel.set_width(xlim[1]-xlim[0])
         self.sel.set_height(ylim[1]-ylim[0])
 
-        if self.manageX:
+        if self.manageX and self.fieldfilterX is not None:
             self.sel.set_x(self.fieldfilterX.minimum)
             self.sel.set_width(self.fieldfilterX.maximum-self.fieldfilterX.minimum)
             self.sel.set_visible(self.fieldfilterX.isActive())
-        if self.manageY:
+        if self.manageY and self.fieldfilterY is not None:
             self.sel.set_y(self.fieldfilterY.minimum)
             self.sel.set_height(self.fieldfilterY.maximum-self.fieldfilterY.minimum)
             self.sel.set_visible(self.fieldfilterY.isActive() or (self.fieldfilterX is not None and self.fieldfilterX.isActive()))
@@ -797,6 +806,8 @@ class MyImage(MyPlot):
         self.vmin=None
         self.vmax=None
         self.cmap=None
+        self.manageX=True
+        self.manageY=True
 
         self.sel=Rectangle((0,0),0,0,color='r',fill=False)
         self.datamenu.setEnabled(False)
@@ -818,6 +829,30 @@ class MyImage(MyPlot):
                 txt="%0.2f (%i,%i)" % (self.idata[y,x],x,y)
         return txt
 
+class MyScatterStatic(MyPlot):
+    def __init__(self,data,cfg,title,fig,plt,parent):
+        MyPlot.__init__(self,fig,plt,parent)
+
+        self.manageX=True
+        self.manageY=True
+        self.data=data
+        self.title=title
+        self.cfg=cfg
+        self.mydraw(False)
+
+    def datadraw(self):
+        if len(self.data):
+            self.plt.scatter(np.arange(len(self.data)),self.data,c=self.cfg.item1dScatterColor,marker=self.cfg.item1dScatterMarker, linewidths=self.cfg.item1dScatterlinewidth,s=self.cfg.item1dScattersize)
+        self.plt.set_title(self.title)
+
+    def onReset(self,event):
+        self.mydraw(False)
+
+    def toolTip(self,event):
+        txt=""
+        if event.xdata is not None and event.ydata is not None and event.inaxes == self.plt:
+            txt="%.4f,%.4f"%(event.xdata,event.ydata)
+        return txt
 
 
 

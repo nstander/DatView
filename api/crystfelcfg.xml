@@ -1,0 +1,161 @@
+<!-- This is the default configuration file for the datamodel python class.-->
+<modelcfg>
+  <!-- If empty uses np default which is whitespace. You can set to use comma. -->
+  <datsep></datsep>
+
+  <!-- Strip the text between commentchars tags from the first field on the first line, used to remove comments-->
+  <commentchars></commentchars>
+
+  <!-- Format: <fieldname options> and options include:
+    prettyname (name used for titles in the gui/> 
+    dtype (the numpy datatype use unicode if it can be a string whether or not it can be grouped/> 
+    fmt (the output format for python like %.2f)
+    mult (multiply the column by this amount after loading)
+    invert="True" (use to take 1/value like converting nm^-1 to Angstroms)
+  -->
+  <fields>
+    <!-- The defaults when unspecified. -->
+    <field nm="default" dtype="f4" fmt="%f"  mult="1" />
+
+    <!-- This column is created and maintained by the software and never output. If you need to change the raw name, change DataModel.sortColumnName in api/datamodel.py. -->
+    <field nm="datview_sort_order" prettyname="Current Sort Order"  dtype="u4" fmt="%i"/>
+
+    <!-- Stream columns possible with datgen -->
+    <field nm="run"    prettyname="Run"  dtype="i4" fmt="%i"/>
+    <field nm="subcxi" prettyname="CXI File #"  dtype="i4" fmt="%i"/>
+    <field nm="class"  prettyname="CXI Class" dtype="i4" fmt="%i"/>
+    <field nm="event"  prettyname="Event" dtype="i4" fmt="%i"/>
+    <field nm="id"     prettyname="Internal ID" dtype="U12" fmt="%s"/>
+    <field nm="multi"  prettyname="Crystals Per Frame" dtype="i4" fmt="%i"/>
+    <field nm="multiid" prettyname="Crystal # On Frame" dtype="i4" fmt="%i"/>
+    <field nm="a"      prettyname=" A Axis (A)" mult="10" />
+    <field nm="b"      prettyname=" B Axis (A)" mult="10" />
+    <field nm="c"      prettyname=" C Axis (A)" mult="10" />
+    <field nm="alpha"  prettyname="Alpha (deg)"  />
+    <field nm="beta"   prettyname="Beta (deg)"  />
+    <field nm="gamma"  prettyname="Gamma (deg)"  />
+    <field nm="indby"  prettyname="Indexed By" dtype="U50" fmt="%s"/>
+    <field nm="phoen"  prettyname="Photon Energy (eV)"  />
+    <field nm="bmdv"   prettyname="Beam Divergence (rad)"  />
+    <field nm="bmbw"   prettyname="Beam Bandwidth (fraction)"  />
+    <field nm="npeak"  prettyname="Number of Peaks" dtype="i4"  fmt="%i"/>
+    <field nm="prorad" prettyname="Profile Radius (nm^-1)" />
+    <field nm="detdx"  prettyname="Detector X Shift (mm)"  />
+    <field nm="detdy"  prettyname="Detector Y Shift (mm)" />
+    <field nm="reslim" prettyname="Diffraction Resolution Limit (nm^-1)" />
+    <!-- Use this for resolution limit in Angstroms
+    <field nm="reslim" prettyname="Diffraction Resolution Limit (A)" mult="10" invert="True" />
+    -->
+    <field nm="nref"   prettyname="Number of Reflections" dtype="i4"  fmt="%i"/>
+    <field nm="nsref"  prettyname="Number of Saturated Reflections" dtype="i4"  fmt="%i"/>
+    <field nm="niref"  prettyname="Number of Implausibly Negative Reflections" dtype="i4" fmt="%i"/>
+    <field nm="o1"     prettyname="astar[0] (nm^-1)" />
+    <field nm="o2"     prettyname="astar[1] (nm^-1)" />
+    <field nm="o3"     prettyname="astar[2] (nm^-1)" />
+    <field nm="o4"     prettyname="bstar[0] (nm^-1)" />
+    <field nm="o5"     prettyname="bstar[1] (nm^-1)" />
+    <field nm="o6"     prettyname="bstar[2] (nm^-1)" />
+    <field nm="o7"     prettyname="cstar[0] (nm^-1)" />
+    <field nm="o8"     prettyname="cstar[1] (nm^-1)" />
+    <field nm="o9"     prettyname="cstar[2] (nm^-1)" />
+    <field nm="ifile"  prettyname="Image File (cxi/hdf5)" dtype="U256" fmt="%s"/>
+    <field nm="sfile"  prettyname="Stream File" dtype="U256" fmt="%s"/>
+    <field nm="istart" prettyname="Begin Chunk Pointer" dtype="i8" fmt="%i"/>
+    <field nm="iend"   prettyname="End Chunk Pointer" dtype="i8" fmt="%i"/>
+    <field nm="cstart" prettyname="Begin Crystal Pointer" dtype="i8" fmt="%i"/>
+    <field nm="cend"   prettyname="End Crystal Pointer" dtype="i8" fmt="%i"/>
+    <field nm="rstart" prettyname="Begin Reflections Pointer" dtype="i8" fmt="%i"/>
+    <field nm="rend"   prettyname="End Reflections Pointer" dtype="i8" fmt="%i"/>
+    <field nm="pstart" prettyname="Begin Peaks Pointer" dtype="i8" fmt="%i"/>
+    <field nm="pend"   prettyname="End Peaks Pointer" dtype="i8" fmt="%i"/>
+    <field nm="aclen"  prettyname="Average Camera Length (m)" fmt="%i"/>
+    <field nm="cent"   prettyname="Centering" dtype="U1" fmt="%s"/>
+    <field nm="ltype"  prettyname="Lattice Type" dtype="U15" fmt="%s"/>
+    <field nm="vol"  prettyname="Cell Volume (nm^3)"/>
+    <field nm="basename"  prettyname="Image File Basename" dtype="U50" fmt="%s"/>
+
+    <!-- Some common cxi/h5 fields -->
+    <field nm="/LCLS/machineTime" prettyname="Machine Time (s)" dtype="i4" fmt="%i"/>
+    <field nm="/LCLS/machineTimeNanoSeconds" prettyname="Machine Time (ns)" dtype="i4" fmt="%i"/>
+    <field nm="/LCLS/fiducial" prettyname="Fiducial" dtype="i4" fmt="%i"/>
+    <field nm="/cheetah/frameNumber" prettyname="Frame # (by Run)" dtype="i4" fmt="%i"/>
+
+    <!-- Some common numpy file names -->
+    <field nm="row"    prettyname="Chip Row (by Run)" dtype="i4" fmt="%i" />
+    <field nm="col"    prettyname="Chip Column" dtype="i4" fmt="%i" />
+    <field nm="chiprow" prettyname="Chip Row (by Chip)" dtype="i4" fmt="%i" />
+    <field nm="chipframe" prettyname="Frame # by Chip" dtype="i4" fmt="%i" />
+    <field nm="chip" prettyname="Chip" fmt="%i" />
+    <field nm="sample" prettyname="Sample" fmt="%i" />
+
+  </fields> 
+
+  <!-- Histograms displayed by default when launching GUI -->
+  <defaulthistograms names="a,b,c,alpha,beta,gamma"/>
+
+  <!-- Columns that should be hidden from menus in the GUI (values that make no sense to plot and would just clutter the gui) -->
+  <hidden names="istart,iend,cstart,cend,pstart,pend,rstart,rend"/>
+
+  <!-- Columns that should be treated as categorical variables. In-set filters are only available for categorical variables. Note that any fields whose datatype is string (starts with U) and all fields starting with a group file prefix are automatically categorical. -->
+  <categorical names="subcxi,class,multi,multiid,run"/>
+
+  <!-- Number of ticks on the x axis for non categorical, GUI limits to 6 by default to limit overlapping labels -->
+  <numXticks>6</numXticks>
+  <!-- Matplotlib Color Map controls. See https://matplotlib.org/examples/color/colormaps_reference.html -->
+  <scattercmap>jet</scattercmap>
+  <hist2dcmap>jet</hist2dcmap>
+  <pixelcmap>jet</pixelcmap>
+
+  <!-- More matplotlib options specifically for scatterplots. Note that the color-by option affects only fill color, so be aware that not all markers are fillable. The default options here remove the line width and make the points small assuming a large number of points -->
+  <scatterlinewidth>0</scatterlinewidth> <!-- linewidths parameter of matplotlib.pyplot.scatter -->
+  <scattermarker>o</scattermarker> <!-- marker parameter of matplotlib.pyplot.scatter -->
+  <scattersize>4</scattersize> <!-- s parameter of matplotlib.pyplot.scatter -->
+
+  <!-- For histograms, always mask 0's. Masked values appear as white, and occurs whenever log scale colors are used. By default, use for all histograms to distinguish 1 from 0 more easily, but you can change here by setting text to 0. Any other value will be registered as true. -->
+  <histAlwaysMask0>1</histAlwaysMask0>
+
+  <!-- Number of histograms to display on a row in the main GUI window. Default=3 -->
+  <histperrow>3</histperrow>
+
+  <!-- Initial number of bins. Larger numbers take longer to plot. Bins can be changed per graph with +/-. Note that this multiplies/divides by two so default numbers are powers of 2. Default is 32 for 1D and 64 for 2D -->
+  <hist1Dbins>32</hist1Dbins>
+  <hist2Dbins>64</hist2Dbins>
+
+  <!-- Time in msec for going to next image in the Item Viewer. Defaults to 1000 = 1 sec -->
+  <playInterval>1000</playInterval>
+
+
+  <!-- Stuff specific to viewing CrystFEL style images (H5/CXI by cheetah, stream files) -->
+  <!-- paths in h5 file to look for image array, regardless of CXI(event) or H5. Event use is determined by event column in dat file. List is comma separated. First path found in file is used. -->
+  <imageH5paths>/entry_1/data_1/data,/data/data,/data</imageH5paths>
+  <!-- Software searches for x path first, if 1 column assume x positions and search for y. If more than one column (like Hdf5 old format) than assume 1st column x and 2nd column is y and ignore all other columns (looks like 3rd is total intensity and 4th is the number of pixels). Peaks should be raw as geometry operations are applied when a CrystFEL geometry is provided. -->
+  <peakXH5paths>/entry_1/result_1/peakXPosRaw,/processing/hitfinder/peakinfo-raw</peakXH5paths>
+  <peakYH5paths>/entry_1/result_1/peakYPosRaw</peakYH5paths> <!-- Should be 1D if found -->
+  <viewerPhotonEvH5Paths>/instrument/photon_energy_eV,/LCLS/photon_energy_eV</viewerPhotonEvH5Paths>
+  <viewerCameraLengthH5Paths>/instrument/detector_1/EncoderValue,/LCLS/detector_1/EncoderValue,/LCLS/detector0-EncoderValue</viewerCameraLengthH5Paths>
+
+  <!--cxiview magic numbers-->
+  <cxiviewHistClipLevelValue>0.0002</cxiviewHistClipLevelValue>
+  <cxiviewHistMax>16384</cxiviewHistMax>
+  <cxiviewHistMin>-100</cxiviewHistMin>
+  <cxiviewHistPadding>0.05</cxiviewHistPadding>
+
+  <!-- pyqtgraph controls for the viewer -->
+  <viewerPeakSymbol>s</viewerPeakSymbol> <!-- String -->
+  <viewerPeakSize>10</viewerPeakSize>
+  <viewerPeakColor>r</viewerPeakColor> <!-- String -->
+  <viewerPeakPenWidth>2</viewerPeakPenWidth>
+
+  <viewerReflectionSymbol>o</viewerReflectionSymbol> <!-- String -->
+  <viewerReflectionSize>10</viewerReflectionSize>
+  <viewerReflectionColor>b</viewerReflectionColor> <!-- String -->
+  <viewerReflectionPenWidth>2</viewerReflectionPenWidth>
+
+  <viewerResolutionRingsAngstroms>3.0,4.0,6.0,8.0,10.0,20.0</viewerResolutionRingsAngstroms> <!-- Must all be floats -->
+  <viewerResRingColor>b</viewerResRingColor>
+  <viewerResRingWidth>1</viewerResRingWidth>
+
+  <viewerResLimitRingColor>g</viewerResLimitRingColor>
+  <viewerResLimitRingWidth>1</viewerResLimitRingWidth>
+
+</modelcfg>

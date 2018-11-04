@@ -15,7 +15,7 @@ except ImportError:
     qt5=False
 from api.datamodel import DataModel
 from api.itemmodel import ItemModel
-from . import richTextDelegate, crystfelImage
+from . import richTextDelegate, crystfelImage, h5OneD
 
 class MyItemViewer(QWidget):
     def __init__(self,dmodel,geom,parent=None):
@@ -53,6 +53,9 @@ class MyItemViewer(QWidget):
             self.ui.tableView.horizontalHeader().setResizeMode(0,QHeaderView.ResizeToContents)
 
         imageManager=crystfelImage.CrystfelImage(self.model,self.ui.imageView,geom,self)
+        for path in dmodel.cfg.item1dPlots:
+            f=h5OneD.H5OneD(path,self.model,self.ui.scrollAreaWidgetContents)
+            self.ui.verticalLayout.addWidget(f.fig)
         self.timer=QTimer()
         self.timer.setInterval(dmodel.cfg.playtime)
         self.timer.timeout.connect(self.model.next)
