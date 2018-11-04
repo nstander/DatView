@@ -47,9 +47,11 @@ class DatGenerator:
     allstreamcols=allstrcols+internalcols
     alllistcols=['ifile','run','class','subcxi','event','basename']
                 
-    def __init__(self,out,streamcols,cxicols,staticlist,groupmgr=None):
+    def __init__(self,out,streamcols,cxicols,staticlist,integratecols,groupmgr=None):
+        cxicols +=integratecols
         self.cols=streamcols+cxicols
         self.cxicols=cxicols
+        self.integratecols=integratecols
         self.curCXIName=None
         self.curCXI=None
         self.curH5=None
@@ -129,16 +131,19 @@ class DatGenerator:
             self.curCXI=h5py.File(self.curCXIName,'r')
             if os.path.isfile(self.curCXIName[:-3] + "h5"):
                 self.curH5=h5py.File(self.curCXIName[:-3] + "h5",'r')
+        event=cur.get('event')
+        if event is None:
+            event=0
+        else:
+            event=int(event)
         for col in self.cxicols:
-            event=cur.get('event')
-            if event is None:
-                event=0
-            else:
-                event=int(event)
             if col in self.curCXI and event < len(self.curCXI[col]):
-                cur[col]=self.curCXI[col][event]
+                v=self.curCXI[col][event]
             elif self.curH5 and col in self.curH5 and int(event) < len(self.curH5[col]):
-                cur[col]=self.curH5[col][event]
+                v=self.curH5[col][event]
+            if col in self.integratecols:
+                v=np.trapz(np.array(v))
+            cur[col]=v
 
     def groupify(self,cur):
         if self.groupmgr is not None:
@@ -244,6 +249,7 @@ if __name__ == '__main__':
     parser.add_argument('--group',default=None,help='The group file output by groupgen.py (groupcfg.txt), for custom groups and/or enumerating strings')
     parser.add_argument('--builtincols',default=None,nargs='+',help='Space separated list of builtin columns to include in output. Defaults to all possible.')
     parser.add_argument('--cxi',action='append',default=[],help='Include from cxi/h5 file. Use switch multiple times to include from multiple cxi files. Example: --cxi /cheetah/frameNumber --cxi /LCLS/machineTime')
+    parser.add_argument('--cxiintegrate',action='append',default=[],help='Include from cxi/h5 file. Use switch multiple times to include from multiple cxi files. Assumes 1D data that should be integrated with np.trapz for a single value')
     parser.add_argument('--static',action='append',default=[],nargs=2,help='Include a column whose value is the same for all output. Arguments are column_name column_value. Example --static dataset jan2012. You can include the switch multiple times for multiple static columns.')
     parser.add_argument('--npfile',default=None,help='Filepath to numpy file. Columns in numpy file will be synced with stats after cxi columns but before grouping.')
     parser.add_argument('--npcols',nargs='+',default=[],help='Space separated column names for columns in npfile. Defaults to npcol0 npcol1 etc if not provided. Variable length arguments so don\'t use as last switch before stream files.')
@@ -269,7 +275,7 @@ if __name__ == '__main__':
     if args.group:
         gmgr=GroupMgr(args.group,True)
 
-    datgen=DatGenerator(args.out,args.builtincols,args.cxi,args.static,gmgr)
+    datgen=DatGenerator(args.out,args.builtincols,args.cxi,args.static,args.cxiintegrate,gmgr)
 
     if args.npfile is not None:
         npdata=np.load(args.npfile)
