@@ -64,20 +64,20 @@
 
   <!-- Stuff specific to viewing CrystFEL style images (H5/CXI by cheetah, stream files) -->
   <!-- paths in h5 file to look for image array, regardless of CXI(event) or H5. Event use is determined by event column in dat file. List is comma separated. First path found in file is used. -->
-  <imageH5paths>/my/twoD</imageH5paths>
+  <imageH5paths>/eh1/mpccd1/image/block0_values</imageH5paths>
 
   <!--cxiview magic numbers-->
-  <cxiviewHistClipLevelValue>0.0002</cxiviewHistClipLevelValue>
+  <cxiviewHistClipLevelValue>0.000</cxiviewHistClipLevelValue>
   <cxiviewHistMax>16384</cxiviewHistMax>
   <cxiviewHistMin>-100</cxiviewHistMin>
   <cxiviewHistPadding>0.05</cxiviewHistPadding>
 
   <!-- For 1D plots in image view -->
-  <item1dPlots>/my/oneD</item1dPlots>
+  <item1dPlots>/eh1/pd1/waveforms.ch1/block0_values,/eh1/pd1/waveforms.ch2/block0_values,/eh1/qbpm1/waveforms.ch1/block0_values,/eh1/qbpm1/waveforms.ch2/block0_values,/eh1/qbpm1/waveforms.ch3/block0_values,/eh1/qbpm1/waveforms.ch4/block0_values,/es/pd1/waveforms.ch1/block0_values,/es/pd1/waveforms.ch2/block0_values,/es/pd1/waveforms.ch3/block0_values,/es/pd1/waveforms.ch4/block0_values</item1dPlots>
   <item1dScatterColor>b</item1dScatterColor>
   <item1dScatterMarker>o</item1dScatterMarker>
   <item1dScatterlinewidth>0</item1dScatterlinewidth>
-  <item1dScattersize>8</item1dScattersize>
+  <item1dScattersize>5</item1dScattersize>
 
 
 </modelcfg>
