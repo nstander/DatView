@@ -394,6 +394,16 @@ class MyHistogram(MyPlot):
             self.dmin = np.min(self.model.data[self.field])
             self.dmax = np.max(self.model.data[self.field])
             assert np.equal(np.mod(self.dmin,1),0) and np.equal(np.mod(self.dmax,1),0)
+
+        act=self.menu.addAction("Fit Histogram (Ctrl+F)")
+        act.triggered.connect(self.calcFit)
+        act=self.menu.addAction("Clear Fit (Ctrl+F)")
+        act.triggered.connect(self.clearFit)
+        act=self.menu.addAction("Increase Bins (+)")
+        act.triggered.connect(self.increaseBins)
+        act=self.menu.addAction("Decrease Bins (-)")
+        act.triggered.connect(self.decreaseBins)
+
         self.mydraw(False)
 
     def stackedDraw(self,data,alpha):
@@ -434,17 +444,24 @@ class MyHistogram(MyPlot):
 
     def onKey(self,event):
         if event.key == '+' or event.key == '=':
-            self.bins *=2
-            self.mydraw()
+            self.increaseBins()
         if event.key == '-':
-            self.bins =int(self.bins/2)
-            self.mydraw()
+            self.decreaseBins()
         if event.key == 'ctrl+f':
             if self.mu is None:
                 self.calcFit()
             else:
                 self.clearFit()
 
+    def increaseBins(self):
+        self.bins *=2
+        self.mydraw()
+
+    def decreaseBins(self):
+        self.bins =int(self.bins/2)
+        if self.bins == 0:
+            self.bins=1
+        self.mydraw()
 
     def calcFit(self):
         # Always fit filtered (if not filtering, will be full model)
@@ -587,7 +604,6 @@ class MyHist2d(MyPlot):
         self.yfield=yfield
         self.xbins=int(model.cfg.hist2Dbins)
         self.ybins=int(model.cfg.hist2Dbins)
-        self.log=log
 
         self.fig.canvas.mpl_connect('key_press_event',self.onKey)
 
@@ -625,6 +641,14 @@ class MyHist2d(MyPlot):
 
         self.drawBoth.setVisible(False)
         self.drawSelection.setChecked(True)
+        self.log=self.menu.addAction("Log Color Scale")
+        self.log.setCheckable(True)
+        self.log.setChecked(log)
+        self.log.toggled.connect(self.mydraw)
+        act=self.menu.addAction("Increase Bins (+)")
+        act.triggered.connect(self.increaseBins)
+        act=self.menu.addAction("Decrease Bins (-)")
+        act.triggered.connect(self.decreaseBins)
 
         self.mydraw()
 
@@ -653,7 +677,7 @@ class MyHist2d(MyPlot):
                               range=self.range)
 
         norm=None
-        if self.log:
+        if self.log.isChecked():
             norm=LogNorm()
         h=self.H
         if self.model.cfg.histAlwaysMask0:
@@ -662,7 +686,9 @@ class MyHist2d(MyPlot):
         if self.cb is None:
             self.cb=self.fig.colorbar(sc,ax=self.plt)
         else:
+            self.cb.set_norm(norm)
             self.cb.on_mappable_changed(sc)
+            self.cb.update_normal(sc)
 
         self.plt.set_xlabel(self.model.prettyname(self.xfield))
         self.plt.set_ylabel(self.model.prettyname(self.yfield))
@@ -672,17 +698,23 @@ class MyHist2d(MyPlot):
 
     def onKey(self,event):
         if event.key == '+' or event.key == '=':
-            self.xbins *=2
-            self.ybins *=2
-            self.mydraw()
+            self.increaseBins()
         if event.key == '-':
-            self.xbins =int(self.xbins/2)
-            if self.xbins < 1:
-                self.xbins = 1
-            self.ybins =int(self.ybins/2)
-            if self.ybins < 1:
-                self.ybins = 1
-            self.mydraw()
+            self.decreaseBins()
+
+    def increaseBins(self):
+        self.xbins *=2
+        self.ybins *=2
+        self.mydraw()
+
+    def decreaseBins(self):
+        self.xbins =int(self.xbins/2)
+        if self.xbins < 1:
+            self.xbins = 1
+        self.ybins =int(self.ybins/2)
+        if self.ybins < 1:
+            self.ybins = 1
+        self.mydraw()
 
     def onReset(self,event):
         self.xbins=int(self.model.cfg.hist2Dbins)

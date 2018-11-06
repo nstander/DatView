@@ -37,10 +37,7 @@ class MyHist2dDialog(QDialog):
         xfield=self.ui.xCombo.itemData(self.ui.xCombo.currentIndex())
         yfield=self.ui.yCombo.itemData(self.ui.yCombo.currentIndex())
         p.histogram2D(self.model,xfield,yfield,log=self.ui.logCheckBox.isChecked())
-        logtxt=""
-        if self.ui.logCheckBox.isChecked():
-            logtxt="Log "
-        p.setWindowTitle("%s - %s - %s2D Histogram" % (self.model.prettyname(xfield),self.model.prettyname(yfield),logtxt))
+        p.setWindowTitle("%s - %s - 2D Histogram" % (self.model.prettyname(xfield),self.model.prettyname(yfield)))
         p.show()
 
 class MyScatterDialog(QDialog):
