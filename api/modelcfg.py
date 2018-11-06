@@ -65,6 +65,9 @@ class ModelConfig:
         self.item1dScatterlinewidth=None
         self.item1dScattersize=8
         self.item1dPlots=[]
+        self.fieldColors={}
+        self.defaultColors=['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
+        self.legendInitial=None
 
 
         et=ElementTree.parse(filename)
@@ -178,6 +181,14 @@ class ModelConfig:
                 self.item1dScattersize=int(child.text)
             if child.tag == "item1dPlots" and child.text:
                 self.item1dPlots=child.text.split(',')
+            if child.tag == "colors":
+                for child2 in child:
+                    if child2.tag =="default":
+                        self.defaultColors=child2.text.split(',')
+                    else:
+                        self.fieldColors[child2.tag]=dict(child2.attrib)
+            if child.tag == "legendInitial" and child.text:
+                self.legendInitial=child.text
 
 
     def prettyname(self,field):
@@ -211,6 +222,12 @@ class ModelConfig:
         if field in self.multMap:
             r= self.multMap[field]
         return r
+
+    def color(self,field,value,i):
+        c=self.defaultColors[i%len(self.defaultColors)]
+        if field in self.fieldColors:
+            c=self.fieldColors[field].get(value,c)
+        return c
 
 
 

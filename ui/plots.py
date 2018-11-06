@@ -377,6 +377,7 @@ class MyHistogram(MyPlot):
         self.fieldfilterX.modelchange.connect(self.onFilterChange)
         self.model.filterchange.connect(self.mydraw)
         self.model.filterModelChange.connect(self.onFilterModelChange)
+        self.model.stackChange.connect(self.mydraw)
 
         self.sel=Rectangle((self.fieldfilterX.minimum,0),self.fieldfilterX.maximum-self.fieldfilterX.minimum,0,alpha=0.3,color='r')
         self.sel.set_visible(self.fieldfilterX.isActive())
@@ -387,41 +388,46 @@ class MyHistogram(MyPlot):
             self.initRange((self.model.fieldmin(self.field),self.model.fieldmax(self.field)),None)
 
         self.plt.get_yaxis().set_visible(False)
-        self.dcache=None
+        self.dmin=None
+        self.dmax=None
+        if self.model.isCategorical(self.field):
+            self.dmin = np.min(self.model.data[self.field])
+            self.dmax = np.max(self.model.data[self.field])
+            assert np.equal(np.mod(self.dmin,1),0) and np.equal(np.mod(self.dmax,1),0)
         self.mydraw(False)
+
+    def stackedDraw(self,data,alpha):
+        b=None
+        if len(data[0]): # Have array to plot
+            if self.model.isCategorical(self.field):
+                bottoms=np.zeros(self.dmax-self.dmin+1)
+                for i in range(len(data[0])):
+                    cnts=np.unique(data[0][i],return_counts=True)
+                    self.plt.bar(cnts[0],cnts[1],color=data[1][i],alpha=alpha,
+                                 edgecolor="none",align="center",bottom=bottoms[cnts[0]-self.dmin],linewidth=0)
+                    bottoms[cnts[0]-self.dmin]+=cnts[1]
+            else:
+                b=self.plt.hist(data[0],bins=self.bins,color=data[1],range=self.range,
+                              alpha=alpha,histtype="barstacked",linewidth=0,rwidth=1)[1]
+        return b
 
     def datadraw(self):
         title=self.model.prettyname(self.field)
         fmt=" %0.2f "+u"\u00B1"+ " %0.2f"
         drawBoth=self.model.isFiltered() and self.drawBoth.isChecked()
-        if self.model.isCategorical(self.field):
-            if self.dcache is None:
-                self.dcache=np.unique(self.model.datacol(self.field),return_counts=True)
-            if drawBoth:
-                self.plt.bar(self.dcache[0],self.dcache[1],color='black',alpha=0.5,edgecolor="none",align='center')
-                fcnts=np.unique(self.model.filtered[self.field],return_counts=True)
-                self.plt.bar(fcnts[0],fcnts[1],color='black',align='center')
-            elif self.drawSelection.isChecked():
-                fcnts=np.unique(self.model.filtered[self.field],return_counts=True)
-                self.plt.bar(fcnts[0],fcnts[1],color='black',align='center')
-            else:
-                self.plt.bar(self.dcache[0],self.dcache[1],color='black',align='center')
-        else:
-            if drawBoth:
-                b=self.plt.hist(self.model.datacol(self.field),bins=self.bins,color='black',alpha=0.5,edgecolor="none",
-                    range=self.range)[1]
-                self.plt.hist(self.model.filtered[self.field],bins=b,color='black',
-                    range=self.range)
-            elif self.drawSelection.isChecked():
-                b=self.plt.hist(self.model.filtered[self.field],bins=self.bins,color='black',
-                    range=self.range)[1]
-            else:
-                b=self.plt.hist(self.model.datacol(self.field),bins=self.bins,color='black',
-                    range=self.range)[1]
-            if self.mu is not None:
-                y=matplotlib.mlab.normpdf(np.array(b),self.mu,self.sigma)
-                self.plt.plot(b,y/np.max(y)*self.plt.get_ylim()[1]*0.95,'r',linewidth=2)
-                title += fmt % (self.mu,self.sigma)
+        data=self.model.stackedDataCol(self.field,self.drawSelection.isChecked(),"black")
+        alpha=1
+        if drawBoth:
+            alpha=0.5
+        b=self.stackedDraw(data,alpha)
+        if drawBoth:
+            self.stackedDraw(self.model.stackedDataCol(self.field,True,"black"),1)
+
+        if b is not None and self.mu is not None:
+            y=matplotlib.mlab.normpdf(np.array(b),self.mu,self.sigma)
+            self.plt.plot(b,y/np.max(y)*self.plt.get_ylim()[1]*0.95,'r',linewidth=2)
+            title += fmt % (self.mu,self.sigma)
+
         self.xlabels(self.model,self.field)
         self.plt.set_title(title)
         self.sel.set_height(self.plt.get_ylim()[1])

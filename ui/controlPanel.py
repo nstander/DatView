@@ -3,13 +3,14 @@
 # Author Natasha Stander
 
 try:
-    from PyQt5.QtWidgets import QWidget, QHeaderView, QAbstractItemView, QFileDialog,QMenu
-    from PyQt5.QtCore import QStringListModel, Qt, pyqtSignal
+    from PyQt5.QtWidgets import QWidget, QHeaderView, QAbstractItemView, QFileDialog,QMenu, QColorDialog
+    from PyQt5.QtCore import QStringListModel, Qt, pyqtSignal, QVariant
+    from PyQt5.QtGui import QColor, QStandardItemModel, QStandardItem
     from ui.Ui_ControlPanel5 import Ui_ControlPanel
     qt5=True
 except ImportError:
-    from PyQt4.QtGui import QWidget, QHeaderView, QAbstractItemView, QFileDialog, QStringListModel, QMenu
-    from PyQt4.QtCore import Qt, pyqtSignal
+    from PyQt4.QtGui import QWidget, QHeaderView, QAbstractItemView, QFileDialog, QStringListModel, QMenu, QColor, QStandardItemModel, QStandardItem, QColorDialog
+    from PyQt4.QtCore import Qt, pyqtSignal, QVariant
     from ui.Ui_ControlPanel import Ui_ControlPanel
     qt5=False
 
@@ -28,7 +29,8 @@ class MyControlPanel(QWidget):
         self.model = model
 
         sortmenu=QMenu()
-        for col in sorted(set(self.model.cols) - self.model.cfg.internalCols,key=self.model.prettyname):
+        lIinitial=None
+        for i,col in enumerate(sorted(set(self.model.cols) - self.model.cfg.internalCols,key=self.model.prettyname)):
             # Sort Menu
             a = sortmenu.addAction(self.model.prettyname(col))
             a.setData(col)
@@ -36,6 +38,9 @@ class MyControlPanel(QWidget):
 
             # Combo boxes
             self.ui.partComboBox.addItem(self.model.prettyname(col),col)
+            self.ui.legendComboBox.addItem(self.model.prettyname(col),col)
+            if col == model.cfg.legendInitial:
+                lIinitial=i
 
         # Sort
         self.ui.addSortField.setMenu(sortmenu)
@@ -46,7 +51,22 @@ class MyControlPanel(QWidget):
         self.ui.sortAscendingCheckBox.clicked.connect(self.onSortAscendingChange)
 
         # Legend
-        self.ui.legendGroupBox.hide()
+        self.legend=None
+        self.ui.legendGroupBox.setChecked(lIinitial is not None)
+        self.legendModel=QStandardItemModel()
+        self.ui.legendListView.setModel(self.legendModel)
+        self.ui.legendListView.doubleClicked.connect(self.selectLegendColor)
+
+        if lIinitial is not None:
+            self.ui.legendComboBox.setCurrentIndex(lIinitial)
+        self.ui.legendComboBox.currentIndexChanged.connect(self.onLegendComboChange)
+        self.onLegendComboChange()
+
+        self.ui.legendGroupBox.toggled.connect(self.calcLegend)
+        self.ui.legendBinSpinBox.editingFinished.connect(self.calcLegend)
+        self.ui.legendMaxSpinBox.editingFinished.connect(self.calcLegend)
+        self.ui.legendMinSpinBox.editingFinished.connect(self.calcLegend)
+        self.legendModel.dataChanged.connect(self.updateModelLegend)
 
         # Partition
         self.partitions=None
@@ -150,6 +170,67 @@ class MyControlPanel(QWidget):
         self.model.onSortChange()
 
     # Legends
+    def onLegendComboChange(self):
+        field=self.ui.legendComboBox.itemData(self.ui.legendComboBox.currentIndex())
+        enable=not self.model.isCategorical(field)
+
+        if self.ui.legendGroupBox.isChecked() or not enable:
+            self.ui.legendBinSpinBox.setEnabled(enable)
+            self.ui.legendMinSpinBox.setEnabled(enable)
+            self.ui.legendMaxSpinBox.setEnabled(enable)
+
+        self.ui.legendMinSpinBox.setMinimum(self.model.fieldmin(field))
+        self.ui.legendMaxSpinBox.setMinimum(self.model.fieldmin(field))
+        self.ui.legendMinSpinBox.setMaximum(self.model.fieldmax(field))
+        self.ui.legendMaxSpinBox.setMaximum(self.model.fieldmax(field))
+
+        self.ui.legendMinSpinBox.setValue(self.model.fieldmin(field))
+        self.ui.legendMaxSpinBox.setValue(self.model.fieldmax(field))
+        self.calcLegend()
+
+    def calcLegend(self):
+        self.legendModel.clear()
+        if not self.ui.legendGroupBox.isChecked():
+            self.legend=None
+            self.legendModel.clear()
+            self.updateModelLegend()
+            return
+        field=self.ui.legendComboBox.itemData(self.ui.legendComboBox.currentIndex())
+        num=None
+        minimum=None
+        maximum=None
+        if self.ui.legendBinSpinBox.isEnabled():
+            num=self.ui.legendBinSpinBox.value()
+            minimum=self.ui.legendMinSpinBox.value()
+            maximum=self.ui.legendMaxSpinBox.value()
+        self.legend=self.model.partition(field,minimum,maximum,num)
+        lst=list(sorted(self.legend.keys()))
+        for i,s in enumerate(lst):
+            c=self.model.cfg.color(field,s,i)
+            item=QStandardItem(s)
+            item.setData(QColor(c),Qt.DecorationRole)
+            item.setData(s)
+            self.legendModel.appendRow(item)
+        self.updateModelLegend()
+
+
+    def selectLegendColor(self,index):
+        c=QColorDialog.getColor(self.legendModel.data(index,Qt.DecorationRole),self)
+        if c.isValid():
+            self.legendModel.setData(index,c,Qt.DecorationRole)
+
+    def updateModelLegend(self):
+        stack=None
+        if self.legend is not None:
+            stack=[[],[],[]]
+            for i in range(self.legendModel.rowCount()):
+                it=self.legendModel.item(i)
+                stack[0].append(self.legend[it.data()])
+                stack[1].append(it.data(Qt.DecorationRole).name())
+                stack[2].append(it.text())
+        self.model.setStacks(stack)
+                
+        
 
     # Partitions
     def onPartitionComboChange(self):

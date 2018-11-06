@@ -19,6 +19,7 @@ class DataModel(QObject):
     filterchange=pyqtSignal()
     sortchange=pyqtSignal()
     filterModelChange=pyqtSignal(GroupFilter)
+    stackChange=pyqtSignal()
     sortColumnName="datview_sort_order"
     def __init__(self,filename,groupfile=None,cfg=None):
         QObject.__init__(self)
@@ -61,6 +62,7 @@ class DataModel(QObject):
         self.reverseSort=False
         self.limit=None
         self.limitModeRandom = True
+        self.stacks=None
 
     def loadtxt(self,filename):
         """Called from __init__, not intended to be called by users"""
@@ -354,6 +356,35 @@ class DataModel(QObject):
             return self.data[field][self.partitionfilter.getKeep()]
         else:
             return self.data[field]
+
+    def stackedDataCol(self,field,filtered=False,defaultcolor='b',respectPartition=True):
+        """Return [[arrays],[colors],[labels]]"""
+        field=self.datafield(field)
+        keep=np.ones(self.data.shape,dtype=bool)
+        if respectPartition:
+            keep &=self.partitionfilter.getKeep()
+        if filtered:
+            keep &=self.topfilter.getKeep()
+
+        if self.stacks is None:
+            return [[ self.data[field][keep] ], [defaultcolor] , ["All"] ]
+        else:
+            a=[]
+            c=[]
+            l=[]
+            for i in range(len(self.stacks[0])):
+                d= self.data[field][keep&self.stacks[0][i]]
+                if len(d):
+                    a.append(d)
+                    c.append(self.stacks[1][i])
+                    l.append(self.stacks[2][i])
+        return [a,c,l]
+                
+            
+
+    def setStacks(self,stack):
+        self.stacks=stack
+        self.stackChange.emit()
 
         
 

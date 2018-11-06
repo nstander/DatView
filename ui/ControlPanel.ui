@@ -37,7 +37,7 @@
         <x>0</x>
         <y>0</y>
         <width>299</width>
-        <height>2214</height>
+        <height>2230</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_7">
@@ -147,7 +147,7 @@
           <item>
            <widget class="QLabel" name="label_3">
             <property name="text">
-             <string>Change field and colors for stacked histograms and aggregated plots. Click to edit color.</string>
+             <string>Change field and colors for stacked histograms and aggregated plots. Double click to edit color. Single click on selected to edit name.</string>
             </property>
             <property name="wordWrap">
              <bool>true</bool>
@@ -172,7 +172,7 @@
                <number>1</number>
               </property>
               <property name="value">
-               <number>10</number>
+               <number>9</number>
               </property>
              </widget>
             </item>
@@ -207,7 +207,11 @@
            </layout>
           </item>
           <item>
-           <widget class="QListWidget" name="legendListWidget"/>
+           <widget class="QListView" name="legendListView">
+            <property name="editTriggers">
+             <set>QAbstractItemView::EditKeyPressed|QAbstractItemView::SelectedClicked</set>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>

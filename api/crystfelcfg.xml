@@ -93,6 +93,9 @@
   <!-- Histograms displayed by default when launching GUI -->
   <defaulthistograms names="a,b,c,alpha,beta,gamma"/>
 
+  <!-- initial column for legend (stacking histograms) -->
+  <legendInitial>cent</legendInitial>
+
   <!-- Columns that should be hidden from menus in the GUI (values that make no sense to plot and would just clutter the gui) -->
   <hidden names="istart,iend,cstart,cend,pstart,pend,rstart,rend"/>
 
@@ -157,5 +160,11 @@
 
   <viewerResLimitRingColor>g</viewerResLimitRingColor>
   <viewerResLimitRingWidth>1</viewerResLimitRingWidth>
+
+  <colors>
+    <!-- Color scheme for legends. Name is name of field. Provide attributes key=color for each value. cent is centering field guessed from CrystFEL colors. default will be used when no other colors provided and was based off matplotlib and is comma separated list -->
+    <cent P="#000000" A="#00CCCC" B="#0000CC" C="#664CFF" I="#00CC00" F="#FF4CFF" H="#CC0000" R="#999900" />
+    <default>#1f77b4,#ff7f0e,#2ca02c,#d62728,#9467bd,#8c564b,#e377c2,#7f7f7f,#bcbd22,#17becf</default>
+  </colors>
 
 </modelcfg>
