@@ -84,6 +84,8 @@ class Ui_MainWindow(object):
         self.actionPixel.setObjectName(_fromUtf8("actionPixel"))
         self.actionViewControls = QtGui.QAction(MainWindow)
         self.actionViewControls.setObjectName(_fromUtf8("actionViewControls"))
+        self.actionAggregated_Plot = QtGui.QAction(MainWindow)
+        self.actionAggregated_Plot.setObjectName(_fromUtf8("actionAggregated_Plot"))
         self.menuSave_Selections_As_2.addAction(self.actionSave_List)
         self.menuSave_Selections_As_2.addAction(self.actionSave_Stream)
         self.menuSave_Selections_As_2.addAction(self.actionSave_Dat)
@@ -97,6 +99,7 @@ class Ui_MainWindow(object):
         self.menuPlot.addAction(self.actionScatter)
         self.menuPlot.addAction(self.action2D_Histogram)
         self.menuPlot.addAction(self.actionPixel)
+        self.menuPlot.addAction(self.actionAggregated_Plot)
         self.menuView.addAction(self.actionItem_Viewer)
         self.menuView.addAction(self.actionViewControls)
         self.menubar.addAction(self.menuFile.menuAction())
@@ -128,4 +131,5 @@ class Ui_MainWindow(object):
         self.actionPixel.setText(_translate("MainWindow", "Pixel Plot", None))
         self.actionPixel.setWhatsThis(_translate("MainWindow", "Also called chip plot. Color pixels by field value, pixels by real space coordinates.", None))
         self.actionViewControls.setText(_translate("MainWindow", "Controls", None))
+        self.actionAggregated_Plot.setText(_translate("MainWindow", "Aggregated Plot", None))
 

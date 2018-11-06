@@ -12,6 +12,7 @@ except ImportError:
     from ui.Ui_PlotDialog import Ui_PlotDialog
 from api.datamodel import DataModel
 from ui.plots import MyFigure
+import numpy as np
 
 class MyHist2dDialog(QDialog):
     def __init__(self,model,parent):
@@ -23,6 +24,7 @@ class MyHist2dDialog(QDialog):
         self.model = model
 
         # Hide irrelevant combos so we can keep using the same UI file.
+        self.ui.frame.hide()
         self.ui.zCombo.hide()
         self.ui.cCombo.hide()
         self.ui.label_3.hide()
@@ -48,7 +50,7 @@ class MyScatterDialog(QDialog):
         self.ui.description.setText("Select X and Y axis, and optional color by field")
         self.model = model
 
-        self.ui.zCombo.addItem("None",None)
+        self.ui.frame.hide()
         self.ui.zCombo.hide()
         self.ui.label_3.hide()
         self.ui.logCheckBox.hide()
@@ -76,7 +78,7 @@ class MyPixelPlotDialog(QDialog):
         self.ui.description.setText("Color pixels at each coordinate with the value of the color by field. Use to plot data according to real-space coordinates.")
         self.model = model
 
-        self.ui.zCombo.addItem("None",None)
+        self.ui.frame.hide()
         self.ui.zCombo.hide()
         self.ui.label_3.hide()
         self.ui.logCheckBox.hide()
@@ -103,5 +105,75 @@ class MyPixelPlotDialog(QDialog):
         p.pixelPlot(self.model,xfield,yfield,cfield)
         p.setWindowTitle("%s - Pixel Plot" % (self.model.prettyname(cfield)))
         p.show()
+
+class MyAggPlotDialog(QDialog):
+    def __init__(self,model,parent):
+        QDialog.__init__(self,parent)
+        self.ui=Ui_PlotDialog()
+        self.ui.setupUi(self)
+        self.setWindowTitle("Aggregated Plot")
+        self.ui.description.setText("Aggregate values of x field using method. Show error bars from selected method. Legend from control panel is used. Max is not included in range when set. Bins are automatically determined when not set.")
+        self.model = model
+
+        self.ui.label_3.setText("Aggregate Method:")
+        self.ui.zCombo.addItem("Average",np.average)
+        self.ui.zCombo.addItem("Median",np.median)
+        self.ui.zCombo.addItem("Min",np.min)
+        self.ui.zCombo.addItem("Max",np.max)
+        self.ui.zCombo.addItem("Count",len)
+        self.ui.zCombo.addItem("Count Valid (not -1)",lambda x : np.count_nonzero(x!=-1))
+
+        self.ui.label_4.setText("Error Bars:")
+        self.ui.cCombo.addItem("None",None)
+        self.ui.cCombo.addItem("Standard Deviation",lambda x : [np.std(x)])
+        self.ui.cCombo.addItem("Min,Max",lambda x : [np.min(x),np.max(x)])
+
+        self.ui.logCheckBox.setText("Transpose")
+        cols=set(self.model.cols) - self.model.cfg.internalCols
+        for col in sorted(cols,key=self.model.prettyname):
+            self.ui.xCombo.addItem(self.model.prettyname(col),col)
+            self.ui.yCombo.addItem(self.model.prettyname(col),col)
+        self.accepted.connect(self.onAccept)
+        self.ui.xCombo.currentIndexChanged.connect(self.onXComboChange)
+        self.onXComboChange()
+
+    def onAccept(self):
+#model,xfield,yfield,aggFunc,errFunc,partitions,tranpose
+        p=MyFigure(parent=self.parent(),flags=Qt.Window)
+        xfield=self.ui.xCombo.itemData(self.ui.xCombo.currentIndex())
+        yfield=self.ui.yCombo.itemData(self.ui.yCombo.currentIndex())
+        aggFunc=self.ui.zCombo.itemData(self.ui.zCombo.currentIndex())
+        eFunc=self.ui.cCombo.itemData(self.ui.cCombo.currentIndex())
+        tran=self.ui.logCheckBox.isChecked()
+        minimum=None
+        if self.ui.minCheckBox.isChecked():
+            minimum=self.ui.minSpinBox.value()
+        maximum=None
+        if self.ui.maxCheckBox.isChecked():
+            maximum=self.ui.maxSpinBox.value()
+        bins=None
+        if self.ui.binCheckBox.isChecked():
+            bins=self.ui.binSpinBox.value()
+        part=self.model.partition(xfield,minimum,maximum,bins)
+        errTxt=""
+        if eFunc is not None:
+            errTxt=u" \u00B1 %s"%(self.ui.cCombo.currentText())
+        aggtext="%s %s%s"%(self.ui.zCombo.currentText(),"%s",errTxt)
+        p.aggPlot(self.model,xfield,yfield,aggFunc,eFunc,part,tran,aggtext)
+        p.setWindowTitle("%s %s - %s Aggregated Plot" % (self.ui.zCombo.currentText(),self.model.prettyname(xfield),self.model.prettyname(yfield)))
+        p.show()
+        pass
+
+    def onXComboChange(self):
+        field=self.ui.xCombo.itemData(self.ui.xCombo.currentIndex())
+
+        self.ui.minSpinBox.setMinimum(self.model.fieldmin(field))
+        self.ui.maxSpinBox.setMinimum(self.model.fieldmin(field))
+        self.ui.minSpinBox.setMaximum(self.model.fieldmax(field))
+        self.ui.maxSpinBox.setMaximum(self.model.fieldmax(field))
+
+        self.ui.minSpinBox.setValue(self.model.fieldmin(field))
+        self.ui.maxSpinBox.setValue(self.model.fieldmax(field))
+
 
         

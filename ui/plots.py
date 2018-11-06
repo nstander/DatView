@@ -83,6 +83,13 @@ class MyFigure(FigureCanvas):
         self.plts.append(p)
         return p
 
+    def aggPlot(self,model,xfield,yfield,aggFunc,errFunc,partitions,tranpose,aggText,axis=None):
+        if axis is None:
+            axis=self.fig.add_subplot(111)
+        p=MyAggPlot(model,xfield,yfield,aggFunc,errFunc,partitions, tranpose,aggText,self.fig,axis,self)
+        self.plts.append(p)
+        return p
+
     def onMotion(self,event):
         handled=False
         for p in self.plts:
@@ -892,6 +899,122 @@ class MyScatterStatic(MyPlot):
             txt="%.4f,%.4f"%(event.xdata,event.ydata)
         return txt
 
+class MyAggPlot(MyPlot):
+    def __init__(self,model,xfield,yfield,aggFunc,errFunc,partitions,tranpose,aggText,fig,plt,parent):
+        MyPlot.__init__(self,fig,plt,parent)
+        self.model=model
+        self.tranpose=tranpose
+        if self.tranpose:
+            self.xfield=yfield
+            self.yfield=xfield
+        else:
+            self.xfield=xfield
+            self.yfield=yfield
+        self.aggField=yfield
+        self.aggFunc=aggFunc
+        self.errFunc=errFunc
+        self.aggtext=aggText
+
+        x=[]
+        keep=[]
+        for k,v in partitions.items():
+            keep.append(v)
+            try:
+                k2=float(k)
+            except ValueError:
+                k2 = None
+            if k2 is None and model.isCategorical(xfield):
+                k2=model.intValue(xfield,k)
+            if k2 is None:
+                bounds=k.split('-')
+                k2=np.average(float(bounds[0]),float(bounds[1]))
+            x.append(k2)
+        self.x=np.array(x)
+        self.keep=np.array(keep)[np.argsort(x)]
+        self.x.sort()
+
+        self.manageX=True
+        self.fieldfilterX=self.model.selectionFilter(self.xfield)
+        self.fieldfilterX.modelchange.connect(self.onFilterChange)
+
+        self.manageY=True
+        self.fieldfilterY=self.model.selectionFilter(self.yfield)
+        self.fieldfilterY.modelchange.connect(self.onFilterChange)
+
+
+        self.model.filterchange.connect(self.mydraw)
+        self.model.filterModelChange.connect(self.onFilterModelChange)
+
+        self.sel=Rectangle((0,0),0,0,color='r',fill=False)
+        self.onFilterChange() # Let this function worry about actual bounds, we just cared about color and fill
+
+        self.mydraw(False)
+
+    def datadraw(self):
+        lbls=["all"]
+        colors={"all":"b"}
+        dtype=[]
+        if self.model.stacks is not None:
+            lbls=self.model.stacks[2]
+            colors=dict(zip(lbls,self.model.stacks[1]))
+        for lbl in lbls:
+            dtype.append((lbl,'f4'))
+        y=np.zeros((len(self.x)),dtype=dtype)
+        uplim=np.zeros((len(self.x)),dtype=dtype)
+        lowlim=np.zeros((len(self.x)),dtype=dtype)
+        for i,k in enumerate(self.keep):
+            stackedData=self.model.stackedDataCol(self.aggField, filtered=self.drawSelection.isChecked(),keep=k)
+            for j in range(len(stackedData[0])):
+                v=self.aggFunc(stackedData[0][j])
+                y[stackedData[2][j]][i]=v
+                if self.errFunc is not None:
+                    e=self.errFunc(stackedData[0][j])
+                    if len(e) == 1:
+                        lowlim[stackedData[2][j]][i]=e[0]
+                        uplim[stackedData[2][j]][i]=e[0]
+                    else:
+                        assert len(e) == 2
+                        lowlim[stackedData[2][j]][i]=v-e[0]
+                        uplim[stackedData[2][j]][i]=e[1]-v
+        for l in lbls:
+            if self.tranpose:
+                self.plt.errorbar(y[l],self.x,xerr=[lowlim[l],uplim[l]],label=l,color=colors[l],marker=self.model.cfg.aggmarker)
+            else:
+                self.plt.errorbar(self.x,y[l],yerr=[lowlim[l],uplim[l]],label=l,color=colors[l],marker=self.model.cfg.aggmarker)
+        #self.plt.legend()  
+        self.plt.set_xlabel(self.model.prettyname(self.xfield))
+        self.plt.set_ylabel(self.model.prettyname(self.yfield))
+        self.plt.set_title(self.aggtext % self.model.prettyname(self.aggField))
+
+        self.xlabels(self.model,self.xfield,True)
+        self.ylabels(self.model,self.yfield,True)
+
+    def onReset(self,event):
+        self.mydraw(False)
+
+    def toolTip(self,event):
+        txt=""
+        if event.xdata is not None and event.ydata is not None and event.inaxes == self.plt:
+            if self.model.isCategorical(self.xfield):
+                xtxt=self.model.stringValue(self.xfield,int(np.round(event.xdata)))
+            else:
+                xtxt="%.4f"%(event.xdata)
+            if self.model.isCategorical(self.yfield):
+                ytxt=self.model.stringValue(self.yfield,int(np.round(event.ydata)))
+            else:
+                ytxt="%.4f"%(event.ydata)
+            txt="%s,%s"%(xtxt,ytxt)
+        return txt
+
+    def onFilterModelChange(self):
+        self.fieldfilterX.modelchange.disconnect(self.onFilterChange)
+        self.fieldfilterX=self.model.selectionFilter(self.xfield)
+        self.fieldfilterX.modelchange.connect(self.onFilterChange)
+
+        self.fieldfilterY.modelchange.disconnect(self.onFilterChange)
+        self.fieldfilterY=self.model.selectionFilter(self.yfield)
+        self.fieldfilterY.modelchange.connect(self.onFilterChange)
+        self.onFilterChange()
 
 
 

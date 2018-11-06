@@ -229,7 +229,7 @@ class DataModel(QObject):
             try:
                 r=int(i)
             except ValueError:
-                print ("value error for",i)
+                r=None
                 pass
         return r
 
@@ -357,10 +357,11 @@ class DataModel(QObject):
         else:
             return self.data[field]
 
-    def stackedDataCol(self,field,filtered=False,defaultcolor='b',respectPartition=True):
+    def stackedDataCol(self,field,filtered=False,defaultcolor='b',respectPartition=True, keep=None):
         """Return [[arrays],[colors],[labels]]"""
         field=self.datafield(field)
-        keep=np.ones(self.data.shape,dtype=bool)
+        if keep is None:
+            keep=np.ones(self.data.shape,dtype=bool)
         if respectPartition:
             keep &=self.partitionfilter.getKeep()
         if filtered:

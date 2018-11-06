@@ -30,6 +30,7 @@ class MyControlPanel(QWidget):
 
         sortmenu=QMenu()
         lIinitial=None
+        searchLegend=model.datafield(model.cfg.legendInitial)
         for i,col in enumerate(sorted(set(self.model.cols) - self.model.cfg.internalCols,key=self.model.prettyname)):
             # Sort Menu
             a = sortmenu.addAction(self.model.prettyname(col))
@@ -39,7 +40,7 @@ class MyControlPanel(QWidget):
             # Combo boxes
             self.ui.partComboBox.addItem(self.model.prettyname(col),col)
             self.ui.legendComboBox.addItem(self.model.prettyname(col),col)
-            if col == model.cfg.legendInitial:
+            if col == searchLegend:
                 lIinitial=i
 
         # Sort
