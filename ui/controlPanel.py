@@ -1,33 +1,54 @@
-# datview/ui/filterPanel.py
-# FilterPanel code for FilterPanel.ui
+# datview/ui/controlPanel.py 
+# All controls
 # Author Natasha Stander
 
 try:
-    from PyQt5.QtWidgets import QWidget, QHeaderView, QAbstractItemView, QFileDialog
+    from PyQt5.QtWidgets import QWidget, QHeaderView, QAbstractItemView, QFileDialog,QMenu
     from PyQt5.QtCore import QStringListModel, Qt, pyqtSignal
-    from ui.Ui_FilterPanel5 import Ui_FilterPanel
+    from ui.Ui_ControlPanel5 import Ui_ControlPanel
     qt5=True
 except ImportError:
-    from PyQt4.QtGui import QWidget, QHeaderView, QAbstractItemView, QFileDialog, QStringListModel
+    from PyQt4.QtGui import QWidget, QHeaderView, QAbstractItemView, QFileDialog, QStringListModel, QMenu
     from PyQt4.QtCore import Qt, pyqtSignal
-    from ui.Ui_FilterPanel import Ui_FilterPanel
+    from ui.Ui_ControlPanel import Ui_ControlPanel
     qt5=False
+
 from api.datamodel import DataModel
 from api.filtermodel import FilterModel
 from . import filterEditDelegate
 import numpy as np
 
-class MyFilterPanel(QWidget):
-    flagselected =pyqtSignal(int)
-    def __init__(self,dmodel,parent=None):
-        QWidget.__init__(self,parent)
-        self.ui=Ui_FilterPanel()
-        self.ui.setupUi(self)
-        self.model = dmodel
 
-        # Partitions
+class MyControlPanel(QWidget):
+    flagselected =pyqtSignal(int)
+    def __init__(self,model,parent=None):
+        QWidget.__init__(self,parent)
+        self.ui=Ui_ControlPanel()
+        self.ui.setupUi(self)
+        self.model = model
+
+        sortmenu=QMenu()
         for col in sorted(set(self.model.cols) - self.model.cfg.internalCols,key=self.model.prettyname):
+            # Sort Menu
+            a = sortmenu.addAction(self.model.prettyname(col))
+            a.setData(col)
+            a.triggered.connect(self.onAddSortField)
+
+            # Combo boxes
             self.ui.partComboBox.addItem(self.model.prettyname(col),col)
+
+        # Sort
+        self.ui.addSortField.setMenu(sortmenu)
+        self.ui.sortByListWidget.itemSelectionChanged.connect(self.onSelectionChange)
+        self.onSelectionChange()
+        self.ui.removeSortField.clicked.connect(self.onRemoveSortField)
+        self.ui.moveSortField.clicked.connect(self.onMoveSortFieldUp)
+        self.ui.sortAscendingCheckBox.clicked.connect(self.onSortAscendingChange)
+
+        # Legend
+        self.ui.legendGroupBox.hide()
+
+        # Partition
         self.partitions=None
         self.partitionModel=QStringListModel()
         self.ui.partitionList.setModel(self.partitionModel)
@@ -41,8 +62,7 @@ class MyFilterPanel(QWidget):
         self.ui.partMaxSpinBox.valueChanged.connect(self.calcPartitions)
         self.ui.partMinSpinBox.valueChanged.connect(self.calcPartitions)
 
-
-        # Flagged
+        # Flags
         if self.model.flagFilter.isActive():
             self.ui.flagIgnore.setChecked(True)
             if self.model.flagFilter.invert:
@@ -59,8 +79,15 @@ class MyFilterPanel(QWidget):
         self.ui.flagKeep.clicked.connect(self.onOnlyFlags)
         self.ui.flaggedList.selectionModel().currentChanged.connect(self.onSelectFlag)
 
-        # Filter Tree View
-        self.filtermodel = FilterModel(dmodel.topfilter,dmodel)
+        # Limits
+        self.ui.limitCheckBox.clicked.connect(self.onLimitChange)
+        self.ui.limTopButton.clicked.connect(self.onLimitChange)
+        self.ui.limRandomButton.clicked.connect(self.onLimitChange)
+        self.ui.limitSpinBox.editingFinished.connect(self.onLimitChange)
+        self.onLimitChange()
+
+        # Filters
+        self.filtermodel = FilterModel(model.topfilter,model)
         self.ui.filterTreeView.setEditTriggers(QAbstractItemView.AllEditTriggers)
         self.ui.filterTreeView.setModel(self.filtermodel)
         if qt5:
@@ -77,22 +104,54 @@ class MyFilterPanel(QWidget):
         self.ui.saveFiltersButton.clicked.connect(self.onSaveFilters)
         self.ui.loadFiltersButton.clicked.connect(self.onLoadFilters)
 
-    def onSaveFilters(self):
-        name=QFileDialog.getSaveFileName(self,'Save Filters As',filter='*.xml')
-        if qt5:
-            if name:
-                self.model.saveFilters(name[0])
-        elif name is not None and len(name):
-            self.model.saveFilters(name)
+    # Sorting
+    def onAddSortField(self):
+        field=self.sender().data()
+        self.ui.sortByListWidget.addItem(self.model.prettyname(field))
+        self.model.sortlst.append(field)
+        self.model.onSortChange()
 
-    def onLoadFilters(self):
-        name=QFileDialog.getOpenFileName(self,'Load Filter File',filter='*.xml')
-        if qt5:
-            if name:
-                self.model.loadFilters(name[0])
-        elif name is not None and len(name):
-            self.model.loadFilters(name)
+    def onSelectionChange(self):
+        hasSelection=bool(len(self.ui.sortByListWidget.selectedItems()))
+        self.ui.removeSortField.setEnabled(hasSelection)
+        canMove=hasSelection
+        for item in self.ui.sortByListWidget.selectedItems():
+            canMove &= self.ui.sortByListWidget.row(item) != 0
+        self.ui.moveSortField.setEnabled(canMove)
 
+    def onRemoveSortField(self):
+        rows=[]
+        for item in self.ui.sortByListWidget.selectedItems():
+            rows.append(self.ui.sortByListWidget.row(item))
+        for r in sorted(rows,reverse=True):
+            del self.model.sortlst[r]
+            self.ui.sortByListWidget.takeItem(r)
+        self.model.onSortChange()
+        self.onSelectionChange()
+
+    def onMoveSortFieldUp(self):
+        rows=[]
+        for item in self.ui.sortByListWidget.selectedItems():
+            rows.append(self.ui.sortByListWidget.row(item))
+        for r in sorted(rows):
+            self.model.sortlst.insert(r-1,self.model.sortlst.pop(r))
+            self.ui.sortByListWidget.insertItem(r-1,self.ui.sortByListWidget.takeItem(r))
+            self.ui.sortByListWidget.setCurrentItem(self.ui.sortByListWidget.item(r-1))   
+        self.model.onSortChange()
+
+    def setSort(self,lst):
+        for field in lst:
+            self.ui.sortByListWidget.addItem(self.model.prettyname(field))
+            self.model.sortlst.append(field)
+        self.model.onSortChange()
+
+    def onSortAscendingChange(self):
+        self.model.reverseSort = not self.ui.sortAscendingCheckBox.isChecked()
+        self.model.onSortChange()
+
+    # Legends
+
+    # Partitions
     def onPartitionComboChange(self):
         field=self.ui.partComboBox.itemData(self.ui.partComboBox.currentIndex())
         enable=not self.model.isCategorical(field)
@@ -132,6 +191,7 @@ class MyFilterPanel(QWidget):
         part=self.partitionModel.data(self.ui.partitionList.selectionModel().currentIndex(),Qt.DisplayRole)
         self.model.setPartition(self.partitions[part])
 
+    # Flags
     def onFlagChange(self):
         slist=[]
         for i in np.where(self.model.flagFilter.keep)[0]:
@@ -156,10 +216,36 @@ class MyFilterPanel(QWidget):
         row=int(self.flagModel.data(self.ui.flaggedList.selectionModel().currentIndex(),Qt.DisplayRole))
         self.flagselected.emit(row)
 
-        
-        
-        
 
-        
+    # Limits 
+    def onLimitChange(self):
+        if self.ui.limitCheckBox.isChecked():
+            self.model.limit = self.ui.limitSpinBox.value()
+        else:
+            self.model.limit = None
+        self.model.limitModeRandom=self.ui.limRandomButton.isChecked()
+
+    def setLimit(self,l):
+        self.ui.limitSpinBox.setValue(l)
+        self.ui.limitCheckBox.setChecked(True)
+        self.onLimitChange()
+
+    # Filters
+    def onSaveFilters(self):
+        name=QFileDialog.getSaveFileName(self,'Save Filters As',filter='*.xml')
+        if qt5:
+            if name:
+                self.model.saveFilters(name[0])
+        elif name is not None and len(name):
+            self.model.saveFilters(name)
+
+    def onLoadFilters(self):
+        name=QFileDialog.getOpenFileName(self,'Load Filter File',filter='*.xml')
+        if qt5:
+            if name:
+                self.model.loadFilters(name[0])
+        elif name is not None and len(name):
+            self.model.loadFilters(name)
+
 
 

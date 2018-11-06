@@ -21,10 +21,9 @@ except ImportError:
 
 from api.datamodel import DataModel
 from api.modelcfg import ModelConfig
-from ui.datasetPanel import MyDatasetPanel
+from ui.controlPanel import MyControlPanel
 from ui.plotDialogs import MyScatterDialog, MyHist2dDialog, MyPixelPlotDialog
 from ui.itemViewer import MyItemViewer
-from ui.filterPanel import MyFilterPanel
 from ui.plots import MyFigure
 
 class MyMainWindow(QMainWindow):
@@ -69,21 +68,16 @@ class MyMainWindow(QMainWindow):
         self.placeHistograms()
 
         # Filter Panel
-        self.filterpanel=MyFilterPanel(self.model,parent=self)
-        self.filterpanel.setWindowFlags(Qt.Window)
-        self.ui.actionShowFilters.triggered.connect(self.filterpanel.show)
-        self.ui.actionSave_Filters.triggered.connect(self.filterpanel.onSaveFilters)
-
-        # Dataset Panel
-        self.datasetpanel=MyDatasetPanel(self.model,parent=self)
-        self.datasetpanel.setWindowFlags(Qt.Window)
-        self.ui.actionShowDatasetPanel.triggered.connect(self.datasetpanel.show)
+        self.controlPanel=MyControlPanel(self.model,parent=self)
+        self.controlPanel.setWindowFlags(Qt.Window)
+        self.ui.actionViewControls.triggered.connect(self.controlPanel.show)
+        self.ui.actionSave_Filters.triggered.connect(self.controlPanel.onSaveFilters)
 
         # Item Viewer
         itemviewer=MyItemViewer(self.model,geom,parent=self)
         itemviewer.setWindowFlags(Qt.Window)
         self.ui.actionItem_Viewer.triggered.connect(itemviewer.show)
-        self.filterpanel.flagselected.connect(itemviewer.model.setRow)
+        self.controlPanel.flagselected.connect(itemviewer.model.setRow)
 
         if qt5:
             self.ui.plotScrollArea.viewport().installEventFilter(self)
@@ -190,9 +184,9 @@ def main():
     app = QApplication(sys.argv)
     w = MyMainWindow(args.file,args.group, args.filter,args.cfg,args.geom)
     if args.sort is not None:
-        w.datasetpanel.setSort(args.sort)
+        w.controlPanel.setSort(args.sort)
     if args.limit is not None:
-        w.datasetpanel.setLimit(args.limit)
+        w.controlPanel.setLimit(args.limit)
     w.show()
     sys.exit(app.exec_())
 
