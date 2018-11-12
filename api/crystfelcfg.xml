@@ -94,7 +94,7 @@
   <defaulthistograms names="a,b,c,alpha,beta,gamma"/>
 
   <!-- initial column for legend (stacking histograms) -->
-  <legendInitial>cent</legendInitial>
+  <legendInitial>indby</legendInitial>
 
   <!-- Columns that should be hidden from menus in the GUI (values that make no sense to plot and would just clutter the gui) -->
   <hidden names="istart,iend,cstart,cend,pstart,pend,rstart,rend"/>

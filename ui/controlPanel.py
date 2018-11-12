@@ -16,7 +16,7 @@ except ImportError:
 
 from api.datamodel import DataModel
 from api.filtermodel import FilterModel
-from . import filterEditDelegate
+from . import filterEditDelegate, partitionWidget
 import numpy as np
 
 
@@ -29,19 +29,11 @@ class MyControlPanel(QWidget):
         self.model = model
 
         sortmenu=QMenu()
-        lIinitial=None
-        searchLegend=model.datafield(model.cfg.legendInitial)
         for i,col in enumerate(sorted(set(self.model.cols) - self.model.cfg.internalCols,key=self.model.prettyname)):
             # Sort Menu
             a = sortmenu.addAction(self.model.prettyname(col))
             a.setData(col)
             a.triggered.connect(self.onAddSortField)
-
-            # Combo boxes
-            self.ui.partComboBox.addItem(self.model.prettyname(col),col)
-            self.ui.legendComboBox.addItem(self.model.prettyname(col),col)
-            if col == searchLegend:
-                lIinitial=i
 
         # Sort
         self.ui.addSortField.setMenu(sortmenu)
@@ -52,36 +44,16 @@ class MyControlPanel(QWidget):
         self.ui.sortAscendingCheckBox.clicked.connect(self.onSortAscendingChange)
 
         # Legend
-        self.legend=None
-        self.ui.legendGroupBox.setChecked(lIinitial is not None)
-        self.legendModel=QStandardItemModel()
-        self.ui.legendListView.setModel(self.legendModel)
-        self.ui.legendListView.doubleClicked.connect(self.selectLegendColor)
-
-        if lIinitial is not None:
-            self.ui.legendComboBox.setCurrentIndex(lIinitial)
-        self.ui.legendComboBox.currentIndexChanged.connect(self.onLegendComboChange)
-        self.onLegendComboChange()
-
-        self.ui.legendGroupBox.toggled.connect(self.calcLegend)
-        self.ui.legendBinSpinBox.editingFinished.connect(self.calcLegend)
-        self.ui.legendMaxSpinBox.editingFinished.connect(self.calcLegend)
-        self.ui.legendMinSpinBox.editingFinished.connect(self.calcLegend)
-        self.legendModel.dataChanged.connect(self.updateModelLegend)
+        self.legendWidget=partitionWidget.MyPartitionWidget(model, self.model.setStacks, model.cfg.legendInitial, True, True, self)
+        self.legendWidget.ui.description.setText("Change field and colors for stacked histograms. Double click to edit color. Single click on selected to edit label. Checkboxes only affect visibility, not the selected items.")
+        self.legendWidget.ui.groupBox.setTitle("Histogram Legends")
+        self.ui.verticalLayout_7.insertWidget(1,self.legendWidget)
 
         # Partition
-        self.partitions=None
-        self.partitionModel=QStringListModel()
-        self.ui.partitionList.setModel(self.partitionModel)
-        self.ui.partitionList.selectionModel().currentChanged.connect(self.onSelectPartition)
-
-        self.ui.partComboBox.currentIndexChanged.connect(self.onPartitionComboChange)
-        self.onPartitionComboChange()
-
-        self.ui.partitionBox.toggled.connect(self.calcPartitions)
-        self.ui.partBinSpinBox.valueChanged.connect(self.calcPartitions)
-        self.ui.partMaxSpinBox.valueChanged.connect(self.calcPartitions)
-        self.ui.partMinSpinBox.valueChanged.connect(self.calcPartitions)
+        self.partWidget=partitionWidget.MyPartitionWidget(model, self.model.setPartition, None, True, False, self)
+        self.partWidget.ui.description.setText("Partition the data. Selecting a partition changes the full dataset shown in plots to just match the partition. When partitions are active, output is split with one output for each partition.")
+        self.partWidget.ui.groupBox.setTitle("Partitions")
+        self.ui.verticalLayout_7.insertWidget(2,self.partWidget)
 
         # Flags
         if self.model.flagFilter.isActive():
@@ -169,109 +141,6 @@ class MyControlPanel(QWidget):
     def onSortAscendingChange(self):
         self.model.reverseSort = not self.ui.sortAscendingCheckBox.isChecked()
         self.model.onSortChange()
-
-    # Legends
-    def onLegendComboChange(self):
-        field=self.ui.legendComboBox.itemData(self.ui.legendComboBox.currentIndex())
-        enable=not self.model.isCategorical(field)
-
-        if self.ui.legendGroupBox.isChecked() or not enable:
-            self.ui.legendBinSpinBox.setEnabled(enable)
-            self.ui.legendMinSpinBox.setEnabled(enable)
-            self.ui.legendMaxSpinBox.setEnabled(enable)
-
-        self.ui.legendMinSpinBox.setMinimum(self.model.fieldmin(field))
-        self.ui.legendMaxSpinBox.setMinimum(self.model.fieldmin(field))
-        self.ui.legendMinSpinBox.setMaximum(self.model.fieldmax(field))
-        self.ui.legendMaxSpinBox.setMaximum(self.model.fieldmax(field))
-
-        self.ui.legendMinSpinBox.setValue(self.model.fieldmin(field))
-        self.ui.legendMaxSpinBox.setValue(self.model.fieldmax(field))
-        self.calcLegend()
-
-    def calcLegend(self):
-        self.legendModel.clear()
-        if not self.ui.legendGroupBox.isChecked():
-            self.legend=None
-            self.legendModel.clear()
-            self.updateModelLegend()
-            return
-        field=self.ui.legendComboBox.itemData(self.ui.legendComboBox.currentIndex())
-        num=None
-        minimum=None
-        maximum=None
-        if self.ui.legendBinSpinBox.isEnabled():
-            num=self.ui.legendBinSpinBox.value()
-            minimum=self.ui.legendMinSpinBox.value()
-            maximum=self.ui.legendMaxSpinBox.value()
-        self.legend=self.model.partition(field,minimum,maximum,num)
-        lst=list(sorted(self.legend.keys()))
-        for i,s in enumerate(lst):
-            c=self.model.cfg.color(field,s,i)
-            item=QStandardItem(s)
-            item.setData(QColor(c),Qt.DecorationRole)
-            item.setData(s)
-            self.legendModel.appendRow(item)
-        self.updateModelLegend()
-
-
-    def selectLegendColor(self,index):
-        c=QColorDialog.getColor(self.legendModel.data(index,Qt.DecorationRole),self)
-        if c.isValid():
-            self.legendModel.setData(index,c,Qt.DecorationRole)
-
-    def updateModelLegend(self):
-        stack=None
-        if self.legend is not None:
-            stack=[[],[],[]]
-            for i in range(self.legendModel.rowCount()):
-                it=self.legendModel.item(i)
-                stack[0].append(self.legend[it.data()])
-                stack[1].append(it.data(Qt.DecorationRole).name())
-                stack[2].append(it.text())
-        self.model.setStacks(stack)
-                
-        
-
-    # Partitions
-    def onPartitionComboChange(self):
-        field=self.ui.partComboBox.itemData(self.ui.partComboBox.currentIndex())
-        enable=not self.model.isCategorical(field)
-
-        if self.ui.partitionBox.isChecked() or not enable:
-            self.ui.partBinSpinBox.setEnabled(enable)
-            self.ui.partMinSpinBox.setEnabled(enable)
-            self.ui.partMaxSpinBox.setEnabled(enable)
-
-        self.ui.partMinSpinBox.setMinimum(self.model.fieldmin(field))
-        self.ui.partMaxSpinBox.setMinimum(self.model.fieldmin(field))
-        self.ui.partMinSpinBox.setMaximum(self.model.fieldmax(field))
-        self.ui.partMaxSpinBox.setMaximum(self.model.fieldmax(field))
-
-        self.ui.partMinSpinBox.setValue(self.model.fieldmin(field))
-        self.ui.partMaxSpinBox.setValue(self.model.fieldmax(field))
-        self.calcPartitions()
-
-    def calcPartitions(self):
-        self.model.clearPartition()
-        if not self.ui.partitionBox.isChecked():
-            self.partitions=None
-            self.partitionModel.setStringList([])
-            return
-        field=self.ui.partComboBox.itemData(self.ui.partComboBox.currentIndex())
-        num=None
-        minimum=None
-        maximum=None
-        if self.ui.partBinSpinBox.isEnabled():
-            num=self.ui.partBinSpinBox.value()
-            minimum=self.ui.partMinSpinBox.value()
-            maximum=self.ui.partMaxSpinBox.value()
-        self.partitions=self.model.partition(field,minimum,maximum,num)
-        self.partitionModel.setStringList(sorted(self.partitions.keys()))
-
-    def onSelectPartition(self):
-        part=self.partitionModel.data(self.ui.partitionList.selectionModel().currentIndex(),Qt.DisplayRole)
-        self.model.setPartition(self.partitions[part])
 
     # Flags
     def onFlagChange(self):

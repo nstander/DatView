@@ -53,6 +53,7 @@ class DataModel(QObject):
 
         self.mincache={}
         self.maxcache={}
+        self.tmincache={}
         self.labelcache={}
         self.groupmgr=None
         if groupfile:
@@ -277,6 +278,12 @@ class DataModel(QObject):
                 self.mincache[field]=-1
         return self.mincache[field]
 
+    def trueFieldMin(self,field):
+        field=self.datafield(field)
+        if field not in self.tmincache:
+            self.tmincache[field]=np.min(self.data[field])
+        return self.tmincache[field]
+
     def fieldmax(self,field):
         field=self.datafield(field)
         if field not in self.maxcache:
@@ -357,7 +364,7 @@ class DataModel(QObject):
         else:
             return self.data[field]
 
-    def stackedDataCol(self,field,filtered=False,defaultcolor='b',respectPartition=True, keep=None):
+    def stackedDataCol(self,field,filtered=False,defaultcolor='b',respectPartition=True, keep=None,stacks=0):
         """Return [[arrays],[colors],[labels]]"""
         field=self.datafield(field)
         if keep is None:
@@ -367,18 +374,20 @@ class DataModel(QObject):
         if filtered:
             keep &=self.topfilter.getKeep()
 
-        if self.stacks is None:
+        if stacks == 0:
+            stacks=self.stacks
+        if stacks is None:
             return [[ self.data[field][keep] ], [defaultcolor] , ["All"] ]
         else:
             a=[]
             c=[]
             l=[]
-            for i in range(len(self.stacks[0])):
-                d= self.data[field][keep&self.stacks[0][i]]
+            for i in range(len(stacks[0])):
+                d= self.data[field][keep&stacks[0][i]]
                 if len(d):
                     a.append(d)
-                    c.append(self.stacks[1][i])
-                    l.append(self.stacks[2][i])
+                    c.append(stacks[1][i])
+                    l.append(stacks[2][i])
         return [a,c,l]
                 
             

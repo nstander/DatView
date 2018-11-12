@@ -83,10 +83,10 @@ class MyFigure(FigureCanvas):
         self.plts.append(p)
         return p
 
-    def aggPlot(self,model,xfield,yfield,aggFunc,errFunc,partitions,tranpose,aggText,axis=None):
+    def aggPlot(self,model,xfield,yfield,aggFunc,errFunc,partitions,tranpose,aggText,legend,axis=None):
         if axis is None:
             axis=self.fig.add_subplot(111)
-        p=MyAggPlot(model,xfield,yfield,aggFunc,errFunc,partitions, tranpose,aggText,self.fig,axis,self)
+        p=MyAggPlot(model,xfield,yfield,aggFunc,errFunc,partitions, tranpose,aggText,legend,self.fig,axis,self)
         self.plts.append(p)
         return p
 
@@ -900,7 +900,7 @@ class MyScatterStatic(MyPlot):
         return txt
 
 class MyAggPlot(MyPlot):
-    def __init__(self,model,xfield,yfield,aggFunc,errFunc,partitions,tranpose,aggText,fig,plt,parent):
+    def __init__(self,model,xfield,yfield,aggFunc,errFunc,partitions,tranpose,aggText,legendstacks,fig,plt,parent):
         MyPlot.__init__(self,fig,plt,parent)
         self.model=model
         self.tranpose=tranpose
@@ -914,6 +914,7 @@ class MyAggPlot(MyPlot):
         self.aggFunc=aggFunc
         self.errFunc=errFunc
         self.aggtext=aggText
+        self.legendstacks=legendstacks
 
         x=[]
         keep=[]
@@ -954,16 +955,16 @@ class MyAggPlot(MyPlot):
         lbls=["all"]
         colors={"all":"b"}
         dtype=[]
-        if self.model.stacks is not None:
-            lbls=self.model.stacks[2]
-            colors=dict(zip(lbls,self.model.stacks[1]))
+        if self.legendstacks is not None:
+            lbls=self.legendstacks[2]
+            colors=dict(zip(lbls,self.legendstacks[1]))
         for lbl in lbls:
             dtype.append((lbl,'f4'))
         y=np.zeros((len(self.x)),dtype=dtype)
         uplim=np.zeros((len(self.x)),dtype=dtype)
         lowlim=np.zeros((len(self.x)),dtype=dtype)
         for i,k in enumerate(self.keep):
-            stackedData=self.model.stackedDataCol(self.aggField, filtered=self.drawSelection.isChecked(),keep=k)
+            stackedData=self.model.stackedDataCol(self.aggField, filtered=self.drawSelection.isChecked(),keep=k,stacks=self.legendstacks)
             for j in range(len(stackedData[0])):
                 v=self.aggFunc(stackedData[0][j])
                 y[stackedData[2][j]][i]=v

@@ -130,25 +130,25 @@ class MyMainWindow(QMainWindow):
         name=QFileDialog.getSaveFileName(self,'Save Selected As Dat File',filter='*.dat')
         if qt5:
             if name:
-                self.model.saveByPartitions(name[0], self.model.saveSelDat, self.filterpanel.partitions)
+                self.model.saveByPartitions(name[0], self.model.saveSelDat, self.controlPanel.partWidget.current())
         elif name is not None and len(name):
-            self.model.saveByPartitions(name, self.model.saveSelDat, self.filterpanel.partitions)
+            self.model.saveByPartitions(name, self.model.saveSelDat, self.controlPanel.partWidget.current())
 
     def onSaveLst(self):
         name=QFileDialog.getSaveFileName(self,'Save Selected As List File',filter='*.lst')
         if qt5:
             if name:
-                self.model.saveByPartitions(name[0], self.model.saveSelLst, self.filterpanel.partitions)
+                self.model.saveByPartitions(name[0], self.model.saveSelLst, self.controlPanel.partWidget.current())
         elif name is not None and len(name):
-            self.model.saveByPartitions(name, self.model.saveSelLst, self.filterpanel.partitions)
+            self.model.saveByPartitions(name, self.model.saveSelLst, self.controlPanel.partWidget.current())
 
     def onSaveStream(self):
         name=QFileDialog.getSaveFileName(self,'Save Selected As Stream File',filter='*.stream')
         if qt5:
             if name:
-                self.model.saveByPartitions(name[0], self.model.saveSelStream, self.filterpanel.partitions)
+                self.model.saveByPartitions(name[0], self.model.saveSelStream, self.controlPanel.partWidget.current())
         elif name is not None and len(name):
-            self.model.saveByPartitions(name, self.model.saveSelStream, self.filterpanel.partitions)
+            self.model.saveByPartitions(name, self.model.saveSelStream, self.controlPanel.partWidget.current())
 
     def onSaveNumpy(self):
         name=QFileDialog.getSaveFileName(self,'Save ALL as compressed numpy file',filter='*.npz')
