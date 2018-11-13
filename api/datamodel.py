@@ -236,7 +236,7 @@ class DataModel(QObject):
 
     def datafield(self,field):
         """Return the field name as it appears in the structured array"""
-        if field not in self.cols: 
+        if field is not None and field not in self.cols: 
             if (GroupMgr.prefix+field) in self.cols:
                 field=GroupMgr.prefix+field
             elif field[len(GroupMgr.prefix):] in self.cols:

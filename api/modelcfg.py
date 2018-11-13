@@ -68,7 +68,19 @@ class ModelConfig:
         self.fieldColors={}
         self.defaultColors=['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
         self.legendInitial=None
-        self.aggmarker='*'
+        self.partitionInitial=None
+        self.scatterInitialX=None
+        self.scatterInitialY=None
+        self.scatterInitialColor=None
+        self.hist2dInitialX=None
+        self.hist2dInitialY=None
+        self.pixelplotInitialX=None
+        self.pixelplotInitialY=None
+        self.pixelplotInitialColor=None
+        self.aggplotInitialX=None
+        self.aggplotInitialY=None
+        self.aggplotInitialLegend=None
+        self.aggmarker='o'
 
 
         et=ElementTree.parse(filename)
@@ -190,6 +202,32 @@ class ModelConfig:
                         self.fieldColors[child2.tag]=dict(child2.attrib)
             if child.tag == "legendInitial" and child.text:
                 self.legendInitial=child.text
+            if child.tag == "partitionInitial" and child.text:
+                self.partitionInitial=child.text
+            if child.tag == "scatterInitialX" and child.text:
+                self.scatterInitialX=child.text
+            if child.tag == "scatterInitialY" and child.text:
+                self.scatterInitialY=child.text
+            if child.tag == "scatterInitialColor" and child.text:
+                self.scatterInitialColor=child.text
+            if child.tag == "hist2dInitialX" and child.text:
+                self.hist2dInitialX=child.text
+            if child.tag == "hist2dInitialY" and child.text:
+                self.hist2dInitialY=child.text
+            if child.tag == "pixelplotInitialX" and child.text:
+                self.pixelplotInitialX=child.text
+            if child.tag == "pixelplotInitialY" and child.text:
+                self.pixelplotInitialY=child.text
+            if child.tag == "pixelplotInitialColor" and child.text:
+                self.pixelplotInitialColor=child.text
+            if child.tag == "aggplotInitialX" and child.text:
+                self.aggplotInitialX=child.text
+            if child.tag == "aggplotInitialY" and child.text:
+                self.aggplotInitialY=child.text
+            if child.tag == "aggplotInitialLegend" and child.text:
+                self.aggplotInitialLegend=child.text
+            if child.tag == "aggmarker" and child.text:
+                self.aggmarker=child.text
 
 
     def prettyname(self,field):

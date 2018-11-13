@@ -93,8 +93,20 @@
   <!-- Histograms displayed by default when launching GUI -->
   <defaulthistograms names="a,b,c,alpha,beta,gamma"/>
 
-  <!-- initial column for legend (stacking histograms) -->
-  <legendInitial>indby</legendInitial>
+  <!-- initial column selections for combo boxes. Leave empty to leave option off (where option can be on/off) -->
+  <legendInitial>cent</legendInitial> <!-- Legend combo box in Control Panel, for histogram stacking -->
+  <partitionInitial></partitionInitial> <!-- Partition combo box in Control Panel -->
+  <scatterInitialX>datview_sort_order</scatterInitialX> <!-- Scatter Plot X Axis -->
+  <scatterInitialY>vol</scatterInitialY> <!-- Scatter Plot Y Axis -->
+  <scatterInitialColor>reslim</scatterInitialColor> <!-- Scatter Plot Color By -->
+  <hist2dInitialX>vol</hist2dInitialX> <!-- 2D Histogram X Axis -->
+  <hist2dInitialY>reslim</hist2dInitialY> <!-- 2D Histogram Y Axis -->
+  <pixelplotInitialX>col</pixelplotInitialX> <!-- Pixel Plot X Axis -->
+  <pixelplotInitialY>chiprow</pixelplotInitialY> <!-- Pixel Plot Y Axis -->
+  <pixelplotInitialColor>vol</pixelplotInitialColor> <!-- Pixel Plot Color By -->
+  <aggplotInitialX>multiid</aggplotInitialX> <!-- Pixel Plot X Axis -->
+  <aggplotInitialY>vol</aggplotInitialY> <!-- Pixel Plot Y Axis -->
+  <aggplotInitialLegend>reslim</aggplotInitialLegend> <!-- Pixel Plot Color By -->
 
   <!-- Columns that should be hidden from menus in the GUI (values that make no sense to plot and would just clutter the gui) -->
   <hidden names="istart,iend,cstart,cend,pstart,pend,rstart,rend"/>
@@ -113,6 +125,9 @@
   <scatterlinewidth>0</scatterlinewidth> <!-- linewidths parameter of matplotlib.pyplot.scatter -->
   <scattermarker>o</scattermarker> <!-- marker parameter of matplotlib.pyplot.scatter -->
   <scattersize>4</scattersize> <!-- s parameter of matplotlib.pyplot.scatter -->
+
+  <!-- and for aggregated plots -->
+  <aggmarker>o</aggmarker>
 
   <!-- For histograms, always mask 0's. Masked values appear as white, and occurs whenever log scale colors are used. By default, use for all histograms to distinguish 1 from 0 more easily, but you can change here by setting text to 0. Any other value will be registered as true. -->
   <histAlwaysMask0>1</histAlwaysMask0>

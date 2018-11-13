@@ -50,7 +50,7 @@ class MyControlPanel(QWidget):
         self.ui.verticalLayout_7.insertWidget(1,self.legendWidget)
 
         # Partition
-        self.partWidget=partitionWidget.MyPartitionWidget(model, self.model.setPartition, None, True, False, self)
+        self.partWidget=partitionWidget.MyPartitionWidget(model, self.model.setPartition, model.cfg.partitionInitial, True, False, self)
         self.partWidget.ui.description.setText("Partition the data. Selecting a partition changes the full dataset shown in plots to just match the partition. When partitions are active, output is split with one output for each partition.")
         self.partWidget.ui.groupBox.setTitle("Partitions")
         self.ui.verticalLayout_7.insertWidget(2,self.partWidget)

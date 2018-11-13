@@ -29,9 +29,7 @@ class MyPartitionWidget(QWidget):
         self.setFunction = setFunc
 
         initial=None
-        search=comboInit
-        if search is not None:
-            search=model.datafield(comboInit)
+        search=model.datafield(comboInit)
         i=0
         for col in sorted(set(self.model.cols) - self.model.cfg.internalCols,key=self.model.prettyname):
             if (self.model.fieldmax(col) - self.model.trueFieldMin(col)) > 0:
@@ -39,6 +37,7 @@ class MyPartitionWidget(QWidget):
                 if col == search:
                     initial=i
                 i += 1
+
 
         self.parts=None
         self.ui.groupBox.setChecked(initial is not None)

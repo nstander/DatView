@@ -29,9 +29,20 @@ class MyHist2dDialog(QDialog):
         self.ui.cCombo.hide()
         self.ui.label_3.hide()
         self.ui.label_4.hide()
-        for col in sorted(set(self.model.cols) - self.model.cfg.internalCols,key=self.model.prettyname):
+        x0=0
+        y0=0
+        xInit=model.datafield(model.cfg.hist2dInitialX)
+        yInit=model.datafield(model.cfg.hist2dInitialY)
+        for i,col in enumerate(sorted(set(self.model.cols) - self.model.cfg.internalCols,key=self.model.prettyname)):
             self.ui.xCombo.addItem(self.model.prettyname(col),col)
             self.ui.yCombo.addItem(self.model.prettyname(col),col)
+            if xInit == col:
+                x0=i
+            if yInit == col:
+                y0=i
+
+        self.ui.yCombo.setCurrentIndex(y0)
+        self.ui.xCombo.setCurrentIndex(x0)
         self.accepted.connect(self.onAccept)
 
     def onAccept(self):
@@ -54,10 +65,27 @@ class MyScatterDialog(QDialog):
         self.ui.label_3.hide()
         self.ui.logCheckBox.hide()
         self.ui.cCombo.addItem("None",None)
-        for col in sorted(set(self.model.cols) - self.model.cfg.internalCols,key=self.model.prettyname):
+        x0=0
+        y0=0
+        c0=0
+        xInit=model.datafield(model.cfg.scatterInitialX)
+        yInit=model.datafield(model.cfg.scatterInitialY)
+        cInit=model.datafield(model.cfg.scatterInitialColor)
+        for i,col in enumerate(sorted(set(self.model.cols) - self.model.cfg.internalCols,key=self.model.prettyname)):
             self.ui.xCombo.addItem(self.model.prettyname(col),col)
             self.ui.yCombo.addItem(self.model.prettyname(col),col)
             self.ui.cCombo.addItem(self.model.prettyname(col),col)
+            if cInit == col:
+                c0=i+1
+            if xInit == col:
+                x0=i
+            if yInit == col:
+                y0=i
+
+        self.ui.yCombo.setCurrentIndex(y0)
+        self.ui.cCombo.setCurrentIndex(c0)
+        self.ui.xCombo.setCurrentIndex(x0)
+
         self.accepted.connect(self.onAccept)
 
     def onAccept(self):
@@ -81,17 +109,29 @@ class MyPixelPlotDialog(QDialog):
         self.ui.label_3.hide()
         self.ui.logCheckBox.hide()
         cols=set(self.model.cols) - self.model.cfg.internalCols
-        for col in sorted(cols,key=self.model.prettyname):
+        i2=0
+        x0=0
+        y0=0
+        c0=0
+        xInit=model.datafield(model.cfg.pixelplotInitialX)
+        yInit=model.datafield(model.cfg.pixelplotInitialY)
+        cInit=model.datafield(model.cfg.pixelplotInitialColor)
+        for i,col in enumerate(sorted(cols,key=self.model.prettyname)):
             if model.cfg.dtype(col).startswith("i") or model.cfg.dtype(col).startswith("u"):
                 self.ui.xCombo.addItem(self.model.prettyname(col),col)
                 self.ui.yCombo.addItem(self.model.prettyname(col),col)
+                if col == xInit:
+                    x0=i2
+                if col == yInit:
+                    y0=i2
+                i2+=1
             self.ui.cCombo.addItem(self.model.prettyname(col),col)
-        if "chiprow" in cols:
-            self.ui.yCombo.setCurrentIndex(self.ui.yCombo.findText(self.model.prettyname("chiprow")))
-        elif "row" in cols:
-            self.ui.yCombo.setCurrentIndex(self.ui.yCombo.findText(self.model.prettyname("row")))
-        if "col" in cols:
-            self.ui.xCombo.setCurrentIndex(self.ui.xCombo.findText(self.model.prettyname("col")))
+            if cInit == col:
+                c0=i
+
+        self.ui.yCombo.setCurrentIndex(y0)
+        self.ui.cCombo.setCurrentIndex(c0)
+        self.ui.xCombo.setCurrentIndex(x0)
 
         self.accepted.connect(self.onAccept)
 
@@ -131,11 +171,16 @@ class MyAggPlotDialog(QDialog):
 
         self.ui.logCheckBox.setText("Transpose")
         cols=set(self.model.cols) - self.model.cfg.internalCols
-        for col in sorted(cols,key=self.model.prettyname):
+        yInit=model.datafield(model.cfg.aggplotInitialY)
+        y0=0
+        for i,col in enumerate(sorted(cols,key=self.model.prettyname)):
             self.ui.yCombo.addItem(self.model.prettyname(col),col)
+            if col == yInit:
+                y0=i
+        self.ui.yCombo.setCurrentIndex(y0)
         self.accepted.connect(self.onAccept)
 
-        self.aggFieldWidget=partitionWidget.MyPartitionWidget(model, None, None, True, False, self)
+        self.aggFieldWidget=partitionWidget.MyPartitionWidget(model, None, model.cfg.aggplotInitialX, True, False, self)
         self.aggFieldWidget.ui.description.hide()
         self.aggFieldWidget.ui.groupBox.setTitle("X Axis (aggregated)")
         self.aggFieldWidget.ui.groupBox.setChecked(True)
@@ -144,7 +189,7 @@ class MyAggPlotDialog(QDialog):
         self.aggFieldWidget.onComboChange()
         self.ui.verticalLayout_2.insertWidget(6,self.aggFieldWidget)
 
-        self.legendWidget=partitionWidget.MyPartitionWidget(model, None, None, True, True, self)
+        self.legendWidget=partitionWidget.MyPartitionWidget(model, None, model.cfg.aggplotInitialLegend, True, True, self)
         self.legendWidget.ui.description.setText("Split results into lines.")
         self.legendWidget.ui.groupBox.setTitle("Lines")
         self.ui.verticalLayout_2.insertWidget(7,self.legendWidget)
