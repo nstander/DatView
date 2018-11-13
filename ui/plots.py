@@ -155,9 +155,32 @@ class MyPlot(QObject):
         self.datamenu.addAction(self.drawAll)
         self.datamenu.addAction(self.drawBoth)
         self.datamenu.addAction(self.drawSelection)
+        self.legendActionGroup=None
 
         self.range=None
         self.origRange=None
+
+    def legendMenu(self):
+        self.legendActionGroup=QActionGroup(self)
+        legMenu=self.menu.addMenu("Legend")
+        legInit=None
+
+        legOpt = self.legendActionGroup.addAction("None")
+        legOpt.triggered.connect(self.mydraw)
+        legOpt.setCheckable(True)
+        legOpt.setChecked(legInit is None)
+        legOpt.setData(None)
+        legMenu.addAction(legOpt)        
+
+        legendOpts=['best','upper right','upper left','lower left','lower right','right','center left','center right','lower center','upper center','center']
+        for i,opt in enumerate(legendOpts):
+            legOpt = self.legendActionGroup.addAction(opt)
+            legOpt.triggered.connect(self.mydraw)
+            legOpt.setCheckable(True)
+            legOpt.setChecked(i==legInit)
+            legOpt.setData(i)
+            legMenu.addAction(legOpt)
+        
 
     def initRange(self, xrange,yrange):
         if self.manageX and self.manageY:
@@ -915,6 +938,7 @@ class MyAggPlot(MyPlot):
         self.errFunc=errFunc
         self.aggtext=aggText
         self.legendstacks=legendstacks
+        self.legendMenu()
 
         x=[]
         keep=[]
@@ -983,7 +1007,9 @@ class MyAggPlot(MyPlot):
                 self.plt.errorbar(y[l],self.x,xerr=[lowlim[l],uplim[l]],label=l,color=colors[l],marker=self.model.cfg.aggmarker)
             else:
                 self.plt.errorbar(self.x,y[l],yerr=[lowlim[l],uplim[l]],label=l,color=colors[l],marker=self.model.cfg.aggmarker)
-        #self.plt.legend()  
+        legendPos=self.legendActionGroup.checkedAction().data()
+        if legendPos is not None:
+            self.plt.legend(loc=legendPos)  
         self.plt.set_xlabel(self.model.prettyname(self.xfield))
         self.plt.set_ylabel(self.model.prettyname(self.yfield))
         self.plt.set_title(self.aggtext % self.model.prettyname(self.aggField))
