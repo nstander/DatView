@@ -396,6 +396,7 @@ class MyPlot(QObject):
 class MyHistogram(MyPlot):
     def __init__(self,model,field,fig,plt,parent):
         MyPlot.__init__(self,fig,plt,parent)
+        self.legendMenu()
         self.bins=int(model.cfg.hist1Dbins)
         self.model=model
         self.field=field
@@ -444,11 +445,11 @@ class MyHistogram(MyPlot):
                 for i in range(len(data[0])):
                     cnts=np.unique(data[0][i],return_counts=True)
                     self.plt.bar(cnts[0],cnts[1],color=data[1][i],alpha=alpha,
-                                 edgecolor="none",align="center",bottom=bottoms[cnts[0]-self.dmin],linewidth=0)
+                                 edgecolor="none",align="center",bottom=bottoms[cnts[0]-self.dmin],linewidth=0,label=data[2][i])
                     bottoms[cnts[0]-self.dmin]+=cnts[1]
             else:
                 b=self.plt.hist(data[0],bins=self.bins,color=data[1],range=self.range,
-                              alpha=alpha,histtype="barstacked",linewidth=0,rwidth=1)[1]
+                              alpha=alpha,histtype="barstacked",linewidth=0,rwidth=1,label=data[2])[1]
         return b
 
     def datadraw(self):
@@ -471,6 +472,9 @@ class MyHistogram(MyPlot):
         self.xlabels(self.model,self.field)
         self.plt.set_title(title)
         self.sel.set_height(self.plt.get_ylim()[1])
+        legendPos=self.legendActionGroup.checkedAction().data()
+        if legendPos is not None:
+            self.plt.legend(loc=legendPos) 
 
     def onKey(self,event):
         if event.key == '+' or event.key == '=':
