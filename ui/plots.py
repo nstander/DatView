@@ -961,6 +961,7 @@ class MyAggPlot(MyPlot):
         for lbl in lbls:
             dtype.append((lbl,'f4'))
         y=np.zeros((len(self.x)),dtype=dtype)
+        y.fill(np.nan)
         uplim=np.zeros((len(self.x)),dtype=dtype)
         lowlim=np.zeros((len(self.x)),dtype=dtype)
         for i,k in enumerate(self.keep):
