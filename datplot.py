@@ -225,6 +225,70 @@ def imageh5(model,myFigure,figArgs,plotNum,plotArgString):
         img.plt.set_title(plotArgs.title)
     f.close()
 
+aggParser=argparse.ArgumentParser(prog="aggregate")
+aggParser.add_argument('-x','--xfield',required=True)
+aggParser.add_argument('--xmin',type=float,default=None,help="x minimum, field minimum (without -1) by default")
+aggParser.add_argument('--xmax',type=float,default=None,help="x maximum, field maximum by default")
+aggParser.add_argument('--xbins',type=int,default=None,help="number of x bins when aggregatging")
+aggParser.add_argument('-y','--yfield',required=True)
+aggParser.add_argument('--ymin',type=float,default=None,help="x minimum, field minimum (without -1) by default")
+aggParser.add_argument('--ymax',type=float,default=None,help="x maximum, field maximum by default")
+aggParser.add_argument('--agg',choices=["Average","Median","Min","Max","Count","CountValid"],required=True, help="Aggregate by choice")
+aggParser.add_argument('--err',choices=["None","STD","MinMax"],default="None", help="error bar choice")
+aggParser.add_argument('--tranpose',action='store_true',help="Switch X and Y so aggregated field is y axis")
+aggParser.add_argument('--legendfield',default=None,help="Legend field")
+aggParser.add_argument('--lmin',type=float,default=None,help="min to include in legend")
+aggParser.add_argument('--lmax',type=float,default=None,help="max to include in legend")
+aggParser.add_argument('--lbins',type=int,default=None,help="number of bins in legend")
+aggParser.add_argument('--legendpos',default=None,help="loc argument to pass to position. If not provided, no legend is drawn.")
+aggParser.add_argument('-t','--title',default=None,help="Plot title, defaults to pretty version of color by field name")
+aggParser.add_argument('--datashown',choices=['raw','filtered'],default='filtered',help="Plot just the filtered, the complete dataset, or both with complete semi-transparent")
+aggParser.add_argument('--prow',default=None,type=int,help="Plot row inside figure (used in subplot2grid, first row is 0).")
+aggParser.add_argument('--pcol',default=None,type=int,help="Plot column inside figure (used in subplot2grid, first row is 0).")
+aggParser.add_argument('--prowspan',default=1,type=int,help="Plot row span inside figure (used in subplot2grid).")
+aggParser.add_argument('--pcolspan',default=1,type=int,help="Plot column span inside figure (used in subplot2grid).")
+
+aggMap={"Average": np.average,
+        "Median": np.median,
+        "Min": np.min,
+        "Max": np.max,
+        "Count" : len,
+        "CountValid" : (lambda x : np.count_nonzero(x!=-1))}
+
+errMap={"None" : None, "STD" : (lambda x : [np.std(x)]), "MinMax" : (lambda x : [np.min(x),np.max(x)])}
+
+def aggplot(model,myFigure,figArgs,plotNum,plotArgString):
+    plotArgs=aggParser.parse_args(shlex.split(plotArgString[9:]))
+    ax=generateAxis(figArgs,plotNum,plotArgs)
+    xparts=model.partition(plotArgs.xfield,plotArgs.xmin,plotArgs.xmax,plotArgs.xbins)
+    lstacks=None
+    if plotArgs.legendfield is not None:
+        legendparts=model.partition(plotArgs.legendfield,plotArgs.lmin,plotArgs.lmax,plotArgs.lbins)
+        lstacks=[[],[],[]]
+        for i,k in enumerate(sorted(legendparts.keys())):
+            lstacks[0].append(legendparts[k])
+            lstacks[1].append(model.cfg.color(plotArgs.legendfield,k,i))
+            lstacks[2].append(k)
+
+    errTxt=""
+    if plotArgs.err != "None":
+        errTxt=u" \u00B1 %s"%(plotArgs.err)
+    aggtext="%s %s%s"%(plotArgs.agg,"%s",errTxt)
+
+    s=myFigure.aggPlot(model,plotArgs.xfield,plotArgs.yfield,aggMap[plotArgs.agg],errMap[plotArgs.err],xparts,plotArgs.tranpose,aggtext,lstacks,ax)
+
+    if plotArgs.legendpos is not None:
+        lp=s.legendActionGroup.addAction("User")
+        lp.setCheckable(True)
+        lp.setChecked(True)
+        lp.setData(plotArgs.legendpos)
+
+    if plotArgs.tranpose:
+        s.plt.set_xlim(tuple(yRange(s,plotArgs)))
+    else:
+        s.plt.set_ylim(tuple(yRange(s,plotArgs)))
+    dataAndTitle(s,plotArgs,True)
+
 
 
 def saveFigByPartitions(args,partname=None):
@@ -246,6 +310,7 @@ if __name__ == '__main__':
     scatterParser.print_usage(plothelp)
     pixelParser.print_usage(plothelp)
     imageH5Parser.print_usage(plothelp)
+    aggParser.print_usage(plothelp)
     plothelp.write("""
 Plot Argument Descriptions:
   -x XFIELD, --xfield XFIELD
@@ -282,7 +347,17 @@ Plot Argument Descriptions:
   -d, --datapath        Path in H5 file to get image from, guessed from
                         config if not provided
   -e, --event           Event number of image file
-  --cmap                Color map name, defaults from config""")
+  --cmap                Color map name, defaults from config
+  --agg {Average,Median,Min,Max,Count,CountValid}
+                        Aggregation method for aggregate plot. Applies to x
+  --err {None,STD,MinMax}
+                        Error bars for aggregate plot. Default is None
+  --tranpose            Switch x a and y if switch is included.
+  --legendfield         Field for legend for aggregate plot
+  --lmin                Legend field minimum
+  --lmax                Legend field maximum
+  --lbins               Legend field number of bins
+  --legendpos           Include legend at position given (argument to loc)""")
     parser=argparse.ArgumentParser(description="""Command line interface for plotting. Group, filter, sort, and partition\noptions are available, and if partitions are given then output is saved for\neach partition separately. This script supports subplots, so each plot must be\nspecified with --plot/-p and the argument to plot must be quoted to be read in\nas a single string. The argument to plot specifies all the options for the\ngiven plot.""",epilog=plothelp.getvalue().replace("usage:",""),formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('-p','--plot',action='append',default=[],help='Add a plot to the figure, has a single argument (use quotes) to be parsed on its own, see bottom of help text for options')
     parser.add_argument('-r','--rows',default=None,type=int,help="The number of rows in the figure. Defaults to rows in config if more than one plot provided. You should specify this if you start using prowspan and pcolspan in plots.")
@@ -356,6 +431,8 @@ Plot Argument Descriptions:
             pixelPlot(model,qFig,args,i,p)
         elif p.startswith("imageh5"):
             imageh5(model,qFig,args,i,p)
+        elif p.startswith("aggregate"):
+            aggplot(model,qFig,args,i,p)
         else:
             print("Unrecognized plot string: ",p)
 
