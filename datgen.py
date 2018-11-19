@@ -60,7 +60,6 @@ class DatGenerator:
         self.npdata=None
         self.npcols=None
         self.npsynccols=None
-        self.npsyncfields=None
         self.groupcols=[]
         self.static={}
         self.static.update(staticlist)
@@ -78,20 +77,16 @@ class DatGenerator:
     def startout(self):
         print(*self.cols,sep='\t',file=self.out)
 
-    def setNpSync(self,data,cols,synccols,syncfields):
-        for field in syncfields:
-            # If the field is not one we're outputting, and it's not one we
-            # calculate regardless (streamcol) then assume it is a cxicol and
-            # add it to ensure it's in cur when we need it.
-            if field not in self.cols and field not in self.streamcols:
-                self.cxicols.append(field)
+    def setNpSync(self,data):
         self.npdata=data
-        self.npcols=cols
-        self.npsynccols=synccols
-        self.npsyncfields=syncfields
-        for i in range(len(self.npcols)):
-            if i not in self.npsynccols:
-                self.cols.append(self.npcols[i])
+        self.npcols=[]
+        self.npsynccols=[]
+        for col in data.dtype.names:
+            if col in self.cols:
+                self.npsynccols.append(col)
+            else:
+                self.npcols.append(col)
+                self.cols.append(col)
 
     def skipCols(self,skip):
         for col in skip:
@@ -101,11 +96,11 @@ class DatGenerator:
     def addNp(self,cur):
         if self.npdata is not None:
             r=self.npdata
-            for i in range(len(self.npsynccols)):
-                r = r[r[:,self.npsynccols[i]]==cur[self.npsyncfields[i]],:]
+            for sync in self.npsynccols:
+                r = r[r[sync]==cur[sync]]
             if r.shape[0] == 1:
-                for i in range(len(self.npcols)):
-                        cur[self.npcols[i]]=r[0,i]
+                for col in self.npcols:
+                        cur[col]=r[col][0]
 
     def writerow(self,cur):
         cur.update(self.static)
@@ -251,10 +246,7 @@ if __name__ == '__main__':
     parser.add_argument('--cxi',action='append',default=[],help='Include from cxi/h5 file. Use switch multiple times to include from multiple cxi files. Example: --cxi /cheetah/frameNumber --cxi /LCLS/machineTime')
     parser.add_argument('--cxiintegrate',action='append',default=[],help='Include from cxi/h5 file. Use switch multiple times to include from multiple cxi files. Assumes 1D data that should be integrated with np.trapz for a single value')
     parser.add_argument('--static',action='append',default=[],nargs=2,help='Include a column whose value is the same for all output. Arguments are column_name column_value. Example --static dataset jan2012. You can include the switch multiple times for multiple static columns.')
-    parser.add_argument('--npfile',default=None,help='Filepath to numpy file. Columns in numpy file will be synced with stats after cxi columns but before grouping.')
-    parser.add_argument('--npcols',nargs='+',default=[],help='Space separated column names for columns in npfile. Defaults to npcol0 npcol1 etc if not provided. Variable length arguments so don\'t use as last switch before stream files.')
-    parser.add_argument('--npsynccols',type=int,nargs='+',default=[],help='The column(s) numbers of the npfile to sync on. Defaults to the the first column(s) to the length of the --npsyncfields. So, if --npsyncfields is length 2, and this is not provided, it will default to 0,1. These  columns are not output Variable length arguments so don\'t use as last switch before stream files.')
-    parser.add_argument('--npsyncfields',nargs="+",default=['/LCLS/machineTime','/LCLS/machineTimeNanoSeconds'],help='The fields(s) from the stream/cxi file to sync with. Defaults to [/LCLS/machineTime,/LCLS/machineTimeNanoSeconds]. Variable length arguments so don\'t use as last switch before stream files.')
+    parser.add_argument('--npfile',default=None,help='Filepath to numpy file containing a record array. Columns in numpy file will be synced with stats after cxi columns but before grouping. Column names from rec array will be used and column names that match will be used for syncing. So, a rec array with the columns (a,b,c,d,e) with a stream file input would use values of a, b, and c from the stream file that match and add the values for d and e to the output in columns named d and e. A more natural example might be a recarray with columns (ifile,event,dataToAdd1,dataToAdd2).')
     parser.add_argument('--skipcols',default=[],nargs='+',help='Remove the given columns from the output. Fast alternative to specifying all but a few columns to other options.')
     parser.add_argument('files',nargs='+',help='Files to process. They can be CrystFEL stream files or CrystFEL list files, but the two shouldn\'t be mixed in the same command. The extension on the first file determines how all remaining files will be processed, with .lst or .txt indicating a list file and anything else is assumed to be a stream file. Events must be specified in the list file (listing CXI files will not read each event seperately. Use CrystFEL\'s list_events to convert a list of CXI files to a list of events).')
 
@@ -279,12 +271,7 @@ if __name__ == '__main__':
 
     if args.npfile is not None:
         npdata=np.load(args.npfile)
-        for i in range(npdata.shape[1]): # This will crash for 1D arrays but this shouldn't be a 1D array
-            if (len(args.npcols)-1) < i:
-                args.npcols.append("npcol"+str(i))
-        if len(args.npsynccols) < len(args.npsyncfields):
-            args.npsynccols=np.arange(len(args.npsyncfields))
-        datgen.setNpSync(npdata,args.npcols,args.npsynccols,args.npsyncfields)
+        datgen.setNpSync(npdata)
 
     datgen.skipCols(args.skipcols)
             
