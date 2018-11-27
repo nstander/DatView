@@ -46,8 +46,9 @@ class DatGenerator:
     internalcols=['sfile','istart','iend','cstart','cend','pstart','pend','rstart','rend','multiid','multi','vol']
     allstreamcols=allstrcols+internalcols
     alllistcols=['ifile','run','class','subcxi','event','basename']
+    concatjoiner="--"
                 
-    def __init__(self,out,streamcols,cxicols,staticlist,integratecols,groupmgr=None):
+    def __init__(self,out,streamcols,cxicols,staticlist,integratecols,concatint,groupmgr=None):
         cxicols +=integratecols
         self.cols=streamcols+cxicols
         self.cxicols=cxicols
@@ -63,8 +64,11 @@ class DatGenerator:
         self.groupcols=[]
         self.static={}
         self.static.update(staticlist)
+        self.concatint=concatint
         for s in staticlist:
             self.cols.append(s[0])
+        for row in concatint:
+            self.cols.append(DatGenerator.concatjoiner.join(row))
         if groupmgr is not None:
             for col in sorted(self.groupmgr.groups()):
                 if col in self.cols:
@@ -73,6 +77,7 @@ class DatGenerator:
                 elif self.groupmgr.matchcol(col) in self.cols:
                     self.cols.append(GroupMgr.prefix + col)
                     self.groupcols.append(col)
+
 
     def startout(self):
         print(*self.cols,sep='\t',file=self.out)
@@ -102,10 +107,19 @@ class DatGenerator:
                 for col in self.npcols:
                         cur[col]=r[col][0]
 
+    def addConcatInt(self,cur):
+        for row in self.concatint:
+            l=[]
+            for v in row:
+                l.append(str(int(cur[v])))
+            cur[DatGenerator.concatjoiner.join(row)]=DatGenerator.concatjoiner.join(l)
+                
+
     def writerow(self,cur):
         cur.update(self.static)
         self.addcxi(cur)
         self.addNp(cur)
+        self.addConcatInt(cur)
         self.groupify(cur)
         for col in self.cols:
             if col in cur and cur[col] is not None:
@@ -248,6 +262,7 @@ if __name__ == '__main__':
     parser.add_argument('--static',action='append',default=[],nargs=2,help='Include a column whose value is the same for all output. Arguments are column_name column_value. Example --static dataset jan2012. You can include the switch multiple times for multiple static columns.')
     parser.add_argument('--npfile',default=None,help='Filepath to numpy file containing a record array. Columns in numpy file will be synced with stats after cxi columns but before grouping. Column names from rec array will be used and column names that match will be used for syncing. So, a rec array with the columns (a,b,c,d,e) with a stream file input would use values of a, b, and c from the stream file that match and add the values for d and e to the output in columns named d and e. A more natural example might be a recarray with columns (ifile,event,dataToAdd1,dataToAdd2).')
     parser.add_argument('--skipcols',default=[],nargs='+',help='Remove the given columns from the output. Fast alternative to specifying all but a few columns to other options.')
+    parser.add_argument('--concatint',action='append',default=[],nargs='+',help='Concatenate integer columns with --. Useful for grouping on multiple values. Values are converted to integers before concatenation so there is no 0 padding.')
     parser.add_argument('files',nargs='+',help='Files to process. They can be CrystFEL stream files or CrystFEL list files, but the two shouldn\'t be mixed in the same command. The extension on the first file determines how all remaining files will be processed, with .lst or .txt indicating a list file and anything else is assumed to be a stream file. Events must be specified in the list file (listing CXI files will not read each event seperately. Use CrystFEL\'s list_events to convert a list of CXI files to a list of events).')
 
 
@@ -267,7 +282,7 @@ if __name__ == '__main__':
     if args.group:
         gmgr=GroupMgr(args.group,True)
 
-    datgen=DatGenerator(args.out,args.builtincols,args.cxi,args.static,args.cxiintegrate,gmgr)
+    datgen=DatGenerator(args.out,args.builtincols,args.cxi,args.static,args.cxiintegrate,args.concatint,gmgr)
 
     if args.npfile is not None:
         npdata=np.load(args.npfile)
