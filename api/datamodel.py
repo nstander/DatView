@@ -430,7 +430,7 @@ class DataModel(QObject):
         if partitions is not None:
             previous=self.partitionfilter.getKeep()
             self.internalFilterChanges = internal
-            for k,v in partitions.items():
+            for k,v in sorted(partitions.items()):
                 self.setPartition(v)
                 if np.count_nonzero(self.rootfilter.getKeep()):
                     if appendName:
