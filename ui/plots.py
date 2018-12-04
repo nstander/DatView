@@ -424,7 +424,10 @@ class MyHistogram(MyPlot):
         if self.model.isCategorical(self.field):
             self.dmin = np.min(self.model.data[self.field])
             self.dmax = np.max(self.model.data[self.field])
+            # Categorical variables must be integers (or mapped to integers like groups and strings are)
             assert np.equal(np.mod(self.dmin,1),0) and np.equal(np.mod(self.dmax,1),0)
+            self.dmin = int(self.dmin)
+            self.dmax = int(self.dmax)
 
         act=self.menu.addAction("Fit Histogram (Ctrl+F)")
         act.triggered.connect(self.calcFit)
@@ -445,8 +448,8 @@ class MyHistogram(MyPlot):
                 for i in range(len(data[0])):
                     cnts=np.unique(data[0][i],return_counts=True)
                     self.plt.bar(cnts[0],cnts[1],color=data[1][i],alpha=alpha,
-                                 edgecolor="none",align="center",bottom=bottoms[cnts[0]-self.dmin],linewidth=0,label=data[2][i])
-                    bottoms[cnts[0]-self.dmin]+=cnts[1]
+                                 edgecolor="none",align="center",bottom=bottoms[cnts[0].astype(int)-self.dmin],linewidth=0,label=data[2][i])
+                    bottoms[cnts[0].astype(int)-self.dmin]+=cnts[1]
             else:
                 b=self.plt.hist(data[0],bins=self.bins,color=data[1],range=self.range,
                               alpha=alpha,histtype="barstacked",linewidth=0,rwidth=1,label=data[2])[1]

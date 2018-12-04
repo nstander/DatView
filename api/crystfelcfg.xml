@@ -112,7 +112,7 @@
   <hidden names="istart,iend,cstart,cend,pstart,pend,rstart,rend"/>
 
   <!-- Columns that should be treated as categorical variables. In-set filters are only available for categorical variables. Note that any fields whose datatype is string (starts with U) and all fields starting with a group file prefix are automatically categorical. -->
-  <categorical names="subcxi,class,multi,multiid,run"/>
+  <categorical names="subcxi,class,multi,multiid,run,/LCLS/evr41"/>
 
   <!-- Number of ticks on the x axis for non categorical, GUI limits to 6 by default to limit overlapping labels -->
   <numXticks>6</numXticks>
