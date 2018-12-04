@@ -110,9 +110,14 @@ class DatGenerator:
     def addConcatInt(self,cur):
         for row in self.concatint:
             l=[]
+            valid=True
             for v in row:
-                l.append(str(int(cur[v])))
-            cur[DatGenerator.concatjoiner.join(row)]=DatGenerator.concatjoiner.join(l)
+                if v in cur and cur[v] is not None:
+                    l.append(str(int(cur[v])))
+                else:
+                    valid=False
+            if valid:
+                cur[DatGenerator.concatjoiner.join(row)]=DatGenerator.concatjoiner.join(l)
                 
 
     def writerow(self,cur):
@@ -146,6 +151,7 @@ class DatGenerator:
         else:
             event=int(event)
         for col in self.cxicols:
+            v=None
             if col in self.curCXI and event < len(self.curCXI[col]):
                 v=self.curCXI[col][event]
             elif self.curH5 and col in self.curH5 and int(event) < len(self.curH5[col]):
@@ -157,7 +163,7 @@ class DatGenerator:
     def groupify(self,cur):
         if self.groupmgr is not None:
             for g in self.groupcols:
-                cur[GroupMgr.prefix + g] = self.groupmgr.match(g,cur[self.groupmgr.matchcol(g)])
+                cur[GroupMgr.prefix + g] = self.groupmgr.match(g,cur.get(self.groupmgr.matchcol(g),-1))
         
 
     def parsestream(self,filename):
