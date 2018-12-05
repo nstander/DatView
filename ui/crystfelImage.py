@@ -141,6 +141,7 @@ class CrystfelImage(QObject):
         image=self.image()
         if image is None:
             return # Problem with file, don't try to load anything else
+        image=np.array(image)
 
         # Image was loaded, so update what we've currently got drawn
         self.lastrow=self.imodel.currow
