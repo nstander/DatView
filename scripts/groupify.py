@@ -62,7 +62,7 @@ while True:
         valid=True
         for v in row:
             if v in cur and cur[v] is not None:
-                l.append(str(int(cur[v])))
+                l.append(str(int(float(cur[v]))))
             else:
                 valid=False
         if valid:
