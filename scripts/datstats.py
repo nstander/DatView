@@ -17,7 +17,8 @@ from api.modelcfg import ModelConfig
 
 def addline(args,partname=None):
     cur={}
-    cur['_'.join(args.partition)]=partname
+    if args.partition:
+        cur['_'.join(args.partition)]=partname
     for c in args.average:
         cur['average_'+c]=np.average(args.model.filtered[c][args.model.filtered[c] != -1])
     for c in args.averageN:
