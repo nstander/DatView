@@ -415,6 +415,9 @@ class MyHistogram(MyPlot):
 
         self.mu=None
         self.sigma=None
+        self.edges=None
+        self.cnts=None
+        self.labels=None
         if not self.model.isCategorical(self.field):
             self.initRange((self.model.fieldmin(self.field),self.model.fieldmax(self.field)),None)
 
@@ -441,19 +444,22 @@ class MyHistogram(MyPlot):
         self.mydraw(False)
 
     def stackedDraw(self,data,alpha):
-        b=None
+        self.edges=None
         if len(data[0]): # Have array to plot
+            self.labels=data[2]
             if self.model.isCategorical(self.field):
-                bottoms=np.zeros(self.dmax-self.dmin+1)
+                self.edges=np.arange(self.dmin -0.5, self.dmax + 1.5)
+                self.cnts=np.zeros((len(data[0]),self.dmax-self.dmin+1))
                 for i in range(len(data[0])):
                     cnts=np.unique(data[0][i],return_counts=True)
                     self.plt.bar(cnts[0],cnts[1],color=data[1][i],alpha=alpha,
-                                 edgecolor="none",align="center",bottom=bottoms[cnts[0].astype(int)-self.dmin],linewidth=0,label=data[2][i])
-                    bottoms[cnts[0].astype(int)-self.dmin]+=cnts[1]
+                                 edgecolor="none",align="center",bottom=self.cnts[i,cnts[0].astype(int)-self.dmin],linewidth=0,label=data[2][i])
+                    self.cnts[i:,cnts[0].astype(int)-self.dmin]+=cnts[1]
             else:
-                b=self.plt.hist(data[0],bins=self.bins,color=data[1],range=self.range,
-                              alpha=alpha,histtype="barstacked",linewidth=0,rwidth=1,label=data[2])[1]
-        return b
+                self.cnts,self.edges,_=self.plt.hist(data[0],bins=self.bins,color=data[1],range=self.range,
+                              alpha=alpha,histtype="barstacked",linewidth=0,rwidth=1,label=data[2])
+                self.cnts=np.array(self.cnts)
+        return self.edges
 
     def datadraw(self):
         title=self.model.prettyname(self.field)
@@ -463,13 +469,13 @@ class MyHistogram(MyPlot):
         alpha=1
         if drawBoth:
             alpha=0.5
-        b=self.stackedDraw(data,alpha)
+        edges=self.stackedDraw(data,alpha)
         if drawBoth:
             self.stackedDraw(self.model.stackedDataCol(self.field,True,"black"),1)
 
-        if b is not None and self.mu is not None:
-            y=matplotlib.mlab.normpdf(np.array(b),self.mu,self.sigma)
-            self.plt.plot(b,y/np.max(y)*self.plt.get_ylim()[1]*0.95,'r',linewidth=2)
+        if edges is not None and self.mu is not None:
+            y=matplotlib.mlab.normpdf(np.array(edges),self.mu,self.sigma)
+            self.plt.plot(edges,y/np.max(y)*self.plt.get_ylim()[1]*0.95,'r',linewidth=2)
             title += fmt % (self.mu,self.sigma)
 
         self.xlabels(self.model,self.field)
@@ -518,10 +524,26 @@ class MyHistogram(MyPlot):
     def toolTip(self,event):
         txt=""
         if event.xdata is not None and event.ydata is not None and event.inaxes == self.plt:
-            txt=str(event.xdata)
-            if self.model.isCategorical(self.field):
-                bar = int(np.round(event.xdata))
-                txt=self.model.stringValue(self.field,bar)
+            if self.edges is not None:
+                bin=np.searchsorted(self.edges,event.xdata)
+                if bin > 0 and bin < len(self.edges):
+                    if self.model.isCategorical(self.field):
+                        txt=self.model.stringValue(self.field,bin-1)
+                    else:
+                        txt="%.4f-%.4f"%(self.edges[bin-1],self.edges[bin])
+                    cnttxt=""
+                    if len(self.cnts.shape) > 1:
+                        for i in range(len(self.labels)-1,0,-1):
+                            cnttxt+="\n%s : %i" %(self.labels[i],self.cnts[i,bin-1]-self.cnts[i-1,bin-1])
+                        cnttxt+="\n%s : %i" %(self.labels[0],self.cnts[0,bin-1])
+                    else:
+                        cnttxt="\n%i"%self.cnts[bin-1]
+                    txt="%s%s"%(txt,cnttxt)
+            if txt=="":
+                txt=str(event.xdata)
+                if self.model.isCategorical(self.field):
+                    bar = int(np.round(event.xdata))
+                    txt=self.model.stringValue(self.field,bar)
         return txt
 
     def onFilterModelChange(self):
