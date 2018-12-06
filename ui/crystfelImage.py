@@ -304,13 +304,13 @@ class CrystfelImage(QObject):
         clen=None
         if "aclen" in self.dmodel.cols:
             clen=self.dmodel.data["aclen"][self.imodel.currow] # Value is corrected with coffset
-        if clen is None:
+        if clen is None or clen <=0:
             clen=self.fromMaybeEvent(self.dmodel.cfg.viewerCameraLengthH5Paths)
             if clen is not None: # Uncorrected, correct here
                 clen +=self.geom_coffset
 
         # Need valid photon energy, camera length, and geometry (yxmap)
-        if photon_ev is None or photon_ev <= 0 or clen is None or self.yxmap is None:
+        if photon_ev is None or photon_ev <= 0 or clen is None or clen <= 0 or self.yxmap is None:
             return # Not enough info 
 
         lmbd=scipy.constants.h * scipy.constants.c /(scipy.constants.e * photon_ev)
