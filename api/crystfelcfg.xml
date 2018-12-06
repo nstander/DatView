@@ -150,7 +150,7 @@
   <peakXH5paths>/entry_1/result_1/peakXPosRaw,/processing/hitfinder/peakinfo-raw</peakXH5paths>
   <peakYH5paths>/entry_1/result_1/peakYPosRaw</peakYH5paths> <!-- Should be 1D if found -->
   <viewerPhotonEvH5Paths>/instrument/photon_energy_eV,/LCLS/photon_energy_eV</viewerPhotonEvH5Paths>
-  <viewerCameraLengthH5Paths>/instrument/detector_1/EncoderValue,/LCLS/detector_1/EncoderValue,/LCLS/detector0-EncoderValue</viewerCameraLengthH5Paths>
+  <viewerCameraLengthH5Paths>/instrument/detector_1/EncoderValue,/LCLS/detector_1/EncoderValue,/LCLS/detector0-EncoderValue,/LCLS/detectorEncoderValue</viewerCameraLengthH5Paths>
 
   <!--cxiview magic numbers-->
   <cxiviewHistClipLevelValue>0.0002</cxiviewHistClipLevelValue>

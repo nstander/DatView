@@ -168,8 +168,8 @@ class ModelConfig:
                 self.viewerReflectionPenWidth=float(child.text)
             if child.tag == "viewerPhotonEvH5paths" and child.text:
                 self.viewerPhotonEvH5path=child.text.split(',')
-            if child.tag == "viewerCameraLengthH5paths" and child.text:
-                self.viewerCameraLengthH5path=child.text.split(',')
+            if child.tag == "viewerCameraLengthH5Paths" and child.text:
+                self.viewerCameraLengthH5Paths=child.text.split(',')
             if child.tag == "viewerResolutionRingsAngstroms" and child.text:
                 self.viewerResolutionRingsAngstroms=[]
                 for f in child.text.split(','):

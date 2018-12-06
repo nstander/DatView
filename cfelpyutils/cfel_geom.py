@@ -12,6 +12,12 @@
 #
 #    You should have received a copy of the GNU General Public License
 #    along with cfelpyutils.  If not, see <http://www.gnu.org/licenses/>.
+
+# Edited coffset to pull any line with coffset so it picks up the geometry file style with
+# separate coffset for each panel. Now it just grabs the last one. From what I've seen, usually
+# the panel coffsets don't vary much so grabbing the last one is better than nothing.
+# Natasha Stander, December 2018
+
 """
 Utilities for CrystFEL-style geometry files.
 
@@ -260,7 +266,7 @@ def coffset_from_geometry_file(fnam):
     coffset = 0.0
 
     for line in f_lines:
-        if line.startswith('coffset'):
+        if 'coffset' in line:
             coffset = float(line.split('=')[1].split(';')[0])
 
     return coffset
