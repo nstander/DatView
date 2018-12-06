@@ -168,7 +168,7 @@ class DataModel(QObject):
 
     def labelints(self,field):
         field=self.datafield(field)
-        if self.hasLabels(field):
+        if self.isCategorical(field):
             if field not in self.labelcache:
                 self.labels(field)
             return self.labelcache[field]["ints"]

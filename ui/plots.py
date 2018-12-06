@@ -373,7 +373,7 @@ class MyPlot(QObject):
         self.parent().draw()
 
     def xlabels(self,model,field,distribute=False):
-        if model.hasLabels(field):
+        if model.isCategorical(field):
             lbls=model.labels(field)
             ticks=model.labelints(field)
             if distribute:
@@ -384,7 +384,7 @@ class MyPlot(QObject):
             self.plt.locator_params(axis='x', nbins=model.cfg.numXticks)
 
     def ylabels(self,model,field,distribute=False):
-        if model.hasLabels(field):
+        if model.isCategorical(field):
             lbls=model.labels(field)
             ticks=model.labelints(field)
             if distribute:
