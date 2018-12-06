@@ -13,9 +13,9 @@
 #    You should have received a copy of the GNU General Public License
 #    along with cfelpyutils.  If not, see <http://www.gnu.org/licenses/>.
 
-# Edited coffset to pull any line with coffset so it picks up the geometry file style with
-# separate coffset for each panel. Now it just grabs the last one. From what I've seen, usually
-# the panel coffsets don't vary much so grabbing the last one is better than nothing.
+# Edited coffset to pull any line with coffset or res so it picks up the geometry file style with
+# separate coffset/res for each panel. Now it just grabs the last one. From what I've seen, usually
+# the panel coffsets/res don't vary much so grabbing the last one is better than nothing.
 # Natasha Stander, December 2018
 
 """
@@ -293,7 +293,7 @@ def res_from_geometry_file(fnam):
     res = None
 
     for line in f_lines:
-        if line.startswith('res'):
+        if 'res ' in line:
             res = float(line.split('=')[1].split(';')[0])
 
     return res
