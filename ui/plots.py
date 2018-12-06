@@ -797,7 +797,7 @@ class MyHist2d(MyPlot):
                     ytxt=self.model.stringValue(self.yfield,ybin-1)
                 else:
                     ytxt="%.4f-%.4f"%(self.yedges[ybin-1],self.yedges[ybin])
-                txt="%s,%s,%i"%(xtxt,ytxt,self.H[xbin-1,ybin-1])
+                txt="%s,%s\n%i"%(xtxt,ytxt,self.H[xbin-1,ybin-1])
         return txt
 
     def onFilterModelChange(self):
