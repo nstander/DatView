@@ -307,7 +307,9 @@ class CrystfelImage(QObject):
         if clen is None or clen <=0:
             clen=self.fromMaybeEvent(self.dmodel.cfg.viewerCameraLengthH5Paths)
             if clen is not None: # Uncorrected, correct here
-                clen = 1e-3*clen[0]+self.geom_coffset
+                if not isinstance(clen,float):
+                    clen=clen[0]
+                clen = 1e-3*clen+self.geom_coffset
 
         # Need valid photon energy, camera length, and geometry (yxmap)
         if photon_ev is None or photon_ev <= 0 or clen is None or clen <= 0 or self.yxmap is None:
