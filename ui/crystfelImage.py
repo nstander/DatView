@@ -197,13 +197,13 @@ class CrystfelImage(QObject):
                 y=mapped.y()
             txt="x: %i, y: %i" % (x,y)
             if self.iview.image is not None:
-                txt += " value: %.2f" % self.iview.image[int(mapped.x()),int(mapped.y())]
+                txt += "\npixel value: %.2f" % self.iview.image[int(mapped.x()),int(mapped.y())]
             if self.pixRadiusToRes is not None:
-                txt += " resolution: %.2f"% self.pixRadiusToRes(np.sqrt(x**2+y**2))
+                txt += "\nresolution: %.2f"% self.pixRadiusToRes(np.sqrt(x**2+y**2))
             if self.hklLookup is not None:
                 res=self.hklLookup.query([mapped.x(),mapped.y()],k=1)
                 if len(res) > 0 and res[0] < self.dmodel.cfg.viewerReflectionSize:
-                    txt += " hkl: %s" % self.hkl[res[1]]
+                    txt += "\nhkl: %s" % self.hkl[res[1]]
         self.iview.setToolTip(txt)
 
     # Sub functions called by draw, not meant to be called externally
