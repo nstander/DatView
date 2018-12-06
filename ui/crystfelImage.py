@@ -289,7 +289,7 @@ class CrystfelImage(QObject):
             size=self.dmodel.cfg.viewerReflectionSize,pen=\
             mkPen(self.dmodel.cfg.viewerReflectionColor,width=self.dmodel.cfg.viewerReflectionPenWidth),\
             brush=(0,0,0,0),pxMode=False)
-        if self.hkl is not None:
+        if self.hkl is not None and len(self.hkl):
             self.hklLookup=scipy.spatial.cKDTree(np.dstack((px,py))[0])
 
     def calcResLambda(self):
