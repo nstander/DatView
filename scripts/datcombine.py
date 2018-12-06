@@ -16,6 +16,7 @@ parser.add_argument('--cols',default=None,nargs='+',help='The columns to keep. I
 parser.add_argument('--colmode',default='union',choices=['intersect','union'],help='If the columns argument is not used, this determines the columns output as either the columns in common between all files or all columns found across files where missing values are filled in with -1')
 parser.add_argument('--static',action='append',default=[],nargs='+',help='Name of static column, then value(s), either one value for all or one value per dat file')
 parser.add_argument('-o','--out',type=argparse.FileType('w'),default=sys.stdout,help='the output dat file. If not provided, will be standard out.')
+parser.add_argument('--offset',action='append',default=[],nargs='+',help='Name of column, then value(s) to add, either one value for all or one value per dat file. ')
 parser.add_argument('infiles',nargs='+',help='the dat file (or a .npz file output from datview/datexport)')
 
 args=parser.parse_args()
@@ -55,6 +56,9 @@ print(*args.cols,sep='\t',file=args.out)
 for coldef in args.static:
     missing = len(args.infiles)- (len(coldef) - 1) 
     coldef+=[coldef[-1]]*(missing)    
+for coldef in args.offset:
+    missing = len(args.infiles)- (len(coldef) - 1) 
+    coldef+=[coldef[-1]]*(missing)  
 
 for i,ifile in enumerate(args.infiles):
     with open(ifile) as dfile:
@@ -67,6 +71,9 @@ for i,ifile in enumerate(args.infiles):
             cur.update(zip(cols,line.split()))
             for coldef in args.static:
                 cur[coldef[0]]=coldef[i+1]
+            for coldef in args.offset:
+                if coldef[0] in cur:
+                    cur[coldef[0]] = int(float(cur[coldef[0]]) + float(coldef[i+1]))
             for col in args.cols:
                 if col in cur and cur[col] is not None:
                     print(cur[col],end='\t',file=args.out)
