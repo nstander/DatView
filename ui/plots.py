@@ -528,7 +528,7 @@ class MyHistogram(MyPlot):
                 bin=np.searchsorted(self.edges,event.xdata)
                 if bin > 0 and bin < len(self.edges):
                     if self.model.isCategorical(self.field):
-                        txt=self.model.stringValue(self.field,bin-1)
+                        txt=self.model.stringValue(self.field,np.round(event.xdata))
                     else:
                         txt="%.4f-%.4f"%(self.edges[bin-1],self.edges[bin])
                     cnttxt=""
