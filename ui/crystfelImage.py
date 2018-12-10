@@ -300,6 +300,8 @@ class CrystfelImage(QObject):
             photon_ev= self.dmodel.data["phoen"][self.imodel.currow]
         if photon_ev is None or photon_ev <= 0:
             photon_ev=self.fromMaybeEvent(self.dmodel.cfg.viewerPhotonEvH5Paths)
+            if not isinstance(photon_ev,float):
+                photon_ev=photon_ev[0]
 
         clen=None
         if "aclen" in self.dmodel.cols:
