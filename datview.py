@@ -32,6 +32,7 @@ class MyMainWindow(QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         self.setAttribute(Qt.WA_DeleteOnClose)
+        self.setWindowTitle("Datview: %s"%datfile)
 
         config=ModelConfig(cfg)
         self.model=DataModel(datfile,groupfile,cfg=config)
