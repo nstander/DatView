@@ -117,7 +117,7 @@ class MyPixelPlotDialog(QDialog):
         yInit=model.datafield(model.cfg.pixelplotInitialY)
         cInit=model.datafield(model.cfg.pixelplotInitialColor)
         for i,col in enumerate(sorted(cols,key=self.model.prettyname)):
-            if model.cfg.dtype(col).startswith("i") or model.cfg.dtype(col).startswith("u"):
+            if model.cfg.dtype(col).startswith("i") or model.cfg.dtype(col).startswith("u") or col in model.digitized:
                 self.ui.xCombo.addItem(self.model.prettyname(col),col)
                 self.ui.yCombo.addItem(self.model.prettyname(col),col)
                 if col == xInit:

@@ -508,7 +508,7 @@ class MyHistogram(MyPlot):
 
     def calcFit(self):
         # Always fit filtered (if not filtering, will be full model)
-        dt=self.model.filtered[self.field]
+        dt=self.model.datacol(self.field,filtered=True)
         dt = dt[dt != -1] # But don't use empty
         if len(dt):
             (self.mu,self.sigma)=norm.fit(dt)
@@ -594,7 +594,7 @@ class MyScatter(MyPlot):
         marker=self.model.cfg.scattermarker
         if self.cfield is not None:
             cAll=self.model.datacol(self.cfield)
-            cFiltered=self.model.filtered[self.cfield]
+            cFiltered=self.model.datacol(self.cfield,filtered=True)
             cm=plt.cm.get_cmap(self.model.cfg.scattercmap)
             if self.vmin is None:
                 self.vmin=self.model.fieldmin(self.cfield)
@@ -603,9 +603,9 @@ class MyScatter(MyPlot):
 
         if self.model.isFiltered() and self.drawBoth.isChecked():
             self.plt.scatter(self.model.datacol(self.xfield),self.model.datacol(self.yfield),c=cAll,alpha=0.3,cmap=cm, vmin=self.vmin,vmax=self.vmax,marker=marker,linewidths=self.model.cfg.scatterlinewidth,s=self.model.cfg.scattersize)
-            sc=self.plt.scatter(self.model.filtered[self.xfield],self.model.filtered[self.yfield],c=cFiltered,cmap=cm,vmin=self.vmin,vmax=self.vmax,marker=marker,linewidths=self.model.cfg.scatterlinewidth,s=self.model.cfg.scattersize)
+            sc=self.plt.scatter(self.model.datacol(self.xfield,filtered=True),self.model.datacol(self.yfield,filtered=True),c=cFiltered,cmap=cm,vmin=self.vmin,vmax=self.vmax,marker=marker,linewidths=self.model.cfg.scatterlinewidth,s=self.model.cfg.scattersize)
         elif self.drawSelection.isChecked():
-            sc=self.plt.scatter(self.model.filtered[self.xfield],self.model.filtered[self.yfield],c=cFiltered,cmap=cm,vmin=self.vmin,vmax=self.vmax,marker=marker,linewidths=self.model.cfg.scatterlinewidth,s=self.model.cfg.scattersize)
+            sc=self.plt.scatter(self.model.datacol(self.xfield,filtered=True),self.model.datacol(self.yfield,filtered=True),c=cFiltered,cmap=cm,vmin=self.vmin,vmax=self.vmax,marker=marker,linewidths=self.model.cfg.scatterlinewidth,s=self.model.cfg.scattersize)
         else:
             sc=self.plt.scatter(self.model.datacol(self.xfield),self.model.datacol(self.yfield),c=cAll,cmap=cm,
 vmin=self.vmin,vmax=self.vmax,marker=marker,linewidths=self.model.cfg.scatterlinewidth,s=self.model.cfg.scattersize)
@@ -625,8 +625,8 @@ vmin=self.vmin,vmax=self.vmax,marker=marker,linewidths=self.model.cfg.scatterlin
         xrange=(self.model.fieldmin(self.xfield),self.model.fieldmax(self.xfield))
         yrange=(self.model.fieldmin(self.yfield),self.model.fieldmax(self.yfield))
         if self.drawSelection.isChecked() and self.model.isFiltered():
-            xrange=(np.min(self.model.filtered[self.xfield]),np.max(self.model.filtered[self.xfield]))
-            yrange=(np.min(self.model.filtered[self.yfield]),np.max(self.model.filtered[self.yfield]))
+            xrange=(np.min(self.model.datacol(self.xfield,filtered=True)),np.max(self.model.datacol(self.xfield,filtered=True)))
+            yrange=(np.min(self.model.datacol(self.yfield,filtered=True)),np.max(self.model.datacol(self.yfield,filtered=True)))
         self.plt.set_xlim(xrange)
         self.plt.set_ylim(yrange)
         self.mydraw()
@@ -728,12 +728,9 @@ class MyHist2d(MyPlot):
             yedges=edges[yemin:yemax]
             yedges=np.append(yedges,np.max(yedges)+1)
             b[1]=yedges
-        if drawfiltered:
-            self.H,self.xedges,self.yedges = np.histogram2d(self.model.filtered[self.xfield],self.model.filtered[self.yfield],bins=b,
-                              range=self.range)
-        else:
-            self.H,self.xedges,self.yedges = np.histogram2d(self.model.datacol(self.xfield),self.model.datacol(self.yfield),bins=b,
-                              range=self.range)
+
+        self.H,self.xedges,self.yedges = np.histogram2d(self.model.datacol(self.xfield,filtered=drawfiltered),self.model.datacol(self.yfield,filtered=drawfiltered),
+                    bins=b,range=self.range)
 
         norm=None
         if self.log.isChecked():
@@ -847,12 +844,9 @@ class MyPixelPlot(MyPlot):
         ymax=int(np.max(self.model.datacol(self.yfield)))
 
         self.cdat=np.ones((ymax+1,xmax+1))*-1
-        if drawfiltered:
-            valid=(self.model.filtered[self.xfield] >=0) & (self.model.filtered[self.yfield] >= 0)
-            self.cdat[self.model.filtered[self.yfield][valid],self.model.filtered[self.xfield][valid]] = self.model.filtered[self.cfield][valid]
-        else:
-            valid=(self.model.datacol(self.xfield) >=0) & (self.model.datacol(self.yfield) >= 0)
-            self.cdat[self.model.datacol(self.yfield)[valid],self.model.datacol(self.xfield)[valid]] = self.model.datacol(self.cfield)[valid]
+
+        valid=(self.model.datacol(self.xfield,filtered=drawfiltered) >=0) & (self.model.datacol(self.yfield,filtered=drawfiltered) >= 0)
+        self.cdat[self.model.datacol(self.yfield,filtered=drawfiltered)[valid],self.model.datacol(self.xfield,filtered=drawfiltered)[valid]] = self.model.datacol(self.cfield,filtered=drawfiltered)[valid]
 
         if self.vmin is None:
             self.vmin=self.model.fieldmin(self.cfield)
@@ -981,7 +975,7 @@ class MyAggPlot(MyPlot):
                 k2=model.intValue(xfield,k)
             if k2 is None:
                 bounds=k.split('-')
-                k2=np.average(float(bounds[0]),float(bounds[1]))
+                k2=np.average([float(bounds[0]),float(bounds[1])])
             x.append(k2)
         self.x=np.array(x)
         self.keep=np.array(keep)[np.argsort(x)]
@@ -1001,6 +995,9 @@ class MyAggPlot(MyPlot):
 
         self.sel=Rectangle((0,0),0,0,color='r',fill=False)
         self.onFilterChange() # Let this function worry about actual bounds, we just cared about color and fill
+
+        self.drawBoth.setVisible(False)
+        self.drawSelection.setChecked(True)
 
         self.mydraw(False)
 

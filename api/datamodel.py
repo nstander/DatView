@@ -21,6 +21,8 @@ class DataModel(QObject):
     filterModelChange=pyqtSignal(GroupFilter)
     stackChange=pyqtSignal()
     sortColumnName="datview_sort_order"
+    compareGroupName="datview_compare_group"
+    compareIndexName="datview_compare_row"
     def __init__(self,filename,groupfile=None,cfg=None):
         QObject.__init__(self)
         if cfg is None:
@@ -180,7 +182,7 @@ class DataModel(QObject):
            a bar chart versus histogram. Groups are always categorical, columns stored as strings are
            always categorical and some columns with known limited values are specified categorical such
            as multi """
-        return field.startswith(GroupMgr.prefix) or 'U' in self.cfg.dtype(field) or field in self.cfg.categorical
+        return field.startswith(GroupMgr.prefix) or field in self.digitized or field in self.cfg.categorical
 
     def intValues(self,field):
         """Meant for categorical values, return list of all possible"""
@@ -211,7 +213,7 @@ class DataModel(QObject):
 
         if self.canAccessDigitized(field):
             if v >= 0 and v < len(self.digitized[field]):
-                v = self.digitized[field][v]
+                v = self.digitized[field][int(v)]
             else:
                 v=""
         elif field.startswith(GroupMgr.prefix) and self.groupmgr is not None:
@@ -357,33 +359,38 @@ class DataModel(QObject):
         """Set the current partition filter's keep."""
         self.partitionfilter.setkeep(np.ones(self.data.shape,dtype=bool))
 
-    def datacol(self,field,respectPartition=True):
+    def datacol(self,field,filtered=False,respectPartition=True):
         field=self.datafield(field)
-        if respectPartition:
-            return self.data[field][self.partitionfilter.getKeep()]
-        else:
-            return self.data[field]
+        keep=np.ones(self.data.shape,dtype=bool)
 
-    def stackedDataCol(self,field,filtered=False,defaultcolor='b',respectPartition=True, keep=None,stacks=0):
-        """Return [[arrays],[colors],[labels]]"""
-        field=self.datafield(field)
-        if keep is None:
-            keep=np.ones(self.data.shape,dtype=bool)
         if respectPartition:
             keep &=self.partitionfilter.getKeep()
         if filtered:
             keep &=self.topfilter.getKeep()
 
+        return self.data[field][keep]
+
+    def stackedDataCol(self,field,filtered=False,defaultcolor='b',respectPartition=True, keep=None,stacks=0):
+        """Return [[arrays],[colors],[labels]]"""
+        field=self.datafield(field)
+        finalkeep=np.ones(self.data.shape,dtype=bool)
+        if keep is not None:
+            finalkeep &=keep
+        if respectPartition:
+            finalkeep &=self.partitionfilter.getKeep()
+        if filtered:
+            finalkeep &=self.topfilter.getKeep()
+
         if stacks == 0:
             stacks=self.stacks
         if stacks is None:
-            return [[ self.data[field][keep] ], [defaultcolor] , ["All"] ]
+            return [[ self.data[field][finalkeep] ], [defaultcolor] , ["All"] ]
         else:
             a=[]
             c=[]
             l=[]
             for i in range(len(stacks[0])):
-                d= self.data[field][keep&stacks[0][i]]
+                d= self.data[field][finalkeep&stacks[0][i]]
                 if len(d):
                     a.append(d)
                     c.append(stacks[1][i])
