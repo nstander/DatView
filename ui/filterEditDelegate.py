@@ -31,7 +31,7 @@ class FilterItemDelegate(QStyledItemDelegate):
         if index.isValid() and index.column() == 2 and isinstance(index.internalPointer(),filters.InSetFilter):
             combo=QComboBox(parent)
             return combo
-        if index.isValid() and index.column() == 2 and isinstance(index.internalPointer(),filters.GroupFilter):
+        if index.isValid() and index.column() == 2 and (isinstance(index.internalPointer(),filters.OrFilter) or isinstance(index.internalPointer(),filters.AndFilter)):
             e=QToolButton(parent)
             e.setText("+")
             e.setPopupMode(QToolButton.InstantPopup)

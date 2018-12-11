@@ -22,7 +22,7 @@ except ImportError:
 from api.datamodel import DataModel
 from api.modelcfg import ModelConfig
 from ui.controlPanel import MyControlPanel
-from ui.plotDialogs import MyScatterDialog, MyHist2dDialog, MyPixelPlotDialog,MyAggPlotDialog
+from ui.plotDialogs import *
 from ui.itemViewer import MyItemViewer
 from ui.plots import MyFigure
 
@@ -53,6 +53,9 @@ class MyMainWindow(QMainWindow):
         self.ui.actionAggregated_Plot.triggered.connect(self.onShowAggPlot)
         self.ui.actionOpen.setVisible(False)
         self.ui.actionSave_Plot.setVisible(False)
+        self.ui.actionComparison_Scatter.setVisible(self.model.hasComparisons())
+        self.ui.actionComparison_Scatter.triggered.connect(self.onShowCmpScatter)
+        self.ui.actionComparison_2D_Histogram.setVisible(False)
         
 
         self.filtmessage=QLabel(self)
@@ -161,6 +164,10 @@ class MyMainWindow(QMainWindow):
 
     def onShowScatter(self):
         d=MyScatterDialog(self.model,self)
+        d.exec()
+
+    def onShowCmpScatter(self):
+        d=MyCompareScatterDialog(self.model,self)
         d.exec()
 
     def onShowHist2d(self):

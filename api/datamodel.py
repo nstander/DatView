@@ -23,6 +23,9 @@ class DataModel(QObject):
     sortColumnName="datview_sort_order"
     compareGroupName="datview_compare_group"
     compareIndexName="datview_compare_row"
+    genColSeparator="*"
+    cmpColTemplate="%s*cmp*%i*%i" # arguments field, compare group 1, compare group 2
+
     def __init__(self,filename,groupfile=None,cfg=None):
         QObject.__init__(self)
         if cfg is None:
@@ -35,6 +38,7 @@ class DataModel(QObject):
         self.rdata = None
         self.data = None
         self.npfile = None
+        self.cmparray=None
         
         if filename.endswith(".npz"):
             self.loadNumpy(filename)
@@ -66,6 +70,7 @@ class DataModel(QObject):
         self.limit=None
         self.limitModeRandom = True
         self.stacks=None
+
 
     def loadtxt(self,filename):
         """Called from __init__, not intended to be called by users"""
@@ -120,9 +125,18 @@ class DataModel(QObject):
         self.cols=list(self.data.dtype.names)
         for dkey in self.npfile["digitizedkeys"].tolist():
             self.digitized[dkey]=None
+        if "cmparray" in self.npfile.keys():
+            self.cmparray=self.npfile["cmparray"]
         
 
     def prettyname(self,field):
+        origfield=field
+        field=self.datafield(field)
+        if DataModel.genColSeparator in origfield:
+            parts=origfield.split(DataModel.genColSeparator)
+            assert parts[1] == "cmp" # Only one that should appear right now
+            group1=int(parts[2])
+            return "%s of %s" %(self.cfg.prettyname(field), self.stringValue(DataModel.compareGroupName,group1))
         return self.cfg.prettyname(field)
 
 #########################################
@@ -239,6 +253,8 @@ class DataModel(QObject):
     def datafield(self,field):
         """Return the field name as it appears in the structured array"""
         if field is not None and field not in self.cols: 
+            if DataModel.genColSeparator in field:
+                field=field.split(DataModel.genColSeparator)[0]
             if (GroupMgr.prefix+field) in self.cols:
                 field=GroupMgr.prefix+field
             elif field[len(GroupMgr.prefix):] in self.cols:
@@ -256,12 +272,39 @@ class DataModel(QObject):
         self.topfilter.addChild(toAdd)
 
     def selectionFilter(self,field):
+        origfield=field
         field=self.datafield(field)
-        if field not in self.selfilters:
-            f=BetweenFilter(self.fieldmin(field)-1,self.fieldmax(field)+1,self.data[field],field)
-            f.setActive(False)
-            self.addFilter(f)
-            self.selfilters[field]=f
+        if field not in self.selfilters and origfield not in self.selfilters:
+            if DataModel.genColSeparator in origfield:
+                parts=origfield.split(DataModel.genColSeparator)
+                assert parts[1] == "cmp" # Only one that should appear right now
+                group1=int(parts[2])
+                group2=int(parts[3])
+
+                vals1=np.ones(self.cmparray.shape[0])*-1
+                valid=self.cmparray[:,group1] != -1
+                vals1[valid]=self.data[field][self.cmparray[valid,group1].astype(int)]
+
+                vals2=np.ones(self.cmparray.shape[0])*-1
+                valid=self.cmparray[:,group2] != -1
+                vals2[valid]=self.data[field][self.cmparray[valid,group2].astype(int)]
+
+                f1=BetweenFilter(self.fieldmin(field)-1,self.fieldmax(field)+1,vals1,field)
+                f2=BetweenFilter(self.fieldmin(field)-1,self.fieldmax(field)+1,vals2,field)
+                f1.setActive(False)
+                f2.setActive(False)
+                nm="%s,%s"%(self.stringValue(DataModel.compareGroupName,group1),self.stringValue(DataModel.compareGroupName,group2))
+                f=PairBetweenFilter(self.data.shape,self.cmparray,f1,f2,group1,group2,nm)
+                self.addFilter(f)
+                self.selfilters[origfield]=f1
+                self.selfilters[DataModel.cmpColTemplate%(parts[0],group2,group1)]=f2
+            else:
+                f=BetweenFilter(self.fieldmin(field)-1,self.fieldmax(field)+1,self.data[field],field)
+                f.setActive(False)
+                self.addFilter(f)
+                self.selfilters[field]=f
+        if origfield in self.selfilters:
+            return self.selfilters[origfield]
         return self.selfilters[field]
 
     def applyFilters(self):
@@ -360,6 +403,7 @@ class DataModel(QObject):
         self.partitionfilter.setkeep(np.ones(self.data.shape,dtype=bool))
 
     def datacol(self,field,filtered=False,respectPartition=True):
+        origfield=field
         field=self.datafield(field)
         keep=np.ones(self.data.shape,dtype=bool)
 
@@ -368,6 +412,15 @@ class DataModel(QObject):
         if filtered:
             keep &=self.topfilter.getKeep()
 
+        if DataModel.genColSeparator in origfield:
+            parts=origfield.split(DataModel.genColSeparator)
+            assert parts[1] == "cmp" # Only one that should appear right now
+            group1=int(parts[2])
+            group2=int(parts[3])
+            validpairs=(self.cmparray[:,group1] != -1) & (self.cmparray[:,group2] != -1)
+            keepvalid=(keep[self.cmparray[validpairs,group1].astype(int)]) & (keep[self.cmparray[validpairs,group2].astype(int)])
+            finalret=self.cmparray[keepvalid,group1]
+            return self.data[field][finalret.astype(int)]
         return self.data[field][keep]
 
     def stackedDataCol(self,field,filtered=False,defaultcolor='b',respectPartition=True, keep=None,stacks=0):
@@ -402,6 +455,9 @@ class DataModel(QObject):
     def setStacks(self,stack):
         self.stacks=stack
         self.stackChange.emit()
+
+    def hasComparisons(self):
+        return self.cmparray is not None and len(self.cmparray.shape) > 1
 
         
 
@@ -598,6 +654,36 @@ class DataModel(QObject):
             elif child.tag == "and":
                 f=AndFilter(self.data.shape)
                 self.loadFilterRecursive(child,f)
+            elif child.tag == "pairbetween":
+                tmp=AndFilter(self.data.shape)
+                self.loadFilterRecursive(child,tmp)
+                
+                field=tmp.children[0].field
+                group1=int(child.get("col1"))
+                vals1=np.ones(self.cmparray.shape[0])*-1
+                valid=self.cmparray[:,group1] != -1
+                vals1[valid]=self.data[field][self.cmparray[valid,group1].astype(int)]
+                c1=BetweenFilter(tmp.children[0].minimum,tmp.children[0].maximum,vals1,field)
+                
+
+                field=tmp.children[1].field
+                group2=int(child.get("col2"))
+                vals2=np.ones(self.cmparray.shape[0])*-1
+                valid=self.cmparray[:,group2] != -1
+                vals2[valid]=self.data[field][self.cmparray[valid,group2].astype(int)]
+                c2=BetweenFilter(tmp.children[1].minimum,tmp.children[1].maximum,vals2,field)
+
+                nm1=DataModel.cmpColTemplate%(field,group1,group2)
+                nm2=DataModel.cmpColTemplate%(field,group2,group1)
+
+                if field in self.selfilters and self.selfilters[field] == tmp.children[0]:
+                    del self.selfilters[field]
+                if nm1 not in self.selfilters:
+                    self.selfilters[nm1]=c1
+                if nm2 not in self.selfilters:
+                    self.selfilters[nm2]=c2
+
+                f=PairBetweenFilter(self.data.shape,self.cmparray,c1,c2,group1,group2,child.get("namestr"))
             else:
                 assert False #Unsupported
             f.setActive(child.get("active") == "True")

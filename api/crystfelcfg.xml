@@ -17,8 +17,10 @@
     <!-- The defaults when unspecified. -->
     <field nm="default" dtype="f4" fmt="%f"  mult="1" />
 
-    <!-- This column is created and maintained by the software and never output. If you need to change the raw name, change DataModel.sortColumnName in api/datamodel.py. -->
+    <!-- These columns are created and maintained by the software and not output. If you need to change the raw name, change DataModel in api/datamodel.py. -->
     <field nm="datview_sort_order" prettyname="Current Sort Order"  dtype="u4" fmt="%i"/>
+    <field nm="datview_compare_group" prettyname="Compared Group"  dtype="u4" fmt="%i"/>
+    <field nm="datview_compare_row" prettyname="Comparison ID"  dtype="u4" fmt="%i"/>
 
     <!-- Stream columns possible with datgen -->
     <field nm="run"    prettyname="Run"  dtype="i4" fmt="%i"/>
@@ -107,6 +109,7 @@
   <aggplotInitialX>multiid</aggplotInitialX> <!-- Pixel Plot X Axis -->
   <aggplotInitialY>vol</aggplotInitialY> <!-- Pixel Plot Y Axis -->
   <aggplotInitialLegend>reslim</aggplotInitialLegend> <!-- Pixel Plot Color By -->
+  <scatterCmpInitial>vol</scatterCmpInitial> <!-- Scatter Comparison Plot Initial Field. This plot is only available for npz files output from datcompare.py -->
 
   <!-- Columns that should be hidden from menus in the GUI (values that make no sense to plot and would just clutter the gui) -->
   <hidden names="istart,iend,cstart,cend,pstart,pend,rstart,rend"/>

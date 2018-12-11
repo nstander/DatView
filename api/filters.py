@@ -11,7 +11,7 @@ import lxml.etree as ElementTree
 
 class DataFilter(QObject):
     filterchange=pyqtSignal() # When filtering needs to update, final "keep" changed. 
-    activechange=pyqtSignal()
+    activechange=pyqtSignal(bool)
     modelchange=pyqtSignal(object) # When the model needs to update (active or values changed)
 
     def __init__(self,keep):
@@ -38,7 +38,7 @@ class DataFilter(QObject):
     def setActive(self,active):
         if active != self.active:
             self.active=active
-            self.activechange.emit()
+            self.activechange.emit(active)
             self.modelchange.emit(self)
 
     def childcnt(self):
@@ -138,9 +138,13 @@ class OrFilter(GroupFilter):
 
     def onchange(self):
         keep=np.zeros(self.shape,dtype=bool)
+        hadActiveChild=False
         for child in self.children:
             if child.isActive():
+                hadActiveChild=True
                 keep |= child.getKeep()
+        if not hadActiveChild:
+            keep=np.ones(self.shape,dtype=bool)
         self.setkeep(keep)
 
     def kind(self):
@@ -149,6 +153,43 @@ class OrFilter(GroupFilter):
     def toXML(self,parent):
         e=ElementTree.SubElement(parent,"or")
         e.set("active",str(self.active))
+        for child in self.children:
+            child.toXML(e)
+
+class PairBetweenFilter(GroupFilter):
+    def __init__(self,shape,cmparray,child1,child2,col1,col2,namestr):
+        GroupFilter.__init__(self,shape)
+        self.cmparray=cmparray
+        self.child1=child1
+        self.child2=child2
+        self.col1=col1
+        self.col2=col2
+        self.addChild(child1)
+        self.addChild(child2)
+        self.namestr=namestr
+
+    def onchange(self):
+        keep=np.zeros(self.shape,dtype=bool)
+        if self.child1.isActive() and self.child2.isActive():
+            validpairs=self.child1.getKeep() & self.child2.getKeep()
+            keep[self.cmparray[validpairs,:][:,np.array([self.col1,self.col2])].flatten().astype(int)]=True
+        elif self.child1.isActive():
+            keep[self.cmparray[self.child1.getKeep(),self.col1].astype(int)]=True
+        elif self.child2.isActive():
+            keep[self.cmparray[self.child2.getKeep(),self.col2].astype(int)]=True
+        else:
+            keep=np.ones(self.shape,dtype=bool)
+        self.setkeep(keep)
+
+    def kind(self):
+        return "Pair (%s) Between" % self.namestr
+
+    def toXML(self,parent):
+        e=ElementTree.SubElement(parent,"pairbetween")
+        e.set("active",str(self.active))
+        e.set("col1",str(self.col1))
+        e.set("col2",str(self.col2))
+        e.set("namestr",self.namestr)
         for child in self.children:
             child.toXML(e)
 

@@ -74,7 +74,9 @@
     </widget>
     <addaction name="menuHistogram_Bar"/>
     <addaction name="actionScatter"/>
+    <addaction name="actionComparison_Scatter"/>
     <addaction name="action2D_Histogram"/>
+    <addaction name="actionComparison_2D_Histogram"/>
     <addaction name="actionPixel"/>
     <addaction name="actionAggregated_Plot"/>
    </widget>
@@ -164,6 +166,16 @@
   <action name="actionAggregated_Plot">
    <property name="text">
     <string>Aggregated Plot</string>
+   </property>
+  </action>
+  <action name="actionComparison_Scatter">
+   <property name="text">
+    <string>Comparison Scatter</string>
+   </property>
+  </action>
+  <action name="actionComparison_2D_Histogram">
+   <property name="text">
+    <string>Comparison 2D Histogram</string>
    </property>
   </action>
  </widget>

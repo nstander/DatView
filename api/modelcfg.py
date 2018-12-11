@@ -81,6 +81,7 @@ class ModelConfig:
         self.aggplotInitialY=None
         self.aggplotInitialLegend=None
         self.aggmarker='o'
+        self.scatterCmpInitial=None
 
 
         et=ElementTree.parse(filename)
@@ -228,6 +229,8 @@ class ModelConfig:
                 self.aggplotInitialLegend=child.text
             if child.tag == "aggmarker" and child.text:
                 self.aggmarker=child.text
+            if child.tag == "scatterCmpInitial" and child.text:
+                self.scatterCmpInitial=child.text
 
 
     def prettyname(self,field):

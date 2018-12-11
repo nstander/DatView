@@ -94,7 +94,7 @@ data.sort(order=synccols+[DataModel.compareGroupName])
 data[DataModel.sortColumnName]=np.arange(len(data))
 
 cmptable=[]
-currow=np.ones(len(args.infiles))*-1
+currow=np.ones(len(args.infiles),dtype=int)*-1
 cmprow=0
 cur=None
 for i in range(len(data)):
@@ -111,7 +111,6 @@ for i in range(len(data)):
 cmptable.append(currow)
 
 cmparray=np.stack(cmptable)
-print(data[DataModel.compareIndexName])
 
 np.savez_compressed(args.out,data=data,rdata=rdata,cmparray=cmparray,digitizedkeys=np.asarray(sorted(digitized.keys())),**digitized)
 
