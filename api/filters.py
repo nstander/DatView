@@ -343,9 +343,55 @@ class InSetFilter(FieldFilter):
         e.set("field",self.field)
         e.set("set", self.valuesString())
 
+class MaxFilter(FieldFilter):
+    def __init__(self,shape,cmparray,values,field):
+        FieldFilter.__init__(self, np.ones(shape,dtype=bool),field,values)
+        GroupFilter.__init__(self,shape)
+        self.cmparray=cmparray
+        self.shape=shape
+        self.valid=values != -1
+        self.cols=np.arange(cmparray.shape[1])
+        self.update()
 
+    def update(self):
+        keep=np.zeros(self.shape,dtype=bool)
+        for i in range(self.cmparray.shape[0]):
+            if self.valid[i].any():
+                keep[int(self.cmparray[i,(self.cols[self.valid[i]][np.argmax(self.values[i,self.valid[i]])])])]=True
+        self.setkeep(keep)
+
+    def kind(self):
+        return "Max"
+
+    def toXML(self,parent):
+        e=ElementTree.SubElement(parent,"max")
+        e.set("active",str(self.active))
+        e.set("field",self.field)
     
+class MinFilter(FieldFilter):
+    def __init__(self,shape,cmparray,values,field):
+        FieldFilter.__init__(self, np.ones(shape,dtype=bool),field,values)
+        GroupFilter.__init__(self,shape)
+        self.cmparray=cmparray
+        self.shape=shape
+        self.valid=values != -1
+        self.cols=np.arange(cmparray.shape[1])
+        self.update()
 
+    def update(self):
+        keep=np.zeros(self.shape,dtype=bool)
+        for i in range(self.cmparray.shape[0]):
+            if self.valid[i].any():
+                keep[int(self.cmparray[i,(self.cols[self.valid[i]][np.argmin(self.values[i,self.valid[i]])])])]=True
+        self.setkeep(keep)
+
+    def kind(self):
+        return "Min"
+
+    def toXML(self,parent):
+        e=ElementTree.SubElement(parent,"min")
+        e.set("active",str(self.active))
+        e.set("field",self.field)
 
 
 

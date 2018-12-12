@@ -281,16 +281,8 @@ class DataModel(QObject):
                 group1=int(parts[2])
                 group2=int(parts[3])
 
-                vals1=np.ones(self.cmparray.shape[0])*-1
-                valid=self.cmparray[:,group1] != -1
-                vals1[valid]=self.data[field][self.cmparray[valid,group1].astype(int)]
-
-                vals2=np.ones(self.cmparray.shape[0])*-1
-                valid=self.cmparray[:,group2] != -1
-                vals2[valid]=self.data[field][self.cmparray[valid,group2].astype(int)]
-
-                f1=BetweenFilter(self.fieldmin(field)-1,self.fieldmax(field)+1,vals1,field)
-                f2=BetweenFilter(self.fieldmin(field)-1,self.fieldmax(field)+1,vals2,field)
+                f1=BetweenFilter(self.fieldmin(field)-1,self.fieldmax(field)+1,self.cmpvalues(field)[:,group1],field)
+                f2=BetweenFilter(self.fieldmin(field)-1,self.fieldmax(field)+1,self.cmpvalues(field)[:,group2],field)
                 f1.setActive(False)
                 f2.setActive(False)
                 nm="%s,%s"%(self.stringValue(DataModel.compareGroupName,group1),self.stringValue(DataModel.compareGroupName,group2))
@@ -458,6 +450,15 @@ class DataModel(QObject):
 
     def hasComparisons(self):
         return self.cmparray is not None and len(self.cmparray.shape) > 1
+
+    def cmpvalues(self,field):
+        assert self.hasComparisons()
+        field=self.datafield(field)
+        values=np.ones(self.cmparray.shape)*-1
+        valid=self.cmparray != -1
+        values[valid]=self.data[field][self.cmparray[valid].astype(int)]
+        return values
+
 
         
 
@@ -634,44 +635,28 @@ class DataModel(QObject):
 
     def loadFilterRecursive(self,xmlEl,filterpar):
         for child in xmlEl:
-            if child.tag == "between":
-                f=BetweenFilter(float(child.get("min")),float(child.get("max")),self.data[self.datafield(child.get("field"))],child.get("field"))
-                if child.get("field") not in self.selfilters:
-                    self.selfilters[child.get("field")] = f
-            elif child.tag == "greaterequal":
-                f=GreaterEqualFilter(float(child.get("min")),self.data[self.datafield(child.get("field"))],child.get("field"))
-            elif child.tag == "lessthan":
-                f=LessThanFilter(float(child.get("max")),self.data[self.datafield(child.get("field"))],child.get("field"))
-            elif child.tag == "inset":
-                allowedlst=child.get("set").split(",")
-                allowedset=set()
-                for v in allowedlst:
-                    allowedset.add(self.intValue(child.get("field"),v))
-                f=InSetFilter(allowedset,self.data[self.datafield(child.get("field"))],child.get("field"),self.stringValue)
-            elif child.tag == "or":
+            if child.tag == "or":
                 f=OrFilter(self.data.shape)
                 loadFilterRecursive(child,f)
             elif child.tag == "and":
                 f=AndFilter(self.data.shape)
                 self.loadFilterRecursive(child,f)
             elif child.tag == "pairbetween":
+                if not self.hasComparisons():
+                    continue # Don't load this filter if no comparison array
                 tmp=AndFilter(self.data.shape)
                 self.loadFilterRecursive(child,tmp)
+                if len(tmp.children) != 2:
+                    continue # Something went wrong, maybe field doesn't exist
                 
                 field=tmp.children[0].field
                 group1=int(child.get("col1"))
-                vals1=np.ones(self.cmparray.shape[0])*-1
-                valid=self.cmparray[:,group1] != -1
-                vals1[valid]=self.data[field][self.cmparray[valid,group1].astype(int)]
-                c1=BetweenFilter(tmp.children[0].minimum,tmp.children[0].maximum,vals1,field)
+                c1=BetweenFilter(tmp.children[0].minimum,tmp.children[0].maximum,self.cmpvalues(field)[:,group1],field)
                 
 
                 field=tmp.children[1].field
                 group2=int(child.get("col2"))
-                vals2=np.ones(self.cmparray.shape[0])*-1
-                valid=self.cmparray[:,group2] != -1
-                vals2[valid]=self.data[field][self.cmparray[valid,group2].astype(int)]
-                c2=BetweenFilter(tmp.children[1].minimum,tmp.children[1].maximum,vals2,field)
+                c2=BetweenFilter(tmp.children[1].minimum,tmp.children[1].maximum,self.cmpvalues(field)[:,group2],field)
 
                 nm1=DataModel.cmpColTemplate%(field,group1,group2)
                 nm2=DataModel.cmpColTemplate%(field,group2,group1)
@@ -684,8 +669,33 @@ class DataModel(QObject):
                     self.selfilters[nm2]=c2
 
                 f=PairBetweenFilter(self.data.shape,self.cmparray,c1,c2,group1,group2,child.get("namestr"))
-            else:
-                assert False #Unsupported
+            else: # field filter
+                if self.datafield(child.get("field")) not in self.cols:
+                    continue # Filter doesn't apply
+                if child.tag == "between":
+                    f=BetweenFilter(float(child.get("min")),float(child.get("max")),self.data[self.datafield(child.get("field"))],child.get("field"))
+                    if child.get("field") not in self.selfilters:
+                        self.selfilters[child.get("field")] = f
+                elif child.tag == "greaterequal":
+                    f=GreaterEqualFilter(float(child.get("min")),self.data[self.datafield(child.get("field"))],child.get("field"))
+                elif child.tag == "lessthan":
+                    f=LessThanFilter(float(child.get("max")),self.data[self.datafield(child.get("field"))],child.get("field"))
+                elif child.tag == "inset":
+                    allowedlst=child.get("set").split(",")
+                    allowedset=set()
+                    for v in allowedlst:
+                        allowedset.add(self.intValue(child.get("field"),v))
+                    f=InSetFilter(allowedset,self.data[self.datafield(child.get("field"))],child.get("field"),self.stringValue)
+                elif child.tag == "max":
+                    if not self.hasComparisons():
+                        continue # Don't load this filter if no comparison array
+                    f=MaxFilter(self.data.shape,self.cmparray,self.cmpvalues(child.get("field")),child.get("field"))
+                elif child.tag == "min":
+                    if not self.hasComparisons():
+                        continue # Don't load this filter if no comparison array
+                    f=MinFilter(self.data.shape,self.cmparray,self.cmpvalues(child.get("field")),child.get("field"))
+                else:
+                    assert False #Unsupported
             f.setActive(child.get("active") == "True")
             filterpar.addChild(f)
 

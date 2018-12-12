@@ -49,6 +49,10 @@ class FilterItemDelegate(QStyledItemDelegate):
             greater = top.addMenu(">=")
             less = top.addMenu("<")
             inset = top.addMenu("In")
+
+            if index.model().dmodel.hasComparisons():
+                maxMenu=top.addMenu("Max")
+                minMenu=top.addMenu("Min")
             for col in sorted(set(index.model().dmodel.cols) - index.model().dmodel.cfg.internalCols,key=index.model().dmodel.prettyname):
                 a = between.addAction(index.model().dmodel.prettyname(col))
                 a.setData((index,col))
@@ -66,6 +70,14 @@ class FilterItemDelegate(QStyledItemDelegate):
                     a = inset.addAction(index.model().dmodel.prettyname(col))
                     a.setData((index,col))
                     a.triggered.connect(self.onAddIn)
+                if index.model().dmodel.hasComparisons():
+                    a = maxMenu.addAction(index.model().dmodel.prettyname(col))
+                    a.setData((index,col))
+                    a.triggered.connect(self.onAddMax)
+
+                    a = minMenu.addAction(index.model().dmodel.prettyname(col))
+                    a.setData((index,col))
+                    a.triggered.connect(self.onAddMin)
             e.setMenu(top)
             return e
         return super(FilterItemDelegate,self).createEditor(parent,option,index)
@@ -184,6 +196,22 @@ class FilterItemDelegate(QStyledItemDelegate):
         dmodel=act.data()[0].model().dmodel
         field=act.data()[1]
         child=filters.InSetFilter(dmodel.intValues(field),dmodel.data[field],field,dmodel.stringValue)
+        par.addChild(child)
+
+    def onAddMax(self):
+        act=self.sender()
+        par=act.data()[0].internalPointer()
+        dmodel=act.data()[0].model().dmodel
+        field=act.data()[1]
+        child=filters.MaxFilter(par.shape,dmodel.cmparray,dmodel.cmpvalues(field),field)
+        par.addChild(child)
+
+    def onAddMin(self):
+        act=self.sender()
+        par=act.data()[0].internalPointer()
+        dmodel=act.data()[0].model().dmodel
+        field=act.data()[1]
+        child=filters.MinFilter(par.shape,dmodel.cmparray,dmodel.cmpvalues(field),field)
         par.addChild(child)
 
 
