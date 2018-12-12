@@ -840,6 +840,8 @@ class MyPixelPlot(MyPlot):
     def datadraw(self):
         drawfiltered=self.drawSelection.isChecked()
 
+        if len(self.model.datacol(self.xfield)) == 0:
+            return # Don't generate the errors from empty.
         xmax=int(np.max(self.model.datacol(self.xfield)))
         ymax=int(np.max(self.model.datacol(self.yfield)))
 
@@ -867,7 +869,16 @@ class MyPixelPlot(MyPlot):
 
 
     def onReset(self,event):
-        self.mydraw(False)
+        if len(self.model.datacol(self.xfield)) == 0:
+            self.mydraw(False)
+        else:
+            filtered=self.drawSelection.isChecked() and self.model.isFiltered()
+            xrange=(int(np.min(self.model.datacol(self.xfield,filtered))),int(np.max(self.model.datacol(self.xfield,filtered))))
+            yrange=(int(np.min(self.model.datacol(self.yfield,filtered))),int(np.max(self.model.datacol(self.yfield,filtered))))
+            self.plt.set_xlim(xrange)
+            self.plt.set_ylim(yrange)
+            self.mydraw()
+
 
     def toolTip(self,event):
         txt=""
