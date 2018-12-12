@@ -110,6 +110,7 @@
   <aggplotInitialY>vol</aggplotInitialY> <!-- Pixel Plot Y Axis -->
   <aggplotInitialLegend>reslim</aggplotInitialLegend> <!-- Pixel Plot Color By -->
   <scatterCmpInitial>vol</scatterCmpInitial> <!-- Scatter Comparison Plot Initial Field. This plot is only available for npz files output from datcompare.py -->
+  <hist2DCmpInitial>vol</hist2DCmpInitial> <!-- 2D Histogram Comparison Plot Initial Field. This plot is only available for npz files output from datcompare.py -->
 
   <!-- Columns that should be hidden from menus in the GUI (values that make no sense to plot and would just clutter the gui) -->
   <hidden names="istart,iend,cstart,cend,pstart,pend,rstart,rend"/>

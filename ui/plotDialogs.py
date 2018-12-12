@@ -219,6 +219,7 @@ class MyCompareScatterDialog(QDialog):
         QDialog.__init__(self,parent)
         self.ui=Ui_PlotDialog()
         self.ui.setupUi(self)
+        self.setWindowTitle("Comparison Scatter Plot")
         self.ui.description.setText("Select a field, and then two comparison groups to plot against each other")
         self.model = model
 
@@ -259,6 +260,50 @@ class MyCompareScatterDialog(QDialog):
         p.setWindowTitle("%s - Compare Scatter" % (self.model.prettyname(field)))
         p.show()
 
+class MyCompare2DHistDialog(QDialog):
+    def __init__(self,model,parent):
+        QDialog.__init__(self,parent)
+        self.ui=Ui_PlotDialog()
+        self.ui.setupUi(self)
+        self.setWindowTitle("Comparison 2D Histogram")
+        self.ui.description.setText("Select a field, and then two comparison groups to plot against each other")
+        self.model = model
+
+        self.ui.cCombo.hide()
+        self.ui.label_4.hide()
+        self.ui.label_3.setText("Field")
+        z0=0
+        x0=0
+        y0=1
+        zInit=model.datafield(model.cfg.hist2DCmpInitial)
+
+        for i,col in enumerate(sorted(set(self.model.cols) - self.model.cfg.internalCols,key=self.model.prettyname)):
+            self.ui.zCombo.addItem(self.model.prettyname(col),col)
+            if zInit == col:
+                z0=i
+
+        lbls=self.model.labels(DataModel.compareGroupName)
+        lblints=self.model.labelints(DataModel.compareGroupName)
+        for i in range(len(lbls)):
+            self.ui.xCombo.addItem(lbls[i],lblints[i])
+            self.ui.yCombo.addItem(lbls[i],lblints[i])
+
+        self.ui.xCombo.setCurrentIndex(x0)
+        self.ui.yCombo.setCurrentIndex(y0)
+        self.ui.zCombo.setCurrentIndex(z0)
+
+        self.accepted.connect(self.onAccept)
+
+    def onAccept(self):
+        p=MyFigure(parent=self.parent(),flags=Qt.Window)
+        field=self.ui.zCombo.itemData(self.ui.zCombo.currentIndex())
+        xfield=int(self.ui.xCombo.itemData(self.ui.xCombo.currentIndex()))
+        yfield=int(self.ui.yCombo.itemData(self.ui.yCombo.currentIndex()))
+        xstr=DataModel.cmpColTemplate % (field, xfield, yfield)
+        ystr=DataModel.cmpColTemplate % (field, yfield, xfield)
+        p.histogram2D(self.model,xstr,ystr,log=self.ui.logCheckBox.isChecked())
+        p.setWindowTitle("%s - Compare 2D Histogram" % (self.model.prettyname(field)))
+        p.show()
 
 
         

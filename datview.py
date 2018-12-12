@@ -55,7 +55,8 @@ class MyMainWindow(QMainWindow):
         self.ui.actionSave_Plot.setVisible(False)
         self.ui.actionComparison_Scatter.setVisible(self.model.hasComparisons())
         self.ui.actionComparison_Scatter.triggered.connect(self.onShowCmpScatter)
-        self.ui.actionComparison_2D_Histogram.setVisible(False)
+        self.ui.actionComparison_2D_Histogram.setVisible(self.model.hasComparisons())
+        self.ui.actionComparison_2D_Histogram.triggered.connect(self.onShowCmpHist2d)
         
 
         self.filtmessage=QLabel(self)
@@ -172,6 +173,10 @@ class MyMainWindow(QMainWindow):
 
     def onShowHist2d(self):
         d=MyHist2dDialog(self.model,self)
+        d.exec()
+
+    def onShowCmpHist2d(self):
+        d=MyCompare2DHistDialog(self.model,self)
         d.exec()
 
     def onShowPixelPlot(self):
