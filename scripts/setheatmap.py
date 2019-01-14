@@ -15,6 +15,7 @@ parser.add_argument('--title','-t',default='Set Intersection Heatmap',help='Plot
 parser.add_argument('--save','-s',help='Save the figure to the given filename instead of displaying it')
 parser.add_argument("--ext",default="png", help="extension to use in call to savefig. Default=png")
 parser.add_argument("--dpi",type=float,default=None, help="dpi to use in call to savefig. Default=png")
+parser.add_argument("--latex",action="store_true",help="Use Latex to display text")
 parser.add_argument('datfiles',nargs='+',help='The datfiles to use')
 args = parser.parse_args()
 
@@ -45,7 +46,8 @@ for i in range(len(sets)):
         cdat[i,j] = len(sets[i] & sets[j])
         cdat[j,i] = len(sets[i] & sets[j])
 
-plt.rc('text',usetex=True)
+if args.latex:
+    plt.rc('text',usetex=True)
 
 fig = plt.figure(figsize=(14,8.5))
 ax1 = plt.subplot(111)
