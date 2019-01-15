@@ -700,6 +700,24 @@ class DataModel(QObject):
                     if not self.hasComparisons():
                         continue # Don't load this filter if no comparison array
                     f=MinFilter(self.data.shape,self.cmparray,self.cmpvalues(child.get("field")),child.get("field"))
+                elif child.tag == "allbetween":
+                    if not self.hasComparisons():
+                        continue # Don't load this filter if no comparison array
+                    f=AllBetweenFilter(self.data.shape,self.cmparray,self.cmpvalues(child.get("field")),child.get("field"),\
+                        float(child.get("min")),float(child.get("max")))
+                elif child.tag == "anybetween":
+                    if not self.hasComparisons():
+                        continue # Don't load this filter if no comparison array
+                    f=AnyBetweenFilter(self.data.shape,self.cmparray,self.cmpvalues(child.get("field")),child.get("field"),\
+                        float(child.get("min")),float(child.get("max")))
+                elif child.tag == "allsame":
+                    if not self.hasComparisons():
+                        continue # Don't load this filter if no comparison array
+                    f=AllSameFilter(self.data.shape,self.cmparray,self.cmpvalues(child.get("field")),child.get("field"))
+                elif child.tag == "anydifferent":
+                    if not self.hasComparisons():
+                        continue # Don't load this filter if no comparison array
+                    f=AnyDifferentFilter(self.data.shape,self.cmparray,self.cmpvalues(child.get("field")),child.get("field"))
                 else:
                     assert False #Unsupported
             f.setActive(child.get("active") == "True")

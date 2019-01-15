@@ -51,8 +51,14 @@ class FilterItemDelegate(QStyledItemDelegate):
             inset = top.addMenu("In")
 
             if index.model().dmodel.hasComparisons():
-                maxMenu=top.addMenu("Max")
-                minMenu=top.addMenu("Min")
+                cmpMenu=top.addMenu("Comparisons")
+                maxMenu=cmpMenu.addMenu("Max")
+                minMenu=cmpMenu.addMenu("Min")
+                allBetweenMenu=cmpMenu.addMenu("All Between")
+                anyBetweenMenu=cmpMenu.addMenu("Any Between")
+                sameMenu=cmpMenu.addMenu("All Same")
+                differentMenu=cmpMenu.addMenu("Any Different")
+
             for col in sorted(set(index.model().dmodel.cols) - index.model().dmodel.cfg.internalCols,key=index.model().dmodel.prettyname):
                 a = between.addAction(index.model().dmodel.prettyname(col))
                 a.setData((index,col))
@@ -78,6 +84,23 @@ class FilterItemDelegate(QStyledItemDelegate):
                     a = minMenu.addAction(index.model().dmodel.prettyname(col))
                     a.setData((index,col))
                     a.triggered.connect(self.onAddMin)
+
+                    a = allBetweenMenu.addAction(index.model().dmodel.prettyname(col))
+                    a.setData((index,col))
+                    a.triggered.connect(self.onAddAllBetween)
+
+                    a = anyBetweenMenu.addAction(index.model().dmodel.prettyname(col))
+                    a.setData((index,col))
+                    a.triggered.connect(self.onAddAnyBetween)
+
+                    a = sameMenu.addAction(index.model().dmodel.prettyname(col))
+                    a.setData((index,col))
+                    a.triggered.connect(self.onAddSame)
+
+                    a = differentMenu.addAction(index.model().dmodel.prettyname(col))
+                    a.setData((index,col))
+                    a.triggered.connect(self.onAddDifferent)
+
             e.setMenu(top)
             return e
         return super(FilterItemDelegate,self).createEditor(parent,option,index)
@@ -212,6 +235,40 @@ class FilterItemDelegate(QStyledItemDelegate):
         dmodel=act.data()[0].model().dmodel
         field=act.data()[1]
         child=filters.MinFilter(par.shape,dmodel.cmparray,dmodel.cmpvalues(field),field)
+        par.addChild(child)
+
+    def onAddAllBetween(self):
+        act=self.sender()
+        par=act.data()[0].internalPointer()
+        dmodel=act.data()[0].model().dmodel
+        field=act.data()[1]
+        child=filters.AllBetweenFilter(par.shape,dmodel.cmparray,dmodel.cmpvalues(field),field,\
+            dmodel.fieldmin(field)-1,dmodel.fieldmax(field)+1)
+        par.addChild(child)
+
+    def onAddAnyBetween(self):
+        act=self.sender()
+        par=act.data()[0].internalPointer()
+        dmodel=act.data()[0].model().dmodel
+        field=act.data()[1]
+        child=filters.AnyBetweenFilter(par.shape,dmodel.cmparray,dmodel.cmpvalues(field),field,\
+            dmodel.fieldmin(field)-1,dmodel.fieldmax(field)+1)
+        par.addChild(child)
+
+    def onAddSame(self):
+        act=self.sender()
+        par=act.data()[0].internalPointer()
+        dmodel=act.data()[0].model().dmodel
+        field=act.data()[1]
+        child=filters.AllSameFilter(par.shape,dmodel.cmparray,dmodel.cmpvalues(field),field)
+        par.addChild(child)
+
+    def onAddDifferent(self):
+        act=self.sender()
+        par=act.data()[0].internalPointer()
+        dmodel=act.data()[0].model().dmodel
+        field=act.data()[1]
+        child=filters.AnyDifferentFilter(par.shape,dmodel.cmparray,dmodel.cmpvalues(field),field)
         par.addChild(child)
 
 

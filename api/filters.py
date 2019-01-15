@@ -244,8 +244,11 @@ class BetweenFilter(FieldFilter):
     def hasMax(self):
         return True
 
+    def xmlkind(self):
+        return "between"
+
     def toXML(self,parent):
-        e=ElementTree.SubElement(parent,"between")
+        e=ElementTree.SubElement(parent,self.xmlkind())
         e.set("active",str(self.active))
         e.set("min",str(self.minimum))
         e.set("max",str(self.maximum))
@@ -346,7 +349,6 @@ class InSetFilter(FieldFilter):
 class MaxFilter(FieldFilter):
     def __init__(self,shape,cmparray,values,field):
         FieldFilter.__init__(self, np.ones(shape,dtype=bool),field,values)
-        GroupFilter.__init__(self,shape)
         self.cmparray=cmparray
         self.shape=shape
         self.valid=values != -1
@@ -371,7 +373,6 @@ class MaxFilter(FieldFilter):
 class MinFilter(FieldFilter):
     def __init__(self,shape,cmparray,values,field):
         FieldFilter.__init__(self, np.ones(shape,dtype=bool),field,values)
-        GroupFilter.__init__(self,shape)
         self.cmparray=cmparray
         self.shape=shape
         self.valid=values != -1
@@ -390,6 +391,93 @@ class MinFilter(FieldFilter):
 
     def toXML(self,parent):
         e=ElementTree.SubElement(parent,"min")
+        e.set("active",str(self.active))
+        e.set("field",self.field)
+
+class AllBetweenFilter(BetweenFilter):
+    def __init__(self,shape,cmparray,values,field,minimum,maximum):
+        BetweenFilter.__init__(self,minimum,maximum, values.flatten(),field)
+        self.cmparray=cmparray
+        self.shape=shape
+        self.values=values
+        self.update()
+
+    def update(self):
+        keep=np.zeros(self.shape,dtype=bool)
+        validrows=((self.values >= self.minimum) & (self.values < self.maximum)).all(axis=1)
+        keeprows=self.cmparray[validrows].flatten()
+        keep[keeprows[keeprows != -1].astype(int)]=True
+        self.setkeep(keep)
+
+    def kind(self):
+        return "All Between"
+
+    def xmlkind(self):
+        return "allbetween"
+
+
+class AnyBetweenFilter(BetweenFilter):
+    def __init__(self,shape,cmparray,values,field,minimum,maximum):
+        BetweenFilter.__init__(self,minimum,maximum, values.flatten(),field)
+        self.cmparray=cmparray
+        self.shape=shape
+        self.values=values
+        self.update()
+
+    def update(self):
+        keep=np.zeros(self.shape,dtype=bool)
+        validrows=((self.values >= self.minimum) & (self.values < self.maximum)).any(axis=1)
+        keeprows=self.cmparray[validrows].flatten()
+        keep[keeprows[keeprows != -1].astype(int)]=True
+        self.setkeep(keep)
+
+    def kind(self):
+        return "Any Between"
+
+    def xmlkind(self):
+        return "anybetween"
+
+class AllSameFilter(FieldFilter):
+    def __init__(self,shape,cmparray,values,field):
+        FieldFilter.__init__(self, np.ones(shape,dtype=bool),field,values)
+        self.cmparray=cmparray
+        self.shape=shape
+        self.update()
+
+    def update(self):
+        keep=np.zeros(self.shape,dtype=bool)
+        validrows=(self.values == self.values[:,0][:,None]).all(axis=1)
+        keeprows=self.cmparray[validrows].flatten()
+        keep[keeprows[keeprows != -1].astype(int)]=True
+        self.setkeep(keep)
+
+    def kind(self):
+        return "All Same"
+
+    def toXML(self,parent):
+        e=ElementTree.SubElement(parent,"allsame")
+        e.set("active",str(self.active))
+        e.set("field",self.field)
+
+class AnyDifferentFilter(FieldFilter):
+    def __init__(self,shape,cmparray,values,field):
+        FieldFilter.__init__(self, np.ones(shape,dtype=bool),field,values)
+        self.cmparray=cmparray
+        self.shape=shape
+        self.update()
+
+    def update(self):
+        keep=np.zeros(self.shape,dtype=bool)
+        validrows=(self.values != self.values[:,0][:,None]).any(axis=1)
+        keeprows=self.cmparray[validrows].flatten()
+        keep[keeprows[keeprows != -1].astype(int)]=True
+        self.setkeep(keep)
+
+    def kind(self):
+        return "Any Different"
+
+    def toXML(self,parent):
+        e=ElementTree.SubElement(parent,"anydifferent")
         e.set("active",str(self.active))
         e.set("field",self.field)
 
