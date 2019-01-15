@@ -131,36 +131,33 @@ class MyMainWindow(QMainWindow):
     def onFilterChange(self):
         self.filtmessage.setText('%d of %d Selected' %(len(self.model.filtered), len(self.model.data)))
 
-    def onSaveDat(self):
-        name=QFileDialog.getSaveFileName(self,'Save Selected As Dat File',filter='*.dat')
+    def getSaveName(self,title,filter):
+        name=QFileDialog.getSaveFileName(self,title,filter=filter)
         if qt5:
             if name:
-                self.model.saveByPartitions(name[0], self.model.saveSelDat, self.controlPanel.partWidget.current())
+                return name[0]
         elif name is not None and len(name):
+            return name
+        return None
+
+    def onSaveDat(self):
+        name=self.getSaveName('Save Selected As Dat File','*.dat')
+        if name:
             self.model.saveByPartitions(name, self.model.saveSelDat, self.controlPanel.partWidget.current())
 
     def onSaveLst(self):
-        name=QFileDialog.getSaveFileName(self,'Save Selected As List File',filter='*.lst')
-        if qt5:
-            if name:
-                self.model.saveByPartitions(name[0], self.model.saveSelLst, self.controlPanel.partWidget.current())
-        elif name is not None and len(name):
+        name=self.getSaveName('Save Selected As List File','*.lst')
+        if name:
             self.model.saveByPartitions(name, self.model.saveSelLst, self.controlPanel.partWidget.current())
 
     def onSaveStream(self):
-        name=QFileDialog.getSaveFileName(self,'Save Selected As Stream File',filter='*.stream')
-        if qt5:
-            if name:
-                self.model.saveByPartitions(name[0], self.model.saveSelStream, self.controlPanel.partWidget.current())
-        elif name is not None and len(name):
+        name=self.getSaveName('Save Selected As Stream File','*.stream')
+        if name:
             self.model.saveByPartitions(name, self.model.saveSelStream, self.controlPanel.partWidget.current())
 
     def onSaveNumpy(self):
-        name=QFileDialog.getSaveFileName(self,'Save ALL as compressed numpy file',filter='*.npz')
-        if qt5:
-            if name:
-                self.model.saveAllNumpy(name[0])
-        elif name is not None and len(name):
+        name=self.getSaveName('Save ALL as compressed numpy file','*.npz')
+        if name:
             self.model.saveAllNumpy(name)     
 
     def onShowScatter(self):

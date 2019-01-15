@@ -509,10 +509,16 @@ class DataModel(QObject):
 
     def saveSelDat(self,fname):
         formats=[]
-        for c in self.cols:
-            if c != DataModel.sortColumnName:
+        if self.hasComparisons():
+            rdata=self.data
+            for c in self.cols:
                 formats.append(self.cfg.fmt(c))
-        rdata = self.rdata
+        else:
+            for c in self.cols:
+                if c != DataModel.sortColumnName:
+                    formats.append(self.cfg.fmt(c))
+            rdata = self.rdata
+
         if rdata is None:
             assert self.npfile is not None
             rdata = self.npfile["rdata"]
