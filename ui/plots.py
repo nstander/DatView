@@ -1028,6 +1028,8 @@ class MyAggPlot(MyPlot):
         for i,k in enumerate(self.keep):
             stackedData=self.model.stackedDataCol(self.aggField, filtered=self.drawSelection.isChecked(),keep=k,stacks=self.legendstacks)
             for j in range(len(stackedData[0])):
+                if len(stackedData[0][j]) < 1:
+                    continue
                 v=self.aggFunc(stackedData[0][j])
                 y[stackedData[2][j]][i]=v
                 if self.errFunc is not None:

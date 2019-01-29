@@ -429,7 +429,7 @@ class DataModel(QObject):
         if stacks == 0:
             stacks=self.stacks
         if stacks is None:
-            return [[ self.data[field][finalkeep] ], [defaultcolor] , ["All"] ]
+            return [[ self.data[field][finalkeep] ], [defaultcolor] , ["all"] ]
         else:
             a=[]
             c=[]
