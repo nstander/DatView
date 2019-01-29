@@ -546,11 +546,10 @@ class DataModel(QObject):
         assert self.canSaveLst()
         outarr=self.outArrIndices()
         with open(fname,'w') as fout:
-            if 'event' in self.cols:
-                for i in outarr:
+            for i in outarr:
+                if 'event' in self.cols and self.filtered['event'][i] != -1:
                     fout.write('%s //%i\n'%(self.value('ifile',i) ,self.filtered['event'][i]))
-            else:
-                for i in outarr:
+                else:
                     fout.write('%s\n'%(self.value('ifile',i)))
         print ("Wrote",fname)
 
