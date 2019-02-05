@@ -139,7 +139,7 @@ class CrystfelImage(QObject):
 
         # Load the image
         image=self.image()
-        if image is None:
+        if image is None or isinstance(image,h5py.Group):
             return # Problem with file, don't try to load anything else
         image=np.array(image)
 
@@ -300,7 +300,7 @@ class CrystfelImage(QObject):
             photon_ev= self.dmodel.data["phoen"][self.imodel.currow]
         if photon_ev is None or photon_ev <= 0:
             photon_ev=self.fromMaybeEvent(self.dmodel.cfg.viewerPhotonEvH5Paths)
-            if not isinstance(photon_ev,float):
+            if photon_ev and not isinstance(photon_ev,float):
                 photon_ev=photon_ev[0]
 
         clen=None
