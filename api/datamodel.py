@@ -402,7 +402,7 @@ class DataModel(QObject):
         if respectPartition:
             keep &=self.partitionfilter.getKeep()
         if filtered:
-            keep &=self.topfilter.getKeep()
+            keep &=self.rootfilter.getKeep()
 
         if DataModel.genColSeparator in origfield:
             parts=origfield.split(DataModel.genColSeparator)
@@ -424,7 +424,7 @@ class DataModel(QObject):
         if respectPartition:
             finalkeep &=self.partitionfilter.getKeep()
         if filtered:
-            finalkeep &=self.topfilter.getKeep()
+            finalkeep &=self.rootfilter.getKeep()
 
         if stacks == 0:
             stacks=self.stacks
