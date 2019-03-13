@@ -140,6 +140,8 @@ class CrystfelImage(QObject):
         # Load the image
         image=self.image()
         if image is None or isinstance(image,h5py.Group):
+            print("Error: unable to load image")
+            self.iview.clear()
             return # Problem with file, don't try to load anything else
         image=np.array(image)
 
@@ -151,12 +153,18 @@ class CrystfelImage(QObject):
             image=np.transpose(image)
         else:
             image=cfel_geom.apply_geometry_from_pixel_maps(image,self.yxmap,self.im_out)
-        self.iview.setImage(image,autoLevels=False,autoRange=False)
+        # Work around pyqtgraph bug that crashes the program when the image is all 0s
+        # (And for some reason trying to catch the exception isn't working)
+        if np.max(image) == np.min(image) == 0:
+            print ("Error: Image max = Image min, PyQtGraph is unable to display image")
+            self.iview.clear()
+        else:
+            self.iview.setImage(image,autoLevels=False,autoRange=False)
 
-        # CXI View Scaling
-        bottom,top=histogram_clip_levels(image.ravel(),self.dmodel.cfg.cxiviewHistClipLevelValue)
-        self.iview.setLevels(bottom,top)
-        self.iview.getHistogramWidget().setHistogramRange(min(bottom,self.dmodel.cfg.cxiviewHistMin),max(top,self.dmodel.cfg.cxiviewHistMax),padding=self.dmodel.cfg.cxiviewHistPadding)
+            # CXI View Scaling
+            bottom,top=histogram_clip_levels(image.ravel(),self.dmodel.cfg.cxiviewHistClipLevelValue)
+            self.iview.setLevels(bottom,top)
+            self.iview.getHistogramWidget().setHistogramRange(min(bottom,self.dmodel.cfg.cxiviewHistMin),max(top,self.dmodel.cfg.cxiviewHistMax),padding=self.dmodel.cfg.cxiviewHistPadding)
 
         self.calcResLambda()
         self.drawPeaks()
