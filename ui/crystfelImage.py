@@ -149,10 +149,9 @@ class CrystfelImage(QObject):
         self.lastrow=self.imodel.currow
 
         # Apply geometry
-        if self.yxmap is None:
-            image=np.transpose(image)
-        else:
+        if self.yxmap is not None:
             image=cfel_geom.apply_geometry_from_pixel_maps(image,self.yxmap,self.im_out)
+        image=np.transpose(image) # Always transpose images so they work with PyQtGraph
         # Work around pyqtgraph bug that crashes the program when the image is all 0s
         # (And for some reason trying to catch the exception isn't working)
         if np.max(image) == np.min(image) == 0:
@@ -175,6 +174,9 @@ class CrystfelImage(QObject):
 
     def loadGeom(self,filename):
         self.yxmap,self.slab_shape,self.img_shape=cfel_geom.pixel_maps_for_image_view(filename)
+        # The returned yx map has an inverted y axis (I think some image displays do have y inverted,
+        # but PyQtgraph doesn't seem like one of them), so invert it here so it's correct.
+        self.yxmap=(self.img_shape[0]-self.yxmap[0],self.yxmap[1])
         self.im_out=np.zeros(self.img_shape,dtype=np.dtype(float))
         self.geom_coffset=cfel_geom.coffset_from_geometry_file(filename)
         self.geom_pixsize=1/cfel_geom.res_from_geometry_file(filename)
@@ -272,8 +274,8 @@ class CrystfelImage(QObject):
             px=np.array(px,dtype=np.dtype(int))
             py=np.array(py,dtype=np.dtype(int))
             slab=py*self.slab_shape[1]+px
-            px=self.yxmap[0][slab]
-            py=self.yxmap[1][slab]
+            px=self.yxmap[1][slab]
+            py=self.yxmap[0][slab]
         self.peakCanvas.setData(px,py,symbol=self.dmodel.cfg.viewerPeakSymbol,\
             size=self.dmodel.cfg.viewerPeakSize,pen=\
             mkPen(self.dmodel.cfg.viewerPeakColor,width=self.dmodel.cfg.viewerPeakPenWidth),\
@@ -291,8 +293,8 @@ class CrystfelImage(QObject):
             px=np.array(px,dtype=np.dtype(int))
             py=np.array(py,dtype=np.dtype(int))
             slab=py*self.slab_shape[1]+px
-            px=self.yxmap[0][slab]
-            py=self.yxmap[1][slab]
+            px=self.yxmap[1][slab]
+            py=self.yxmap[0][slab]
         self.reflectionCanvas.setData(px,py,symbol=self.dmodel.cfg.viewerReflectionSymbol,\
             size=self.dmodel.cfg.viewerReflectionSize,pen=\
             mkPen(self.dmodel.cfg.viewerReflectionColor,width=self.dmodel.cfg.viewerReflectionPenWidth),\
