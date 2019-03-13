@@ -18,7 +18,7 @@ from pyqtgraph import ImageView, ColorMap, mkPen, ScatterPlotItem, TextItem
 import scipy.constants
 import scipy.spatial
 import h5py
-from cfelpyutils import cfel_geom
+from dv_cfelpyutils import cfel_geom
 from cxiview.cfel_imgtools import histogram_clip_levels
 
 class CrystfelImage(QObject):
