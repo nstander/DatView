@@ -730,18 +730,21 @@ class DataModel(QObject):
     def streamPeaks(self,datarow):
         peakx=[]
         peaky=[]
-        with open(self.value("sfile",datarow,False)) as sfile:
-            sfile.seek(self.data["pstart"][datarow])
-            end=self.data["pend"][datarow]
-            while(sfile.tell() != end):
-                l=sfile.readline().strip().split()
-                try:
-                    x=float(l[0])
-                    y=float(l[1])
-                    peakx.append(x)
-                    peaky.append(y)
-                except ValueError:
-                    pass # First line won't be convertable
+        try:
+            with open(self.value("sfile",datarow,False)) as sfile:
+                sfile.seek(self.data["pstart"][datarow])
+                end=self.data["pend"][datarow]
+                while(sfile.tell() != end):
+                    l=sfile.readline().strip().split()
+                    try:
+                        x=float(l[0])
+                        y=float(l[1])
+                        peakx.append(x)
+                        peaky.append(y)
+                    except ValueError:
+                        pass # First line won't be convertable
+        except FileNotFoundError:
+            print("Unable to open stream file %s for peak data"%self.value("sfile",datarow,False))
         return peakx, peaky
 
     def hasStreamReflections(self):
@@ -755,19 +758,22 @@ class DataModel(QObject):
         hkl=[]
         start = self.data["rstart"][datarow]
         if start != -1: # Have Reflections (might not if not indexed)
-            with open(self.value("sfile",datarow,False)) as sfile:
-                sfile.seek(start)
-                end=self.data["rend"][datarow]
-                while(sfile.tell() != end):
-                    l=sfile.readline().strip().split()
-                    try:
-                        x=float(l[7])
-                        y=float(l[8])
-                        peakx.append(x)
-                        peaky.append(y)
-                        hkl.append(' '.join(l[0:3]))
-                    except ValueError:
-                        pass # First line won't be convertable
+            try:
+                with open(self.value("sfile",datarow,False)) as sfile:
+                    sfile.seek(start)
+                    end=self.data["rend"][datarow]
+                    while(sfile.tell() != end):
+                        l=sfile.readline().strip().split()
+                        try:
+                            x=float(l[7])
+                            y=float(l[8])
+                            peakx.append(x)
+                            peaky.append(y)
+                            hkl.append(' '.join(l[0:3]))
+                        except ValueError:
+                            pass # First line won't be convertable
+            except FileNotFoundError:
+                print("Unable to open stream file %s for reflection data"%self.value("sfile",datarow,False))
         return peakx, peaky, hkl
 
         
