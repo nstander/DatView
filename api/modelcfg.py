@@ -83,6 +83,7 @@ class ModelConfig:
         self.aggmarker='o'
         self.scatterCmpInitial=None
         self.hist2DCmpInitial=None
+        self.maskDataPath=["/data/data"]
 
 
         et=ElementTree.parse(filename)
@@ -234,6 +235,8 @@ class ModelConfig:
                 self.scatterCmpInitial=child.text
             if child.tag == "hist2DCmpInitial" and child.text:
                 self.hist2DCmpInitial=child.text
+            if child.tag == "maskH5Path" and child.text:
+                self.maskDataPath=child.text.split(',')
 
 
     def prettyname(self,field):

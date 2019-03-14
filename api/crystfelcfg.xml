@@ -153,8 +153,10 @@
   <!-- Software searches for x path first, if 1 column assume x positions and search for y. If more than one column (like Hdf5 old format) than assume 1st column x and 2nd column is y and ignore all other columns (looks like 3rd is total intensity and 4th is the number of pixels). Peaks should be raw as geometry operations are applied when a CrystFEL geometry is provided. -->
   <peakXH5paths>/entry_1/result_1/peakXPosRaw,/processing/hitfinder/peakinfo-raw</peakXH5paths>
   <peakYH5paths>/entry_1/result_1/peakYPosRaw</peakYH5paths> <!-- Should be 1D if found -->
+  <!-- Other paths for image data -->
   <viewerPhotonEvH5Paths>/instrument/photon_energy_eV,/LCLS/photon_energy_eV</viewerPhotonEvH5Paths>
   <viewerCameraLengthH5Paths>/instrument/detector_1/EncoderValue,/LCLS/detector_1/EncoderValue,/LCLS/detector0-EncoderValue,/LCLS/detectorEncoderValue</viewerCameraLengthH5Paths>
+  <maskH5Path>/data/data</maskH5Path> 
 
   <!--cxiview magic numbers-->
   <cxiviewHistClipLevelValue>0.0002</cxiviewHistClipLevelValue>

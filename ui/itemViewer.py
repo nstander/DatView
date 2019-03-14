@@ -18,7 +18,7 @@ from api.itemmodel import ItemModel
 from . import richTextDelegate, crystfelImage, h5OneD
 
 class MyItemViewer(QWidget):
-    def __init__(self,dmodel,geom,parent=None):
+    def __init__(self,dmodel,geom,mask,parent=None):
         QWidget.__init__(self,parent)
         self.ui=Ui_ItemViewer()
         self.ui.setupUi(self)
@@ -52,7 +52,7 @@ class MyItemViewer(QWidget):
         else:
             self.ui.tableView.horizontalHeader().setResizeMode(0,QHeaderView.ResizeToContents)
 
-        imageManager=crystfelImage.CrystfelImage(self.model,self.ui.imageView,geom,self)
+        imageManager=crystfelImage.CrystfelImage(self.model,self.ui.imageView,geom,mask,self)
         for path in dmodel.cfg.item1dPlots:
             f=h5OneD.H5OneD(path,self.model,self.ui.scrollAreaWidgetContents)
             self.ui.verticalLayout.addWidget(f.fig)

@@ -22,7 +22,7 @@ from dv_cfelpyutils import cfel_geom
 from cxiview.cfel_imgtools import histogram_clip_levels
 
 class CrystfelImage(QObject):
-    def __init__(self,imodel,iview,geom,parent=None):
+    def __init__(self,imodel,iview,geom,mask,parent=None):
         QObject.__init__(self,parent)
         self.imodel=imodel
         self.dmodel=imodel.model
@@ -56,6 +56,15 @@ class CrystfelImage(QObject):
         self.iview.view.menu.addSeparator()
         openGeomAct=self.iview.view.menu.addAction("Load CrystFEL Geometry")
         openGeomAct.triggered.connect(self.openGeom)
+
+        openMaskAct=self.iview.view.menu.addAction("Load Mask/Gain H5 Map")
+        openMaskAct.triggered.connect(self.openMask)
+        self.useMaskAct=self.iview.view.menu.addAction("Mask")
+        self.useMaskAct.setCheckable(True)
+        self.useMaskAct.setChecked(True)
+        self.useMaskAct.setEnabled(False)
+        self.useMaskAct.triggered.connect(self.draw)
+        self.mask = None
 
         peakmenu=self.iview.view.menu.addMenu("Peaks")
         self.peakActionGroup=QActionGroup(self)
@@ -124,6 +133,9 @@ class CrystfelImage(QObject):
         if geom is not None:
             self.loadGeom(geom)
 
+        if mask is not None:
+            self.loadMask(mask)
+
         self.toolTipsAct=self.iview.view.menu.addAction("Show Position in Tool Tip")
         self.toolTipsAct.setCheckable(True)
         self.toolTipsAct.setChecked(True)
@@ -139,7 +151,7 @@ class CrystfelImage(QObject):
         self.resolutionRingsCanvas.clear()
 
     def draw(self):
-        if not self.canDraw or self.imodel.currow == self.lastrow:
+        if not self.canDraw:
             return
 
         # Image was loaded, so update what we've currently got drawn
@@ -153,7 +165,12 @@ class CrystfelImage(QObject):
             return # Problem with file, don't try to load anything else
         image=np.array(image)
 
-
+        # Apply mask if provided
+        if self.useMaskAct.isEnabled() and self.useMaskAct.isChecked() and self.mask is not None:
+            if image.shape == self.mask.shape:
+                image *= self.mask
+            else:
+                print ("Error: Unable to apply mask to image. Dimensions are not equal. Image: ", image.shape , " Mask: ", self.mask.shape)
 
         # Apply geometry
         if self.yxmap is not None:
@@ -180,17 +197,18 @@ class CrystfelImage(QObject):
         
 
     def loadGeom(self,filename):
-        self.yxmap,self.slab_shape,self.img_shape=cfel_geom.pixel_maps_for_image_view(filename)
-        # The returned yx map has an inverted y axis (I think some image displays do have y inverted,
-        # but PyQtgraph doesn't seem like one of them), so invert it here so it's correct.
-        self.yxmap=(self.img_shape[0]-self.yxmap[0],self.yxmap[1])
-        self.im_out=np.zeros(self.img_shape,dtype=np.dtype(float))
-        self.geom_coffset=cfel_geom.coffset_from_geometry_file(filename)
-        self.geom_pixsize=1/cfel_geom.res_from_geometry_file(filename)
-        self.drawResRingsAct.setEnabled(True)
-        self.drawResolutionLimitAct.setEnabled('reslim' in self.dmodel.cols)
-        self.lastrow=-1
-        self.draw()
+        if filename:
+            self.yxmap,self.slab_shape,self.img_shape=cfel_geom.pixel_maps_for_image_view(filename)
+            # The returned yx map has an inverted y axis (I think some image displays do have y inverted,
+            # but PyQtgraph doesn't seem like one of them), so invert it here so it's correct.
+            self.yxmap=(self.img_shape[0]-self.yxmap[0],self.yxmap[1])
+            self.im_out=np.zeros(self.img_shape,dtype=np.dtype(float))
+            self.geom_coffset=cfel_geom.coffset_from_geometry_file(filename)
+            self.geom_pixsize=1/cfel_geom.res_from_geometry_file(filename)
+            self.drawResRingsAct.setEnabled(True)
+            self.drawResolutionLimitAct.setEnabled('reslim' in self.dmodel.cols)
+            self.lastrow=-1
+            self.draw()
 
     def openGeom(self):
         name=QFileDialog.getOpenFileName(self.iview,'Select CrystFEL Geomery File (.geom)',filter='*.geom')
@@ -199,6 +217,29 @@ class CrystfelImage(QObject):
                 self.loadGeom(name[0])
         elif name is not None and len(name):
             self.loadGeom(name)
+
+    def openMask(self):
+        name=QFileDialog.getOpenFileName(self.iview,'Select H5 Mask/Gain File (.h5)',filter='*.h5')
+        if qt5:
+            if name:
+                self.loadMask(name[0])
+        elif name is not None and len(name):
+            self.loadMask(name)
+
+    def loadMask(self,filename):
+        try:
+            f=h5py.File(filename,'r')
+            for path in self.dmodel.cfg.maskDataPath:
+                if path in f:
+                    mask = f[path]
+                    if not (mask is None or isinstance(mask,h5py.Group)):
+                        self.mask = np.array(mask)
+                        self.useMaskAct.setEnabled(True)
+                        self.draw()
+                    break
+        except OSError:
+            self.useMaskAct.setEnabled(False)
+            print("Unable to load mask file")
 
     def mouseMove(self,pos):
         mapped=self.iview.getView().mapSceneToView(pos)
