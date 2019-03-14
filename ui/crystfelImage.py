@@ -200,8 +200,8 @@ class CrystfelImage(QObject):
                                         and mapped.x() >= 0 and mapped.x() < self.iview.image.shape[0] \
                                         and mapped.y() >= 0 and mapped.y() < self.iview.image.shape[1]:
             if self.img_shape is not None:
-                x=mapped.x()-self.img_shape[0]/2
-                y=self.img_shape[1]/2-mapped.y()
+                x=mapped.x()-self.img_shape[1]/2
+                y=self.img_shape[0]/2-mapped.y()
             else:
                 x=mapped.x()
                 y=mapped.y()
@@ -339,12 +339,12 @@ class CrystfelImage(QObject):
                 ti.setText('')
         else:
             ring_sizes=self.resolutionLambda(np.array(self.dmodel.cfg.viewerResolutionRingsAngstroms))
-            self.resolutionRingsCanvas.setData([self.img_shape[0]/2]*len(ring_sizes), [self.img_shape[1]/2]*len(ring_sizes),symbol='o',\
+            self.resolutionRingsCanvas.setData([self.img_shape[1]/2]*len(ring_sizes), [self.img_shape[0]/2]*len(ring_sizes),symbol='o',\
                 size=ring_sizes,pen=mkPen(self.dmodel.cfg.viewerResRingColor, width=self.dmodel.cfg.viewerResRingWidth),\
                 brush=(0,0,0,0),pxMode=False)
             for i,ti in enumerate(self.resRingsTextItems):
                 ti.setText("%.1f A" % self.dmodel.cfg.viewerResolutionRingsAngstroms[i],color=self.dmodel.cfg.viewerResRingColor)
-                ti.setPos(self.img_shape[0]/2,self.img_shape[1]/2+ring_sizes[i]/2)
+                ti.setPos(self.img_shape[1]/2,self.img_shape[0]/2+ring_sizes[i]/2)
 
     def drawResLimitRing(self):
         if not self.drawResolutionLimitAct.isChecked() or self.resolutionLambda is None:
@@ -355,7 +355,7 @@ class CrystfelImage(QObject):
                 self.resolutionLimitCanvas.setData([],[])
             else:
                 r=10/r
-                self.resolutionLimitCanvas.setData([self.img_shape[0]/2], [self.img_shape[1]/2],symbol='o',\
+                self.resolutionLimitCanvas.setData([self.img_shape[1]/2], [self.img_shape[0]/2],symbol='o',\
                     size=self.resolutionLambda(r),\
                     pen=mkPen(self.dmodel.cfg.viewerResLimitRingColor, width=self.dmodel.cfg.viewerResLimitRingWidth),\
                     brush=(0,0,0,0),pxMode=False)
