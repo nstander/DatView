@@ -9,12 +9,12 @@ import sys
 import argparse
 import numpy as np
 try:
-    from PyQt5.QtWidgets import QApplication, QMainWindow,QLabel,QFileDialog, QAction, QWidget, QMenu
+    from PyQt5.QtWidgets import QApplication, QMainWindow,QLabel,QFileDialog, QAction, QWidget, QMenu, QMessageBox
     from PyQt5.QtCore import Qt, QEvent
     from ui.Ui_MainWindow5 import Ui_MainWindow
     qt5=True
 except ImportError:
-    from PyQt4.QtGui import QApplication, QMainWindow,QLabel,QFileDialog, QAction, QWidget, QMenu
+    from PyQt4.QtGui import QApplication, QMainWindow,QLabel,QFileDialog, QAction, QWidget, QMenu, QMessageBox
     from PyQt4.QtCore import Qt, QEvent
     from ui.Ui_MainWindow import Ui_MainWindow
     qt5=False
@@ -153,7 +153,10 @@ class MyMainWindow(QMainWindow):
     def onSaveStream(self):
         name=self.getSaveName('Save Selected As Stream File','*.stream')
         if name:
-            self.model.saveByPartitions(name, self.model.saveSelStream, self.controlPanel.partWidget.current())
+            try:
+                self.model.saveByPartitions(name, self.model.saveSelStream, self.controlPanel.partWidget.current())
+            except FileNotFoundError as err:
+                QMessageBox.warning(self,"Unable to Save",str(err))
 
     def onSaveNumpy(self):
         name=self.getSaveName('Save ALL as compressed numpy file','*.npz')
