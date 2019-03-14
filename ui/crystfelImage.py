@@ -131,22 +131,29 @@ class CrystfelImage(QObject):
 
         self.draw()
 
-
+    def clear(self):
+        self.iview.clear()
+        self.peakCanvas.clear()
+        self.reflectionCanvas.clear()
+        self.resolutionLimitCanvas.clear()
+        self.resolutionRingsCanvas.clear()
 
     def draw(self):
         if not self.canDraw or self.imodel.currow == self.lastrow:
             return
 
+        # Image was loaded, so update what we've currently got drawn
+        self.lastrow=self.imodel.currow
+
         # Load the image
         image=self.image()
         if image is None or isinstance(image,h5py.Group):
             print("Error: unable to load image")
-            self.iview.clear()
+            self.clear()
             return # Problem with file, don't try to load anything else
         image=np.array(image)
 
-        # Image was loaded, so update what we've currently got drawn
-        self.lastrow=self.imodel.currow
+
 
         # Apply geometry
         if self.yxmap is not None:
@@ -219,6 +226,8 @@ class CrystfelImage(QObject):
     # Sub functions called by draw, not meant to be called externally
     def fromMaybeEvent(self,paths):
         r=None
+        if self.curFile is None:
+            return r
         for path in paths:
             if path in self.curFile:
                 if self.checkEvent:
@@ -239,7 +248,12 @@ class CrystfelImage(QObject):
             if self.curFile is not None:
                 self.curFile.close()
             self.curFileName = ifile
-            self.curFile = h5py.File(ifile,'r')
+            try:
+                self.curFile = h5py.File(ifile,'r')
+            except OSError:
+                print("Error: Unable to open file %s for image display"%ifile)
+                self.curFile = None
+                return image
         image=self.fromMaybeEvent(self.dmodel.cfg.imageH5paths)
         return image
 
