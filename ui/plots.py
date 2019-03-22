@@ -8,12 +8,14 @@ try:
     from PyQt5.QtWidgets import QSizePolicy, QMenu, QApplication, QFileDialog, QActionGroup
     from PyQt5.QtGui import QCursor
     from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+    qt5=True
 except ImportError as e:
     print(e)
     from PyQt4 import QtCore
     from PyQt4.QtCore import QObject
     from PyQt4.QtGui import QSizePolicy, QMenu, QApplication, QCursor, QFileDialog, QActionGroup
     from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
+    qt5=False
 import numpy as np
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
@@ -104,12 +106,16 @@ class MyFigure(FigureCanvas):
 
     def onSave(self):
         name=QFileDialog.getSaveFileName(self,'Save Plot',filter='*.png')
-        if name is not None:
+        if qt5 and name:
+            name = name[0]
+        if name is not None and len(name):
             self.fig.savefig(name,ext="png")
 
     def onSaveSVG(self):
         name=QFileDialog.getSaveFileName(self,'Save Plot',filter='*.svg')
-        if name is not None:
+        if qt5 and name:
+            name = name[0]
+        if name is not None and len(name):
             self.fig.savefig(name,ext="svg")
 
 
