@@ -84,6 +84,7 @@ class ModelConfig:
         self.scatterCmpInitial=None
         self.hist2DCmpInitial=None
         self.maskDataPath=["/data/data"]
+        self.needTablesImport=False
 
 
         et=ElementTree.parse(filename)
@@ -237,6 +238,8 @@ class ModelConfig:
                 self.hist2DCmpInitial=child.text
             if child.tag == "maskH5Path" and child.text:
                 self.maskDataPath=child.text.split(',')
+            if child.tag == "needTablesImport":
+                self.needTablesImport=True
 
 
     def prettyname(self,field):

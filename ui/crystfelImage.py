@@ -29,6 +29,9 @@ class CrystfelImage(QObject):
         self.iview=iview
         self.iview.ui.menuBtn.hide()
         self.iview.ui.roiBtn.hide()
+
+        if self.dmodel.cfg.needTablesImport:
+            import tables
         
         # Thanks CXIVIEW, Anton & Valerio
         pos = np.array([0.0,0.5,1.0])

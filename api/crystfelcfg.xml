@@ -158,6 +158,9 @@
   <viewerCameraLengthH5Paths>/instrument/detector_1/EncoderValue,/LCLS/detector_1/EncoderValue,/LCLS/detector0-EncoderValue,/LCLS/detectorEncoderValue</viewerCameraLengthH5Paths>
   <maskH5Path>/data/data</maskH5Path> 
 
+  <!-- some h5 files seem to require the python library "pytables". If this applies to your dataset, uncomment the following line-->
+  <!--<needTablesImport/>-->
+
   <!--cxiview magic numbers-->
   <cxiviewHistClipLevelValue>0.0002</cxiviewHistClipLevelValue>
   <cxiviewHistMax>16384</cxiviewHistMax>
