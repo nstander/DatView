@@ -204,7 +204,7 @@ class CrystfelImage(QObject):
             self.yxmap,self.slab_shape,self.img_shape=cfel_geom.pixel_maps_for_image_view(filename)
             # The returned yx map has an inverted y axis (I think some image displays do have y inverted,
             # but PyQtgraph doesn't seem like one of them), so invert it here so it's correct.
-            self.yxmap=(self.img_shape[0]-self.yxmap[0],self.yxmap[1])
+            self.yxmap=(self.img_shape[0]-1-self.yxmap[0],self.yxmap[1])
             self.im_out=np.zeros(self.img_shape,dtype=np.dtype(float))
             self.geom_coffset=cfel_geom.coffset_from_geometry_file(filename)
             self.geom_pixsize=1/cfel_geom.res_from_geometry_file(filename)
