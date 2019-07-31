@@ -4,3 +4,5 @@ DatView displays plots of tabular data and syncs selections across plots. It was
 DatView depends on matplotlib, PyQt (4 or 5 will work), NumPy, SciPy, lxml, h5py and pyqtgraph. Included with the code is a modified version of the CfelPyUtils geometry parser and the histogram clip function of cxiview.
 
 Full documentation is available at https://zatsepinlab.atlassian.net/wiki/spaces/DAT/pages/827785219/Tutorial+2019
+
+NSLS-II scripts are available at https://github.com/chufengl/NSLS_FMX_tools/blob/master/NSLS_convters.py
