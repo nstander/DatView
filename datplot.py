@@ -19,7 +19,7 @@ except ImportError:
 import shlex
 import numpy as np
 import h5py
-from cfelpyutils import cfel_geom
+from dv_cfelpyutils import cfel_geom
 import matplotlib.pyplot as plt
 import matplotlib.gridspec
 

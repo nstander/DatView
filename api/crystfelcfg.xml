@@ -89,6 +89,11 @@
     <field nm="chipframe" prettyname="Frame # by Chip" dtype="i4" fmt="%i" />
     <field nm="chip" prettyname="Chip" fmt="%i" />
     <field nm="sample" prettyname="Sample" fmt="%i" />
+    <field nm="pulseDurFS" prettyname="Pulse Duration (fs)" />
+    <field nm="pulseDurAgree" prettyname="Pulse Duration Agreement (%)" />
+    <field nm="xtcavPower" prettyname="Pulse Power (GW)" />
+    <field nm="xtcavAgree" prettyname="Pulse Duration Agreement (%)" />
+    <field nm="xtcavPulseFWHM" prettyname="Pulse Duration (fs)" />
 
   </fields> 
 
@@ -149,7 +154,7 @@
 
   <!-- Stuff specific to viewing CrystFEL style images (H5/CXI by cheetah, stream files) -->
   <!-- paths in h5 file to look for image array, regardless of CXI(event) or H5. Event use is determined by event column in dat file. List is comma separated. First path found in file is used. -->
-  <imageH5paths>/entry_1/data_1/data,/data/data,/data</imageH5paths>
+  <imageH5paths>/entry_1/data_1/data,/entry/data/data,/data/data,/data</imageH5paths>
   <!-- Software searches for x path first, if 1 column assume x positions and search for y. If more than one column (like Hdf5 old format) than assume 1st column x and 2nd column is y and ignore all other columns (looks like 3rd is total intensity and 4th is the number of pixels). Peaks should be raw as geometry operations are applied when a CrystFEL geometry is provided. -->
   <peakXH5paths>/entry_1/result_1/peakXPosRaw,/processing/hitfinder/peakinfo-raw</peakXH5paths>
   <peakYH5paths>/entry_1/result_1/peakYPosRaw</peakYH5paths> <!-- Should be 1D if found -->
