@@ -347,11 +347,11 @@ class InSetFilter(FieldFilter):
         e.set("set", self.valuesString())
 
 class MaxFilter(FieldFilter):
-    def __init__(self,shape,cmparray,values,field):
+    def __init__(self,shape,cmparray,values,field,invalid):
         FieldFilter.__init__(self, np.ones(shape,dtype=bool),field,values)
         self.cmparray=cmparray
         self.shape=shape
-        self.valid=values != -1
+        self.valid=values != invalid
         self.cols=np.arange(cmparray.shape[1])
         self.update()
 
@@ -371,11 +371,11 @@ class MaxFilter(FieldFilter):
         e.set("field",self.field)
     
 class MinFilter(FieldFilter):
-    def __init__(self,shape,cmparray,values,field):
+    def __init__(self,shape,cmparray,values,field,invalid):
         FieldFilter.__init__(self, np.ones(shape,dtype=bool),field,values)
         self.cmparray=cmparray
         self.shape=shape
-        self.valid=values != -1
+        self.valid=values != invalid
         self.cols=np.arange(cmparray.shape[1])
         self.update()
 
@@ -395,18 +395,19 @@ class MinFilter(FieldFilter):
         e.set("field",self.field)
 
 class AllBetweenFilter(BetweenFilter):
-    def __init__(self,shape,cmparray,values,field,minimum,maximum):
+    def __init__(self,shape,cmparray,values,field,minimum,maximum,invalid):
         BetweenFilter.__init__(self,minimum,maximum, values.flatten(),field)
         self.cmparray=cmparray
         self.shape=shape
         self.values=values
+        self.invalid=invalid
         self.update()
 
     def update(self):
         keep=np.zeros(self.shape,dtype=bool)
         validrows=((self.values >= self.minimum) & (self.values < self.maximum)).all(axis=1)
         keeprows=self.cmparray[validrows].flatten()
-        keep[keeprows[keeprows != -1].astype(int)]=True
+        keep[keeprows[keeprows != self.invalid].astype(int)]=True
         self.setkeep(keep)
 
     def kind(self):
@@ -417,18 +418,19 @@ class AllBetweenFilter(BetweenFilter):
 
 
 class AnyBetweenFilter(BetweenFilter):
-    def __init__(self,shape,cmparray,values,field,minimum,maximum):
+    def __init__(self,shape,cmparray,values,field,minimum,maximum,invalid):
         BetweenFilter.__init__(self,minimum,maximum, values.flatten(),field)
         self.cmparray=cmparray
         self.shape=shape
         self.values=values
+        self.invalid = invalid
         self.update()
 
     def update(self):
         keep=np.zeros(self.shape,dtype=bool)
         validrows=((self.values >= self.minimum) & (self.values < self.maximum)).any(axis=1)
         keeprows=self.cmparray[validrows].flatten()
-        keep[keeprows[keeprows != -1].astype(int)]=True
+        keep[keeprows[keeprows != self.invalid].astype(int)]=True
         self.setkeep(keep)
 
     def kind(self):
@@ -438,17 +440,18 @@ class AnyBetweenFilter(BetweenFilter):
         return "anybetween"
 
 class AllSameFilter(FieldFilter):
-    def __init__(self,shape,cmparray,values,field):
+    def __init__(self,shape,cmparray,values,field,invalid):
         FieldFilter.__init__(self, np.ones(shape,dtype=bool),field,values)
         self.cmparray=cmparray
         self.shape=shape
+        self.invalid = invalid
         self.update()
 
     def update(self):
         keep=np.zeros(self.shape,dtype=bool)
         validrows=(self.values == self.values[:,0][:,None]).all(axis=1)
         keeprows=self.cmparray[validrows].flatten()
-        keep[keeprows[keeprows != -1].astype(int)]=True
+        keep[keeprows[keeprows != self.invalid].astype(int)]=True
         self.setkeep(keep)
 
     def kind(self):
@@ -460,17 +463,18 @@ class AllSameFilter(FieldFilter):
         e.set("field",self.field)
 
 class AnyDifferentFilter(FieldFilter):
-    def __init__(self,shape,cmparray,values,field):
+    def __init__(self,shape,cmparray,values,field,invalid):
         FieldFilter.__init__(self, np.ones(shape,dtype=bool),field,values)
         self.cmparray=cmparray
         self.shape=shape
+        self.invalid = invalid
         self.update()
 
     def update(self):
         keep=np.zeros(self.shape,dtype=bool)
         validrows=(self.values != self.values[:,0][:,None]).any(axis=1)
         keeprows=self.cmparray[validrows].flatten()
-        keep[keeprows[keeprows != -1].astype(int)]=True
+        keep[keeprows[keeprows != self.invalid].astype(int)]=True
         self.setkeep(keep)
 
     def kind(self):

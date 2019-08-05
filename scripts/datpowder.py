@@ -32,7 +32,7 @@ def savePowder(args,partname=None):
             curFileName = args.model.value('ifile',i)
             curFile=h5py.File(curFileName,'r')
         for field in args.h5fields:
-            if 'event' in args.model.cols and args.model.filtered['event'][i] != -1:
+            if 'event' in args.model.cols and args.model.filtered['event'][i] != args.model.cfg.nullvalue:
                 v=curFile[field][args.model.filtered['event'][i]]
             else:
                 v=curFile[field]

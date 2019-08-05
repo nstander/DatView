@@ -19,10 +19,14 @@ except ImportError:
 import shlex
 import numpy as np
 import h5py
-from dv_cfelpyutils import cfel_geom
+
 import matplotlib.pyplot as plt
 import matplotlib.gridspec
 
+import sys
+import os
+sys.path.append(os.path.dirname(sys.path[0]))
+from dv_cfelpyutils import cfel_geom
 from api.datamodel import DataModel
 from api.modelcfg import ModelConfig
 
@@ -72,7 +76,7 @@ def dataAndTitle(plot,plotArgs,keepLimits=False):
 
 histParser=argparse.ArgumentParser(prog="histogram")
 histParser.add_argument('-x','--xfield',required=True)
-histParser.add_argument('--xmin',type=float,default=None,help="x minimum, field minimum (without -1) by default")
+histParser.add_argument('--xmin',type=float,default=None,help="x minimum, field minimum (after masking) by default")
 histParser.add_argument('--xmax',type=float,default=None,help="x maximum, field maximum by default")
 histParser.add_argument('-t','--title',default=None,help="Plot title, defaults to pretty version of field name")
 histParser.add_argument('--datashown',choices=['raw','filtered','both'],default='both',help="Plot just the filtered, the complete dataset, or both with complete semi-transparent")
@@ -101,11 +105,11 @@ def histogram(model,myFigure,figArgs,plotNum,plotArgString):
 
 hist2dParser=argparse.ArgumentParser(prog="histogram2D")
 hist2dParser.add_argument('-x','--xfield',required=True)
-hist2dParser.add_argument('--xmin',type=float,default=None,help="x minimum, field minimum (without -1) by default")
+hist2dParser.add_argument('--xmin',type=float,default=None,help="x minimum, field minimum (after masking) by default")
 hist2dParser.add_argument('--xmax',type=float,default=None,help="x maximum, field maximum by default")
 hist2dParser.add_argument('--xbins',default=None,type=int,help="Number of x bins. Default from config file. Does not apply to categorical variables")
 hist2dParser.add_argument('-y','--yfield',required=True)
-hist2dParser.add_argument('--ymin',type=float,default=None,help="x minimum, field minimum (without -1) by default")
+hist2dParser.add_argument('--ymin',type=float,default=None,help="x minimum, field minimum (after masking) by default")
 hist2dParser.add_argument('--ymax',type=float,default=None,help="x maximum, field maximum by default")
 hist2dParser.add_argument('--ybins',default=None,type=int,help="Number of x bins. Default from config file. Does not apply to categorical variables")
 hist2dParser.add_argument('-t','--title',default=None,help="Plot title, defaults to pretty version of field name")
@@ -132,13 +136,13 @@ def histogram2d(model,myFigure,figArgs,plotNum,plotArgString):
 
 scatterParser=argparse.ArgumentParser(prog="scatter")
 scatterParser.add_argument('-x','--xfield',required=True)
-scatterParser.add_argument('--xmin',type=float,default=None,help="x minimum, field minimum (without -1) by default")
+scatterParser.add_argument('--xmin',type=float,default=None,help="x minimum, field minimum (after masking) by default")
 scatterParser.add_argument('--xmax',type=float,default=None,help="x maximum, field maximum by default")
 scatterParser.add_argument('-y','--yfield',required=True)
-scatterParser.add_argument('--ymin',type=float,default=None,help="x minimum, field minimum (without -1) by default")
+scatterParser.add_argument('--ymin',type=float,default=None,help="x minimum, field minimum (after masking) by default")
 scatterParser.add_argument('--ymax',type=float,default=None,help="x maximum, field maximum by default")
 scatterParser.add_argument('-c','--cfield',default=None,help="Color by field")
-scatterParser.add_argument('--cmin',type=float,default=None,help="color minimum, field minimum (without -1) by default")
+scatterParser.add_argument('--cmin',type=float,default=None,help="color minimum, field minimum (after masking) by default")
 scatterParser.add_argument('--cmax',type=float,default=None,help="color maximum, field maximum by default")
 scatterParser.add_argument('-t','--title',default=None,help="Plot title, defaults to pretty version of color by field name")
 scatterParser.add_argument('--datashown',choices=['raw','filtered','both'],default='both',help="Plot just the filtered, the complete dataset, or both with complete semi-transparent")
@@ -157,13 +161,13 @@ def scatter(model,myFigure,figArgs,plotNum,plotArgString):
 
 pixelParser=argparse.ArgumentParser(prog="pixelplot")
 pixelParser.add_argument('-x','--xfield',required=True)
-pixelParser.add_argument('--xmin',type=float,default=None,help="x minimum, field minimum (without -1) by default")
+pixelParser.add_argument('--xmin',type=float,default=None,help="x minimum, field minimum (after masking) by default")
 pixelParser.add_argument('--xmax',type=float,default=None,help="x maximum, field maximum by default")
 pixelParser.add_argument('-y','--yfield',required=True)
-pixelParser.add_argument('--ymin',type=float,default=None,help="x minimum, field minimum (without -1) by default")
+pixelParser.add_argument('--ymin',type=float,default=None,help="x minimum, field minimum (after masking) by default")
 pixelParser.add_argument('--ymax',type=float,default=None,help="x maximum, field maximum by default")
 pixelParser.add_argument('-c','--cfield',required=True,help="Color by field")
-pixelParser.add_argument('--cmin',type=float,default=None,help="color minimum, field minimum (without -1) by default")
+pixelParser.add_argument('--cmin',type=float,default=None,help="color minimum, field minimum (after masking) by default")
 pixelParser.add_argument('--cmax',type=float,default=None,help="color maximum, field maximum by default")
 pixelParser.add_argument('-t','--title',default=None,help="Plot title, defaults to pretty version of color by field name")
 pixelParser.add_argument('--datashown',choices=['raw','filtered'],default='filtered',help="Plot just the filtered or plot the complete dataset")
@@ -227,11 +231,11 @@ def imageh5(model,myFigure,figArgs,plotNum,plotArgString):
 
 aggParser=argparse.ArgumentParser(prog="aggregate")
 aggParser.add_argument('-x','--xfield',required=True)
-aggParser.add_argument('--xmin',type=float,default=None,help="x minimum, field minimum (without -1) by default")
+aggParser.add_argument('--xmin',type=float,default=None,help="x minimum, field minimum (after masking) by default")
 aggParser.add_argument('--xmax',type=float,default=None,help="x maximum, field maximum by default")
 aggParser.add_argument('--xbins',type=int,default=None,help="number of x bins when aggregatging")
 aggParser.add_argument('-y','--yfield',required=True)
-aggParser.add_argument('--ymin',type=float,default=None,help="x minimum, field minimum (without -1) by default")
+aggParser.add_argument('--ymin',type=float,default=None,help="x minimum, field minimum (after masking) by default")
 aggParser.add_argument('--ymax',type=float,default=None,help="x maximum, field maximum by default")
 aggParser.add_argument('--agg',choices=["Average","Median","Min","Max","Count","CountValid"],required=True, help="Aggregate by choice")
 aggParser.add_argument('--err',choices=["None","STD","MinMax"],default="None", help="error bar choice")
@@ -252,8 +256,9 @@ aggMap={"Average": np.average,
         "Median": np.median,
         "Min": np.min,
         "Max": np.max,
-        "Count" : len,
-        "CountValid" : (lambda x : np.count_nonzero(x!=-1))}
+        "Count" : len}
+# CountValid is added in main with the invalid value determined from model cfg.
+
 
 errMap={"None" : None, "STD" : (lambda x : [np.std(x)]), "MinMax" : (lambda x : [np.min(x),np.max(x)])}
 
@@ -314,18 +319,18 @@ if __name__ == '__main__':
     plothelp.write("""
 Plot Argument Descriptions:
   -x XFIELD, --xfield XFIELD
-  --xmin XMIN           x minimum, field minimum (without -1) by default
+  --xmin XMIN           x minimum, field minimum (after masking) by default
   --xmax XMAX           x maximum, field maximum by default
   --xbins XBINS         Number of x bins. Default from config file. Does not
                         apply to categorical variables
   -y YFIELD, --yfield YFIELD
-  --ymin YMIN           x minimum, field minimum (without -1) by default
+  --ymin YMIN           x minimum, field minimum (after masking) by default
   --ymax YMAX           x maximum, field maximum by default
   --ybins YBINS         Number of x bins. Default from config file. Does not
                         apply to categorical variables
   -c CFIELD, --cfield CFIELD
                         Color by field
-  --cmin CMIN           color minimum, field minimum (without -1) by default
+  --cmin CMIN           color minimum, field minimum (after masking) by default
   --cmax CMAX           color maximum, field maximum by default
   -t TITLE, --title TITLE
                         Plot title, defaults to pretty version of color by
@@ -391,6 +396,7 @@ Plot Argument Descriptions:
 
     # Load Dat File
     model=DataModel(args.datfile,args.group,cfg=ModelConfig(args.cfg))
+    aggMap["CountValid"]= (lambda x : np.count_nonzero(x!=-cfg.nullvalue))
     if args.filter is not None:
         model.loadFilters(args.filter)
     if args.sort is not None:

@@ -63,7 +63,7 @@ class GroupMgr:
         """Return the matchcol to use for a particular group, like "run" for "sample" """
         return self.gmaps[group]["matchcol"]
 
-    def match(self,group,matchcolval):
+    def match(self,group,matchcolval,nullvalue):
         """Return the gid for a given matchcol. """
         try:
             matchcolval=int(matchcolval)
@@ -73,7 +73,7 @@ class GroupMgr:
         for k,v in self.gmaps[group]["matches"].items():
             if matchcolval in v:
                 return k
-        return -1
+        return nullvalue
 
 
 

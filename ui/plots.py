@@ -515,7 +515,7 @@ class MyHistogram(MyPlot):
     def calcFit(self):
         # Always fit filtered (if not filtering, will be full model)
         dt=self.model.datacol(self.field,filtered=True)
-        dt = dt[dt != -1] # But don't use empty
+        dt = dt[dt != self.model.cfg.nullvalue] # But don't use empty
         if len(dt):
             (self.mu,self.sigma)=norm.fit(dt)
             self.mydraw()
@@ -851,7 +851,7 @@ class MyPixelPlot(MyPlot):
         xmax=int(np.max(self.model.datacol(self.xfield)))
         ymax=int(np.max(self.model.datacol(self.yfield)))
 
-        self.cdat=np.ones((ymax+1,xmax+1))*-1
+        self.cdat=np.ones((ymax+1,xmax+1))*self.model.cfg.nullvalue
 
         valid=(self.model.datacol(self.xfield,filtered=drawfiltered) >=0) & (self.model.datacol(self.yfield,filtered=drawfiltered) >= 0)
         self.cdat[self.model.datacol(self.yfield,filtered=drawfiltered)[valid],self.model.datacol(self.xfield,filtered=drawfiltered)[valid]] = self.model.datacol(self.cfield,filtered=drawfiltered)[valid]
@@ -861,7 +861,7 @@ class MyPixelPlot(MyPlot):
         if self.vmax is None:
             self.vmax=self.model.fieldmax(self.cfield)
 
-        p=self.plt.pcolormesh(np.ma.masked_values(self.cdat,-1),cmap=plt.cm.get_cmap(self.model.cfg.pixelcmap),vmin=self.vmin,vmax=self.vmax)
+        p=self.plt.pcolormesh(np.ma.masked_values(self.cdat,self.model.cfg.nullvalue),cmap=plt.cm.get_cmap(self.model.cfg.pixelcmap),vmin=self.vmin,vmax=self.vmax)
 
         if self.cb is None:
             self.cb=self.fig.colorbar(p,ax=self.plt)

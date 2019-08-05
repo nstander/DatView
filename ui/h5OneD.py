@@ -47,7 +47,7 @@ class H5OneD(QObject):
         if self.path in self.curFile:
             if self.checkEvent:
                 e=self.dmodel.data["event"][self.imodel.currow]
-                if e == -1: # No event
+                if e == self.dmodel.cfg.nullvalue: # No event
                     data=self.curFile[self.path]
                 else:
                     data=self.curFile[self.path][e]

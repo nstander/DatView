@@ -20,11 +20,11 @@ def addline(args,partname=None):
     if args.partition:
         cur['_'.join(args.partition)]=partname
     for c in args.average:
-        cur['average_'+c]=np.average(args.model.filtered[c][args.model.filtered[c] != -1])
+        cur['average_'+c]=np.average(args.model.filtered[c][args.model.filtered[c] != args.model.cfg.nullvalue])
     for c in args.averageN:
         cur['averageN_'+c]=np.average(args.model.filtered[c])
     for c in args.min:
-        cur['min_'+c]=np.min(args.model.filtered[c][args.model.filtered[c] != -1])
+        cur['min_'+c]=np.min(args.model.filtered[c][args.model.filtered[c] != args.model.cfg.nullvalue])
     for c in args.minN:
         cur['minN_'+c]=np.min(args.model.filtered[c])
     for c in args.max:
@@ -34,7 +34,7 @@ def addline(args,partname=None):
     for c in args.count:
         if len(c):
             if len(c) == 1:
-                cur["count_"+'_'.join(c)]=np.count_nonzero(args.model.filtered[c[0]] != -1)
+                cur["count_"+'_'.join(c)]=np.count_nonzero(args.model.filtered[c[0]] != args.model.cfg.nullvalue)
             else:
                 cnt=0
                 for v in c[1:]:
@@ -49,11 +49,11 @@ def addline(args,partname=None):
         if col in cur and cur[col] is not None:
             print(cur[col],end='\t',file=args.out)
         else:
-            print(-1,end='\t',file=args.out)
+            print(args.model.cfg.nullvalue,end='\t',file=args.out)
     print('\n',end='',file=args.out)
 
 
-parser=argparse.ArgumentParser(description='Combine data files. To sync (adding where values match) use datupdate.py')
+parser=argparse.ArgumentParser(description='Print Statistics')
 parser.add_argument('--group',default=None,help='Group file(s). If more than one is specified, than there must be one group file per dat file')
 parser.add_argument('--cfg',default=None,help='Use the provided configuration file (xml) instead of the default one. Default one is found in api/modelcfg.xml')
 parser.add_argument('--filter',default=None,help='A filter file to load. Filter files are XML format. The first Between filter in the file for a field will be updated with selection.')
@@ -61,9 +61,9 @@ parser.add_argument('--filter',default=None,help='A filter file to load. Filter 
 parser.add_argument('--cols',default=None,nargs='+',help='Specify the order of the columns. Otherwise, column order is alphabetical. Column names are calcmethod_name, so --average reslim would be average_reslim and --max vol would be max_vol. The partition column is the column(s) for partitioning joined by _')
 
 parser.add_argument('--average',action='append',default=[],help='Take the average of the given column. Include switch multiple times for multiple columns')
-parser.add_argument('--averageN',action='append',default=[],help='Take the average of the given column (including -1 values). Include switch multiple times for multiple columns')
-parser.add_argument('--min',action='append',default=[],help='Take the minimum of the given column ignoring -1 values. Include switch multiple times for multiple columns')
-parser.add_argument('--minN',action='append',default=[],help='Take the minimum of the given column (including -1 values). Include switch multiple times for multiple columns')
+parser.add_argument('--averageN',action='append',default=[],help='Take the average of the given column (including masked values). Include switch multiple times for multiple columns')
+parser.add_argument('--min',action='append',default=[],help='Take the minimum of the given column ignoring masked values. Include switch multiple times for multiple columns')
+parser.add_argument('--minN',action='append',default=[],help='Take the minimum of the given column (including masked values). Include switch multiple times for multiple columns')
 parser.add_argument('--max',action='append',default=[],help='Take the maximum of the given column. Include switch multiple times for multiple columns')
 parser.add_argument('--median',action='append',default=[],help='Take the median of the given column. Include switch multiple times for multiple columns')
 parser.add_argument('--std',action='append',default=[],help='Take the standard deviation of the given column. Include switch multiple times for multiple columns')

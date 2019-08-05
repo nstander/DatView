@@ -24,7 +24,7 @@ class FilterItemDelegate(QStyledItemDelegate):
             e=QDoubleSpinBox(parent)
             e.setDecimals(3)
             e.setFrame(False)
-            e.setMinimum(-1)
+            e.setMinimum(index.model().dmodel.fieldmin(index.internalPointer().field)-1)
             e.setMaximum(index.model().dmodel.fieldmax(index.internalPointer().field)+1)
             e.setSingleStep(0.1)
             return e
@@ -226,7 +226,7 @@ class FilterItemDelegate(QStyledItemDelegate):
         par=act.data()[0].internalPointer()
         dmodel=act.data()[0].model().dmodel
         field=act.data()[1]
-        child=filters.MaxFilter(par.shape,dmodel.cmparray,dmodel.cmpvalues(field),field)
+        child=filters.MaxFilter(par.shape,dmodel.cmparray,dmodel.cmpvalues(field),field,dmodel.cfg.nullvalue)
         par.addChild(child)
 
     def onAddMin(self):
@@ -234,7 +234,7 @@ class FilterItemDelegate(QStyledItemDelegate):
         par=act.data()[0].internalPointer()
         dmodel=act.data()[0].model().dmodel
         field=act.data()[1]
-        child=filters.MinFilter(par.shape,dmodel.cmparray,dmodel.cmpvalues(field),field)
+        child=filters.MinFilter(par.shape,dmodel.cmparray,dmodel.cmpvalues(field),field,dmodel.cfg.nullvalue)
         par.addChild(child)
 
     def onAddAllBetween(self):
@@ -243,7 +243,7 @@ class FilterItemDelegate(QStyledItemDelegate):
         dmodel=act.data()[0].model().dmodel
         field=act.data()[1]
         child=filters.AllBetweenFilter(par.shape,dmodel.cmparray,dmodel.cmpvalues(field),field,\
-            dmodel.fieldmin(field)-1,dmodel.fieldmax(field)+1)
+            dmodel.fieldmin(field)-1,dmodel.fieldmax(field)+1,dmodel.cfg.nullvalue)
         par.addChild(child)
 
     def onAddAnyBetween(self):
@@ -252,7 +252,7 @@ class FilterItemDelegate(QStyledItemDelegate):
         dmodel=act.data()[0].model().dmodel
         field=act.data()[1]
         child=filters.AnyBetweenFilter(par.shape,dmodel.cmparray,dmodel.cmpvalues(field),field,\
-            dmodel.fieldmin(field)-1,dmodel.fieldmax(field)+1)
+            dmodel.fieldmin(field)-1,dmodel.fieldmax(field)+1,dmodel.cfg.nullvalue)
         par.addChild(child)
 
     def onAddSame(self):
@@ -260,7 +260,7 @@ class FilterItemDelegate(QStyledItemDelegate):
         par=act.data()[0].internalPointer()
         dmodel=act.data()[0].model().dmodel
         field=act.data()[1]
-        child=filters.AllSameFilter(par.shape,dmodel.cmparray,dmodel.cmpvalues(field),field)
+        child=filters.AllSameFilter(par.shape,dmodel.cmparray,dmodel.cmpvalues(field),field,dmodel.cfg.nullvalue)
         par.addChild(child)
 
     def onAddDifferent(self):
@@ -268,7 +268,7 @@ class FilterItemDelegate(QStyledItemDelegate):
         par=act.data()[0].internalPointer()
         dmodel=act.data()[0].model().dmodel
         field=act.data()[1]
-        child=filters.AnyDifferentFilter(par.shape,dmodel.cmparray,dmodel.cmpvalues(field),field)
+        child=filters.AnyDifferentFilter(par.shape,dmodel.cmparray,dmodel.cmpvalues(field),field,dmodel.cfg.nullvalue)
         par.addChild(child)
 
 

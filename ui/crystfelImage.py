@@ -39,7 +39,6 @@ class CrystfelImage(QObject):
         new_color_map = ColorMap(pos,color)
         self.iview.ui.histogram.gradient.setColorMap(new_color_map)
 
-        self.lastrow=-1
         self.curFileName=None
         self.curFile=None
         self.canDraw=self.dmodel.canSaveLst()
@@ -157,9 +156,6 @@ class CrystfelImage(QObject):
         if not self.canDraw:
             return
 
-        # Image was loaded, so update what we've currently got drawn
-        self.lastrow=self.imodel.currow
-
         # Load the image
         image=self.image()
         if image is None or isinstance(image,h5py.Group):
@@ -210,7 +206,6 @@ class CrystfelImage(QObject):
             self.geom_pixsize=1/cfel_geom.res_from_geometry_file(filename)
             self.drawResRingsAct.setEnabled(True)
             self.drawResolutionLimitAct.setEnabled('reslim' in self.dmodel.cols)
-            self.lastrow=-1
             self.draw()
 
     def openGeom(self):
@@ -276,7 +271,7 @@ class CrystfelImage(QObject):
             if path in self.curFile:
                 if self.checkEvent:
                     e=self.dmodel.data["event"][self.imodel.currow]
-                    if e == -1: # No event
+                    if e == self.dmodel.cfg.nullvalue: # No event
                         r=self.curFile[path]
                     else:
                         r=self.curFile[path][e]

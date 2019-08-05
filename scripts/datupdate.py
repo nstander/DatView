@@ -9,6 +9,8 @@ import sys
 import argparse
 import numpy as np
 
+nullvalue = -1
+
 parser=argparse.ArgumentParser(description='Given two dat files, add fields to the first file that are found in the second file for matching columns. The second datfile will be converted to a numpy array, so npformats can be used for arrays where floats are not used.')
 parser.add_argument('--npformats',default=None,nargs='+',help="The data formats for np.loadtxt")
 parser.add_argument('--datfile1',required=True,help='The main dat file')
@@ -65,7 +67,7 @@ with open(args.datfile1) as dfile:
             if col in cur and cur[col] is not None:
                 print(cur[col],end='\t',file=out)
             else:
-                print(-1,end='\t',file=out)
+                print(nullvalue,end='\t',file=out)
         print('\n',end='',file=out)
 
 

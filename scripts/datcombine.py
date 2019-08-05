@@ -11,6 +11,7 @@ import os
 import numpy as np
 import h5py
 
+nullvalue = -1 
 parser=argparse.ArgumentParser(description='Combine data files. To sync (adding where values match) use datupdate.py')
 parser.add_argument('--cols',default=None,nargs='+',help='The columns to keep. If not specified, columns will be determined by column mode')
 parser.add_argument('--colmode',default='union',choices=['intersect','union'],help='If the columns argument is not used, this determines the columns output as either the columns in common between all files or all columns found across files where missing values are filled in with -1')
@@ -78,7 +79,7 @@ for i,ifile in enumerate(args.infiles):
                 if col in cur and cur[col] is not None:
                     print(cur[col],end='\t',file=args.out)
                 else:
-                    print(-1,end='\t',file=args.out) 
+                    print(nullvalue,end='\t',file=args.out) 
             print('\n',end='',file=args.out)           
 
 

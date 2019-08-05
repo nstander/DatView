@@ -15,6 +15,8 @@ from math import sqrt, cos,radians
 
 from api.groupmgr import GroupMgr
 
+nullvalue=-1
+
 class DatGenerator:
     streamcols=[(('class','subcxi'),re.compile('^Image filename: .*r\d{4}(?:-class(\d))?(?:-c(\d{2}))?\.(?:cxi|h5)')),
                 (('run',),re.compile('^Image filename: .*r(\d{4})')),
@@ -130,7 +132,7 @@ class DatGenerator:
             if col in cur and cur[col] is not None:
                 print(cur[col],end='\t',file=self.out)
             else:
-                print(-1,end='\t',file=self.out)
+                print(nullvalue,end='\t',file=self.out)
         print('\n',end='',file=self.out)
 
     def addcxi(self,cur):
@@ -163,7 +165,7 @@ class DatGenerator:
     def groupify(self,cur):
         if self.groupmgr is not None:
             for g in self.groupcols:
-                cur[GroupMgr.prefix + g] = self.groupmgr.match(g,cur.get(self.groupmgr.matchcol(g),-1))
+                cur[GroupMgr.prefix + g] = self.groupmgr.match(g,cur.get(self.groupmgr.matchcol(g),nullvalue),nullvalue)
         
 
     def parsestream(self,filename):

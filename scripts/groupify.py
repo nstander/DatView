@@ -10,6 +10,8 @@ import os
 import argparse
 import copy
 
+nullvalue = -1 
+
 sys.path.append(os.path.dirname(sys.path[0]))
 from api.groupmgr import GroupMgr
 
@@ -70,15 +72,15 @@ while True:
     
     for g in keptgroups:
         gcol = GroupMgr.prefix + g
-        v = groupmgr.match(g,cur.get(groupmgr.matchcol(g),-1))
-        if v is not -1:
+        v = groupmgr.match(g,cur.get(groupmgr.matchcol(g),nullvalue),nullvalue)
+        if v is not nullvalue:
             cur[gcol] = v # Allow keeping existing value on regrouping if new value not found.
 
     for col in outcols:
         if col in cur and cur[col] is not None:
             print(cur[col],end='\t',file=out)
         else:
-            print(-1,end='\t',file=out)
+            print(nullvalue,end='\t',file=out)
     print('\n',end='',file=out)
 
 

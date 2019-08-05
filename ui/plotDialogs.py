@@ -162,7 +162,7 @@ class MyAggPlotDialog(QDialog):
         self.ui.zCombo.addItem("Min",np.min)
         self.ui.zCombo.addItem("Max",np.max)
         self.ui.zCombo.addItem("Count",len)
-        self.ui.zCombo.addItem("Count Valid (not -1)",lambda x : np.count_nonzero(x!=-1))
+        self.ui.zCombo.addItem("Count Valid (not masked)",lambda x : np.count_nonzero(x!=model.cfg.nullvalue))
 
         self.ui.label_4.setText("Error Bars:")
         self.ui.cCombo.addItem("None",None)
@@ -186,6 +186,7 @@ class MyAggPlotDialog(QDialog):
         self.aggFieldWidget.ui.groupBox.setChecked(True)
         self.aggFieldWidget.ui.groupBox.setCheckable(False)
         self.aggFieldWidget.ui.listView.hide()
+        self.aggFieldWidget.ui.binSpinBox.setMaximum(999)
         self.aggFieldWidget.onComboChange()
         self.ui.verticalLayout_2.insertWidget(6,self.aggFieldWidget)
 

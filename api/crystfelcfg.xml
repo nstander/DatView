@@ -196,4 +196,7 @@
     <default>#1f77b4,#ff7f0e,#2ca02c,#d62728,#9467bd,#8c564b,#e377c2,#7f7f7f,#bcbd22,#17becf</default>
   </colors>
 
+  <!-- Historically, the GUI and most of the scripts automatically ignore the value "-1" in calculations and plot ranges because it was used as the null-value flag in datgen.py and worked for the CrystFEL fields being tested with. To make the software more general, this automatically ignored value is configurable with the nullvalue tag below. Be aware that not all scripts use this configuration file. In particular, datgen.py as well as groupify.py, datupdate.py and datcombine.py have their own null value variable near the top of the file that would also need to be edited to something other than -1. Also, note that since np.loadtxt is used, the nullvalue must be a number since a text string in an numeric column breaks np.loadtxt. There are also some scripts that would have to be manually edited to respect a different null value: palxss.py, chipplot.py, maxres.py, pal_pandas2dat.py and hist2d.py. -->
+  <nullvalue>-1</nullvalue>
+
 </modelcfg>

@@ -85,6 +85,7 @@ class ModelConfig:
         self.hist2DCmpInitial=None
         self.maskDataPath=["/data/data"]
         self.needTablesImport=False
+        self.nullvalue = -1
 
 
         et=ElementTree.parse(filename)
@@ -240,6 +241,8 @@ class ModelConfig:
                 self.maskDataPath=child.text.split(',')
             if child.tag == "needTablesImport":
                 self.needTablesImport=True
+            if child.tag == "nullvalue" and child.text:
+                self.nullvalue=float(child.text)
 
 
     def prettyname(self,field):

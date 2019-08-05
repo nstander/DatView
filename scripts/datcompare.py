@@ -84,7 +84,7 @@ for c in cols:
         if c in cfg.invert:
             data[c] = 1/data[c]
         if cfg.multvalue(c) != 1:
-            data[c][data[c]!=-1]*=cfg.multvalue(c)
+            data[c][data[c]!=cfg.nullvalue]*=cfg.multvalue(c)
 
 for i in range(1,len(rows)):
     data[DataModel.compareGroupName][rows[i-1]:rows[i]]=i-1
@@ -94,7 +94,7 @@ data.sort(order=synccols+[DataModel.compareGroupName])
 data[DataModel.sortColumnName]=np.arange(len(data))
 
 cmptable=[]
-currow=np.ones(len(args.infiles),dtype=int)*-1
+currow=np.ones(len(args.infiles),dtype=int)*cfg.nullvalue
 cmprow=0
 cur=None
 for i in range(len(data)):
@@ -103,7 +103,7 @@ for i in range(len(data)):
     next=data[synccols][i]
     if cur != next:
         cmptable.append(currow)
-        currow=np.ones(len(args.infiles))*-1
+        currow=np.ones(len(args.infiles))*cfg.nullvalue
         cmprow += 1
         cur=next
     data[DataModel.compareIndexName][i] = cmprow

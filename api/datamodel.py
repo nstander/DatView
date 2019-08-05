@@ -117,7 +117,7 @@ class DataModel(QObject):
                 if c in self.cfg.invert:
                     self.data[c] = 1/self.data[c]
                 if self.cfg.multvalue(c) != 1:
-                    self.data[c][self.data[c]!=-1]*=self.cfg.multvalue(c)
+                    self.data[c][self.data[c]!=self.cfg.nullvalue]*=self.cfg.multvalue(c)
 
     def loadNumpy(self,filename):
         self.npfile = np.load(filename)
@@ -308,11 +308,11 @@ class DataModel(QObject):
         field=self.datafield(field)
         if field not in self.mincache:
             valid = self.data[field]
-            valid = valid[valid != -1]
+            valid = valid[valid != self.cfg.nullvalue]
             if len(valid):
                 self.mincache[field]=np.min(valid)
             else:
-                self.mincache[field]=-1
+                self.mincache[field]=self.cfg.nullvalue
         return self.mincache[field]
 
     def trueFieldMin(self,field):
@@ -409,7 +409,7 @@ class DataModel(QObject):
             assert parts[1] == "cmp" # Only one that should appear right now
             group1=int(parts[2])
             group2=int(parts[3])
-            validpairs=(self.cmparray[:,group1] != -1) & (self.cmparray[:,group2] != -1)
+            validpairs=(self.cmparray[:,group1] != self.cfg.nullvalue) & (self.cmparray[:,group2] != self.cfg.nullvalue)
             keepvalid=(keep[self.cmparray[validpairs,group1].astype(int)]) & (keep[self.cmparray[validpairs,group2].astype(int)])
             finalret=self.cmparray[keepvalid,group1]
             return self.data[field][finalret.astype(int)]
@@ -454,8 +454,8 @@ class DataModel(QObject):
     def cmpvalues(self,field):
         assert self.hasComparisons()
         field=self.datafield(field)
-        values=np.ones(self.cmparray.shape)*-1
-        valid=self.cmparray != -1
+        values=np.ones(self.cmparray.shape)*self.cfg.nullvalue
+        valid=self.cmparray != self.cfg.nullvalue
         values[valid]=self.data[field][self.cmparray[valid].astype(int)]
         return values
 
@@ -547,7 +547,7 @@ class DataModel(QObject):
         outarr=self.outArrIndices()
         with open(fname,'w') as fout:
             for i in outarr:
-                if 'event' in self.cols and self.filtered['event'][i] != -1:
+                if 'event' in self.cols and self.filtered['event'][i] != self.cfg.nullvalue:
                     fout.write('%s //%i\n'%(self.value('ifile',i) ,self.filtered['event'][i]))
                 else:
                     fout.write('%s\n'%(self.value('ifile',i)))
@@ -757,7 +757,7 @@ class DataModel(QObject):
         peaky=[]
         hkl=[]
         start = self.data["rstart"][datarow]
-        if start != -1: # Have Reflections (might not if not indexed)
+        if start != self.cfg.nullvalue: # Have Reflections (might not if not indexed)
             try:
                 with open(self.value("sfile",datarow,False)) as sfile:
                     sfile.seek(start)
