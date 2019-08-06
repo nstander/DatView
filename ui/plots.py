@@ -24,6 +24,7 @@ from matplotlib.patches import Rectangle
 from matplotlib.colors import LogNorm
 from api.filters import BetweenFilter
 from scipy.stats import norm
+from timeit import default_timer as timer
 
 
 class MyFigure(FigureCanvas):
@@ -248,7 +249,10 @@ class MyPlot(QObject):
             self.plt.set_xlim(xlim)
         if keeplimits and self.manageY:
             self.plt.set_ylim(ylim)
+        start=timer()
         self.parent().draw()
+        end=timer()
+        print ("myDraw parent's draw time::", end - start)
 
     def onScroll(self,event):
         xcenter=event.xdata
@@ -450,6 +454,7 @@ class MyHistogram(MyPlot):
         self.mydraw(False)
 
     def stackedDraw(self,data,alpha):
+        start=timer()
         self.edges=None
         if len(data[0]): # Have array to plot
             self.labels=data[2]
@@ -457,17 +462,29 @@ class MyHistogram(MyPlot):
                 self.edges=np.arange(self.dmin -0.5, self.dmax + 1.5)
                 self.cnts=np.zeros((len(data[0]),self.dmax-self.dmin+1))
                 for i in range(len(data[0])):
+                    start2=timer()
                     cnts=np.unique(data[0][i],return_counts=True)
+                    end=timer()
+                    print("Histogram categorical calc:",self.field,":",end-start2)
+                    start2=timer()
                     self.plt.bar(cnts[0],cnts[1],color=data[1][i],alpha=alpha,
                                  edgecolor="none",align="center",bottom=self.cnts[i,cnts[0].astype(int)-self.dmin],linewidth=0,label=data[2][i])
+                    end=timer()
+                    print("Histogram categorical plot:",self.field,":",end-start2)
                     self.cnts[i:,cnts[0].astype(int)-self.dmin]+=cnts[1]
             else:
+                start2=timer()
                 self.cnts,self.edges,_=self.plt.hist(data[0],bins=self.bins,color=data[1],range=self.range,
                               alpha=alpha,histtype="barstacked",linewidth=0,rwidth=1,label=data[2])
+                end=timer()
+                print("Histogram continuous calc & plot:",self.field,":", end-start2)
                 self.cnts=np.array(self.cnts)
+        end=timer()
+        print("Histogram stacked draw: ",self.field,":", end-start)
         return self.edges
 
     def datadraw(self):
+        start=timer()
         title=self.model.prettyname(self.field)
         fmt=" %0.2f "+u"\u00B1"+ " %0.2f"
         drawBoth=self.model.isFiltered() and self.drawBoth.isChecked()
@@ -490,6 +507,8 @@ class MyHistogram(MyPlot):
         legendPos=self.legendActionGroup.checkedAction().data()
         if legendPos is not None:
             self.plt.legend(loc=legendPos) 
+        end=timer()
+        print("Histogram datadraw:",self.field,":",end - start)
 
     def onKey(self,event):
         if event.key == '+' or event.key == '=':
@@ -594,6 +613,7 @@ class MyScatter(MyPlot):
         self.mydraw()
 
     def datadraw(self):
+        start=timer()
         cAll="black"
         cFiltered="black"
         cm=None
@@ -626,6 +646,8 @@ vmin=self.vmin,vmax=self.vmax,marker=marker,linewidths=self.model.cfg.scatterlin
 
         self.xlabels(self.model,self.xfield)
         self.ylabels(self.model,self.yfield)
+        end=timer()
+        print("Scatter datadraw:", self.xfield, self.yfield,":", end-start)
 
     def onReset(self,event):
         xrange=(self.model.fieldmin(self.xfield),self.model.fieldmax(self.xfield))
@@ -718,6 +740,7 @@ class MyHist2d(MyPlot):
         self.mydraw()
 
     def datadraw(self):
+        start=timer()
         drawfiltered=self.drawSelection.isChecked()
         b=[self.xbins,self.ybins]
         if self.model.isCategorical(self.xfield):
@@ -735,8 +758,11 @@ class MyHist2d(MyPlot):
             yedges=np.append(yedges,np.max(yedges)+1)
             b[1]=yedges
 
+        start2=timer()
         self.H,self.xedges,self.yedges = np.histogram2d(self.model.datacol(self.xfield,filtered=drawfiltered),self.model.datacol(self.yfield,filtered=drawfiltered),
                     bins=b,range=self.range)
+        end=timer()
+        print ("Histogram 2D calc::",end-start2)
 
         norm=None
         if self.log.isChecked():
@@ -744,7 +770,9 @@ class MyHist2d(MyPlot):
         h=self.H
         if self.model.cfg.histAlwaysMask0:
             h=np.ma.masked_values(h,0)
+        start2=timer()
         sc=self.plt.pcolormesh(self.xedges,self.yedges,np.transpose(h),cmap=plt.cm.get_cmap(self.model.cfg.hist2dcmap),norm=norm)
+        print ("Histogram 2D plot::",end-start2)
         if self.cb is None:
             self.cb=self.fig.colorbar(sc,ax=self.plt)
         else:
@@ -757,6 +785,8 @@ class MyHist2d(MyPlot):
 
         self.xlabels(self.model,self.xfield,True)
         self.ylabels(self.model,self.yfield,True)
+        end = timer()
+        print ("Histogram 2D datadraw:", self.xfield, self.yfield,":", end - start)
 
     def onKey(self,event):
         if event.key == '+' or event.key == '=':
@@ -844,6 +874,7 @@ class MyPixelPlot(MyPlot):
         self.mydraw(False)
 
     def datadraw(self):
+        start=timer()
         drawfiltered=self.drawSelection.isChecked()
 
         if len(self.model.datacol(self.xfield)) == 0:
@@ -861,7 +892,10 @@ class MyPixelPlot(MyPlot):
         if self.vmax is None:
             self.vmax=self.model.fieldmax(self.cfield)
 
+        start2=timer()
         p=self.plt.pcolormesh(np.ma.masked_values(self.cdat,self.model.cfg.nullvalue),cmap=plt.cm.get_cmap(self.model.cfg.pixelcmap),vmin=self.vmin,vmax=self.vmax)
+        end=timer()
+        print("Pixel plot plot::",end-start2)
 
         if self.cb is None:
             self.cb=self.fig.colorbar(p,ax=self.plt)
@@ -872,6 +906,8 @@ class MyPixelPlot(MyPlot):
         self.plt.set_xlabel(self.model.prettyname(self.xfield))
         self.plt.set_ylabel(self.model.prettyname(self.yfield))
         self.plt.set_title(self.model.prettyname(self.cfield))
+        end = timer()
+        print("Pixel plot:" ,self.cfield, ":",end - start)
 
 
     def onReset(self,event):
@@ -1019,6 +1055,7 @@ class MyAggPlot(MyPlot):
         self.mydraw(False)
 
     def datadraw(self):
+        start=timer()
         lbls=["all"]
         colors={"all":"b"}
         dtype=[]
@@ -1048,10 +1085,13 @@ class MyAggPlot(MyPlot):
                         lowlim[stackedData[2][j]][i]=v-e[0]
                         uplim[stackedData[2][j]][i]=e[1]-v
         for l in lbls:
+            start2=timer()
             if self.tranpose:
                 self.plt.errorbar(y[l],self.x,xerr=[lowlim[l],uplim[l]],label=l,color=colors[l],marker=self.model.cfg.aggmarker)
             else:
                 self.plt.errorbar(self.x,y[l],yerr=[lowlim[l],uplim[l]],label=l,color=colors[l],marker=self.model.cfg.aggmarker)
+            end=timer()
+            print ("Aggregated plot plot::",end-start2)
         legendPos=self.legendActionGroup.checkedAction().data()
         if legendPos is not None:
             self.plt.legend(loc=legendPos)  
@@ -1061,6 +1101,8 @@ class MyAggPlot(MyPlot):
 
         self.xlabels(self.model,self.xfield,True)
         self.ylabels(self.model,self.yfield,True)
+        end=timer()
+        print ("Aggregated Plot:", self.xfield,":", end - start)
 
     def onReset(self,event):
         self.mydraw(False)

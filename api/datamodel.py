@@ -13,6 +13,7 @@ from .groupmgr import GroupMgr
 import lxml.etree as ElementTree
 from .modelcfg import ModelConfig
 import sys
+from timeit import default_timer as timer
 
 
 class DataModel(QObject):
@@ -302,7 +303,10 @@ class DataModel(QObject):
     def applyFilters(self):
         self.filtered=self.data[self.rootfilter.getKeep()]
         if not self.internalFilterChanges:
+            start=timer()
             self.filterchange.emit()
+            end=timer()
+            print ("applyFilters time::", end - start)
 
     def fieldmin(self,field):
         field=self.datafield(field)
@@ -395,6 +399,7 @@ class DataModel(QObject):
         self.partitionfilter.setkeep(np.ones(self.data.shape,dtype=bool))
 
     def datacol(self,field,filtered=False,respectPartition=True):
+        start=timer()
         origfield=field
         field=self.datafield(field)
         keep=np.ones(self.data.shape,dtype=bool)
@@ -413,10 +418,13 @@ class DataModel(QObject):
             keepvalid=(keep[self.cmparray[validpairs,group1].astype(int)]) & (keep[self.cmparray[validpairs,group2].astype(int)])
             finalret=self.cmparray[keepvalid,group1]
             return self.data[field][finalret.astype(int)]
+        end=timer()
+        print ("Model datacol:", field,":", end-start)
         return self.data[field][keep]
 
     def stackedDataCol(self,field,filtered=False,defaultcolor='b',respectPartition=True, keep=None,stacks=0):
         """Return [[arrays],[colors],[labels]]"""
+        start=timer()
         field=self.datafield(field)
         finalkeep=np.ones(self.data.shape,dtype=bool)
         if keep is not None:
@@ -429,6 +437,8 @@ class DataModel(QObject):
         if stacks == 0:
             stacks=self.stacks
         if stacks is None:
+            end=timer()
+            print("Model stackedDataCol no stacks:",field,":",end-start)
             return [[ self.data[field][finalkeep] ], [defaultcolor] , ["all"] ]
         else:
             a=[]
@@ -440,6 +450,8 @@ class DataModel(QObject):
                     a.append(d)
                     c.append(stacks[1][i])
                     l.append(stacks[2][i])
+        end=timer()
+        print("Model stackedDataCol no stacks:",field,":",end-start)
         return [a,c,l]
                 
             
